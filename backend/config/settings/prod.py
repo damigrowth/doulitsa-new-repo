@@ -2,14 +2,16 @@
 from __future__ import annotations
 
 from .base import *  # noqa: F401,F403
-from .base import env
+from .base import env, normalize_host
 
 DEBUG = False
 # The Docker HEALTHCHECK curls http://127.0.0.1:8000/api/health, so the loopback
 # hosts must always be allowed — otherwise Django returns 400 DisallowedHost and
 # the container is marked unhealthy. Public traffic arrives via Traefik with the
 # real Host header, which the DJANGO_ALLOWED_HOSTS env value covers.
-ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS") + ["127.0.0.1", "localhost"]
+ALLOWED_HOSTS = [
+    h for h in (normalize_host(v) for v in env.list("DJANGO_ALLOWED_HOSTS")) if h
+] + ["127.0.0.1", "localhost"]
 
 # Behind Dokploy/Traefik the public origin is HTTPS while Django speaks plain
 # HTTP to the proxy. Trust these origins for CSRF (Django admin, DRF session

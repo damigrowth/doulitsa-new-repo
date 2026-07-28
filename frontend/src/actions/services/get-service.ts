@@ -130,6 +130,8 @@ interface RawServicePageBundle
     | 'additionalServices'
   > {
   service: ServiceWithFullProfile;
+  /** Backend DB-resolved labels — fallback when the bundled map is stale. */
+  taxonomyLabels?: { category?: string; subcategory?: string; subdivision?: string };
   category: { slug: string } | null;
   subcategory: { slug: string } | null;
   subdivision: { slug: string } | null;
@@ -157,7 +159,7 @@ export async function getServicePageData(id: number): Promise<ActionResult<Servi
       (values ?? [])
         .map((v) => (dataset ?? []).find((d) => d.slug === v || d.id === v))
         .filter((d): d is { id: string; label: string; slug: string } => d != null);
-    const resolve = (key: unknown): DatasetItem | null => {
+    const resolve = (key: unknown, backendLabel?: string | null): DatasetItem | null => {
       const k = (key && typeof key === 'object' && 'slug' in key
         ? (key as { slug?: string }).slug
         : (key as string | undefined)) ?? null;
@@ -167,7 +169,10 @@ export async function getServicePageData(id: number): Promise<ActionResult<Servi
         (findServiceBySlug(k) as TaxonomyResolved | null) ??
         (findProById(k) as TaxonomyResolved | null) ??
         (findProBySlug(k) as TaxonomyResolved | null);
-      return found ?? { id: k, slug: k, label: k };
+      // When the bundled map is older than the DB (a taxonomy added after the
+      // last frontend build), fall back to the backend's DB-resolved label
+      // instead of leaking the raw id (e.g. "q5F8Ns") into the UI.
+      return found ?? { id: k, slug: k, label: backendLabel || k };
     };
 
     const { enrichServiceCard, enrichProfileCard, enrichCoverage } =
@@ -180,9 +185,9 @@ export async function getServicePageData(id: number): Promise<ActionResult<Servi
 
     const data: ServicePageData = {
       ...bundle,
-      category: resolve(bundle.category),
-      subcategory: resolve(bundle.subcategory),
-      subdivision: resolve(bundle.subdivision),
+      category: resolve(bundle.category, bundle.taxonomyLabels?.category),
+      subcategory: resolve(bundle.subcategory, bundle.taxonomyLabels?.subcategory),
+      subdivision: resolve(bundle.subdivision, bundle.taxonomyLabels?.subdivision),
       profileSubcategory: resolve(bundle.profileSubcategory),
       // About-section chips (Χαρακτηριστικά): resolve tag ids → labels and the
       // budget/size/contact/payment/settlement values from local datasets.

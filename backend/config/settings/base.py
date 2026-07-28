@@ -24,7 +24,25 @@ environ.Env.read_env(BASE_DIR / ".env")
 
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env.bool("DJANGO_DEBUG", default=False)
-ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS")
+
+
+def normalize_host(value: str) -> str:
+    """ALLOWED_HOSTS entries are bare hostnames — no scheme, no path.
+
+    Deploy envs routinely get pasted as full URLs ("https://api.example.gr/"),
+    which silently never match the Host header and make every public request
+    fail with a bare `Bad Request (400)` while the loopback healthcheck still
+    passes. Strip the scheme/path instead of failing mysteriously.
+    """
+    host = value.strip()
+    if "://" in host:
+        host = host.split("://", 1)[1]
+    return host.split("/", 1)[0].strip()
+
+
+ALLOWED_HOSTS = [
+    h for h in (normalize_host(v) for v in env.list("DJANGO_ALLOWED_HOSTS")) if h
+]
 # Shared secret the frontend sends alongside the real visitor IP on server-side
 # calls (X-Real-Client-IP), so rate limiting is per-client through SSR. Must
 # match INTERNAL_PROXY_SECRET on the frontend. Empty => fall back to per-IP of
@@ -322,7 +340,12 @@ CELERY_BEAT_SCHEDULE = {
 # ---------------------------------------------------------------------------
 # CORS / CSP / security
 # ---------------------------------------------------------------------------
-CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
+# A CORS *origin* is scheme://host[:port] — no path. A trailing slash counts as
+# a path and hard-fails django-cors-headers' check (corsheaders.E014), which
+# blocks boot. Normalize instead of trusting hand-written env values.
+CORS_ALLOWED_ORIGINS = [
+    o.strip().rstrip("/") for o in env.list("CORS_ALLOWED_ORIGINS", default=[]) if o.strip()
+]
 CORS_ALLOW_CREDENTIALS = True
 
 SECURE_BROWSER_XSS_FILTER = True
@@ -379,7 +402,10 @@ STORAGES = {
 # ---------------------------------------------------------------------------
 # Frontend / external
 # ---------------------------------------------------------------------------
-FRONTEND_BASE_URL = env.str("FRONTEND_BASE_URL", default="http://localhost:3000")
+# Normalized without a trailing slash: several call sites concatenate paths
+# directly (billing redirect/return URLs, verify-email redirects), so a trailing
+# slash from the env would emit "https://host//path".
+FRONTEND_BASE_URL = env.str("FRONTEND_BASE_URL", default="http://localhost:3000").rstrip("/")
 
 CLOUDINARY = {
     "CLOUD_NAME": env.str("CLOUDINARY_CLOUD_NAME", default=""),

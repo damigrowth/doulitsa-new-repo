@@ -347,6 +347,13 @@ def get_service_page_bundle(service_id: int) -> dict[str, Any] | None:
         # Raw taxonomy slugs — the frontend resolves the {id,label,slug} objects.
         "category": {"slug": cat} if cat else None,
         "subcategory": {"slug": sub} if sub else None,
+        # DB-resolved labels — the frontend falls back to these when its bundled
+        # taxonomy map is older than the DB (prevents raw-id leaks like "q5F8Ns").
+        "taxonomyLabels": {
+            "category": taxonomy.service_category_label(cat),
+            "subcategory": taxonomy.service_category_label(sub),
+            "subdivision": taxonomy.service_category_label(div),
+        },
         "subdivision": {"slug": div} if div else None,
         "profileSubcategory": {"slug": profile.subcategory} if profile.subcategory else None,
         "coverage": coverage,
