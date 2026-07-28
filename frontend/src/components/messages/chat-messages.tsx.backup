@@ -1,0 +1,290 @@
+'use client';
+
+import { useRef, useEffect } from 'react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
+import {
+  Check,
+  CheckCheck,
+  MoreHorizontal,
+  Reply,
+  Edit,
+  Copy,
+  Forward,
+  Trash2,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ChatMessageItem } from '@/lib/types/messages';
+import { formatMessageTime, formatChatDateDivider } from '@/lib/utils/messages';
+
+interface ChatMessagesProps {
+  messages: ChatMessageItem[];
+}
+
+export function ChatMessages({ messages }: ChatMessagesProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const handleMenuAction = (action: string, messageId: string) => {
+    switch (action) {
+      case 'reply':
+        console.log('Reply to message:', messageId);
+        break;
+      case 'edit':
+        console.log('Edit message:', messageId);
+        break;
+      case 'copy':
+        console.log('Copy message:', messageId);
+        break;
+      case 'forward':
+        console.log('Forward message:', messageId);
+        break;
+      case 'delete':
+        console.log('Delete message:', messageId);
+        break;
+      default:
+        console.log('Unknown action:', action);
+    }
+  };
+
+  const shouldShowDateDivider = (index: number) => {
+    if (index === 0) return true;
+    const currentMessage = messages[index];
+    const prevMessage = messages[index - 1];
+    const currentDate = currentMessage.createdAt.toISOString().split('T')[0];
+    const prevDate = prevMessage.createdAt.toISOString().split('T')[0];
+    return currentDate !== prevDate;
+  };
+
+  const getMessageSpacing = (index: number) => {
+    const currentMessage = messages[index];
+    const prevMessage = index > 0 ? messages[index - 1] : null;
+
+    if (!prevMessage) return '';
+
+    // If date changed, no margin (divider handles spacing)
+    const currentDate = currentMessage.createdAt.toISOString().split('T')[0];
+    const prevDate = prevMessage.createdAt.toISOString().split('T')[0];
+    if (currentDate !== prevDate) {
+      return '';
+    }
+
+    // If sender changed, add more spacing
+    if (prevMessage.isOwn !== currentMessage.isOwn) {
+      return 'mt-4';
+    }
+
+    // Same sender, keep tight spacing
+    return 'mt-1.5';
+  };
+
+  const getMessageRadius = (index: number) => {
+    const currentMessage = messages[index];
+    const prevMessage = index > 0 ? messages[index - 1] : null;
+    const nextMessage =
+      index < messages.length - 1 ? messages[index + 1] : null;
+
+    const isFirstInGroup =
+      !prevMessage || prevMessage.isOwn !== currentMessage.isOwn;
+    const isLastInGroup =
+      !nextMessage || nextMessage.isOwn !== currentMessage.isOwn;
+
+    const groupPosition = `${isFirstInGroup ? 'first' : ''}${isLastInGroup ? 'last' : ''}` || 'middle';
+
+    switch (groupPosition) {
+      case 'firstlast':
+        // Single message
+        return currentMessage.isOwn ? 'rounded-bubble-right' : 'rounded-bubble-left';
+
+      case 'first':
+        // First in group
+        return currentMessage.isOwn
+          ? 'rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl rounded-br'
+          : 'rounded-tl-2xl rounded-tr-2xl rounded-bl rounded-br-2xl';
+
+      case 'last':
+        // Last in group
+        return currentMessage.isOwn
+          ? 'rounded-tl-2xl rounded-tr rounded-bl-2xl rounded-br-2xl'
+          : 'rounded-tl rounded-tr-2xl rounded-bl-2xl rounded-br-2xl';
+
+      case 'middle':
+      default:
+        // Middle of group
+        return currentMessage.isOwn
+          ? 'rounded-tl-2xl rounded-tr rounded-bl-2xl rounded-br'
+          : 'rounded-tl rounded-tr-2xl rounded-bl rounded-br-2xl';
+    }
+  };
+
+  return (
+    <ScrollArea className='flex-1 p-4' ref={scrollRef}>
+      <div>
+        {messages.map((message, index) => (
+          <div key={message.id}>
+            {shouldShowDateDivider(index) && (
+              <div className='flex items-center justify-center my-4'>
+                <div className='bg-muted text-muted-foreground text-xs px-3 py-1 rounded-full'>
+                  {formatChatDateDivider(message.createdAt)}
+                </div>
+              </div>
+            )}
+            <div
+              className={cn(
+                'flex gap-2 group items-center',
+                message.isOwn && 'justify-end',
+                getMessageSpacing(index),
+              )}
+            >
+              {message.isOwn && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size='icon'
+                      variant='ghost'
+                      className='h-8 w-8 shrink-0 opacity-0 transition-opacity group-hover:opacity-100'
+                    >
+                      <MoreHorizontal className='h-4 w-4' />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className='rounded-xl' align='end'>
+                    <DropdownMenuItem
+                      onClick={() => handleMenuAction('reply', message.id)}
+                    >
+                      <Reply className='h-4 w-4' />
+                      Reply
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleMenuAction('edit', message.id)}
+                    >
+                      <Edit className='h-4 w-4' />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleMenuAction('copy', message.id)}
+                    >
+                      <Copy className='h-4 w-4' />
+                      Copy message
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleMenuAction('forward', message.id)}
+                    >
+                      <Forward className='h-4 w-4' />
+                      Forward
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => handleMenuAction('delete', message.id)}
+                      className='text-destructive focus:text-destructive'
+                    >
+                      <Trash2 className='h-4 w-4' />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
+              <div
+                className={cn(
+                  'relative max-w-[40%] px-4 py-2',
+                  message.isOwn
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-primary/10',
+                  getMessageRadius(index),
+                )}
+              >
+                {message.deleted ? (
+                  <p className='text-sm leading-relaxed italic opacity-60'>
+                    This message was deleted
+                  </p>
+                ) : (
+                  <>
+                    <p
+                      className={cn(
+                        'text-sm leading-relaxed',
+                        message.isOwn && 'text-primary-foreground',
+                      )}
+                    >
+                      {message.content}
+                      {message.edited && (
+                        <span className='text-xs opacity-60 ml-1'>(edited)</span>
+                      )}
+                    </p>
+                  </>
+                )}
+                <div
+                  className={cn(
+                    'mt-1 flex items-center gap-1',
+                    message.isOwn ? 'justify-end' : 'justify-start',
+                  )}
+                >
+                  <span className='text-xs opacity-70'>
+                    {formatMessageTime(message.createdAt.toISOString())}
+                  </span>
+                  {message.isOwn && !message.deleted && (
+                    <>
+                      {message.isRead ? (
+                        <CheckCheck className='h-3 w-3 opacity-70' />
+                      ) : (
+                        <Check className='h-3 w-3 opacity-70' />
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {!message.isOwn && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size='icon'
+                      variant='ghost'
+                      className='h-8 w-8 shrink-0 opacity-0 transition-opacity group-hover:opacity-100'
+                    >
+                      <MoreHorizontal className='h-4 w-4' />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    className='w-fit rounded-xl'
+                    align='start'
+                  >
+                    <DropdownMenuItem
+                      onClick={() => handleMenuAction('reply', message.id)}
+                    >
+                      <Reply className='h-4 w-4' />
+                      Reply
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleMenuAction('copy', message.id)}
+                    >
+                      <Copy className='h-4 w-4' />
+                      Copy message
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleMenuAction('forward', message.id)}
+                    >
+                      <Forward className='h-4 w-4' />
+                      Forward
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </ScrollArea>
+  );
+}

@@ -1,0 +1,86 @@
+# ============================================================================
+# Monorepo .gitignore — Next.js frontend + Django backend
+# ============================================================================
+
+# -- Secrets ----------------------------------------------------------------
+# Never commit real env files. `.env.example` is allowed (no secrets in it).
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# -- Node / Next.js ---------------------------------------------------------
+node_modules/
+.next/
+out/
+build/
+dist/
+.yarn/cache
+.yarn/install-state.gz
+.yarn/build-state.yml
+.yarn/unplugged
+.yarn/.cache-key
+.pnp.*
+*.tsbuildinfo
+next-env.d.ts
+app_before_migrations/
+# -- Python / Django --------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.eggs/
+.venv/
+venv/
+env/
+.python-version
+.tox/
+.nox/
+.coverage
+.coverage.*
+.pytest_cache/
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Django-generated
+backend/staticfiles/
+backend/media/
+backend/db.sqlite3
+backend/db.sqlite3-journal
+
+# -- Database dumps (PII!) --------------------------------------------------
+# Production database snapshots live under backend/dumps/ — never commit.
+backend/dumps/
+*.dump
+*.sql.gz
+
+# -- Build / coverage / logs -----------------------------------------------
+*.log
+logs/
+coverage/
+.nyc_output/
+
+# -- IDE / editor -----------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+.fleet/
+.zed/
+
+# -- OS junk ----------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# -- Claude / Cursor / AI tooling -------------------------------------------
+.claude/
+.cursor/
+
+# -- Misc -------------------------------------------------------------------
+*.pid
+*.seed
+.tmp/

@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.git/
+.env
+media/
+staticfiles/
+*.log
+node_modules/
+dumps/
+MIGRATION_TRACKER.md
+django_backend.egg-info/

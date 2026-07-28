@@ -1,0 +1,1389 @@
+========================
+CODE SNIPPETS
+========================
+TITLE: Installing Next Cloudinary with pnpm
+DESCRIPTION: Installs the `next-cloudinary` package using the pnpm package manager. This command adds the library to your project's dependencies, ensuring efficient dependency management.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/installation.mdx#_snippet_1
+
+LANGUAGE: Shell
+CODE:
+```
+pnpm install next-cloudinary
+```
+
+----------------------------------------
+
+TITLE: Installing Project Dependencies with pnpm
+DESCRIPTION: This command uses pnpm to install all project dependencies from the root directory, which is required for local development and running the project. Ensure pnpm is installed on your system before running this command.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/README.md#_snippet_4
+
+LANGUAGE: bash
+CODE:
+```
+pnpm install
+```
+
+----------------------------------------
+
+TITLE: Implementing Basic Playback - CldVideoPlayer - Next Cloudinary
+DESCRIPTION: Demonstrates the fundamental setup of the CldVideoPlayer component for standard video playback. It requires only the video's public ID and basic dimensions to render a functional player.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldvideoplayer/examples.mdx#_snippet_0
+
+LANGUAGE: jsx
+CODE:
+```
+import { CldVideoPlayer } from 'next-cloudinary';
+
+<CldVideoPlayer
+  id="default"
+  width="1620"
+  height="1080"
+  src="<Your Public ID>"
+/>
+```
+
+----------------------------------------
+
+TITLE: Installing Next Cloudinary with Yarn
+DESCRIPTION: Installs the `next-cloudinary` package using the Yarn package manager. This command adds the library to your project's dependencies, preparing your project for Next Cloudinary integration.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/installation.mdx#_snippet_2
+
+LANGUAGE: Shell
+CODE:
+```
+yarn add next-cloudinary
+```
+
+----------------------------------------
+
+TITLE: Starting Local Development Server with pnpm
+DESCRIPTION: This command starts the local development server for the project, making it accessible typically at `https://localhost:3000`. It needs to be run in two separate terminal tabs: one in the `next-cloudinary` directory and another in the `docs` directory.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/README.md#_snippet_9
+
+LANGUAGE: bash
+CODE:
+```
+pnpm dev
+```
+
+----------------------------------------
+
+TITLE: Installing Next Cloudinary with npm
+DESCRIPTION: Installs the `next-cloudinary` package using the npm package manager. This command adds the library to your project's dependencies, making its components and utilities available for use.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/installation.mdx#_snippet_0
+
+LANGUAGE: Shell
+CODE:
+```
+npm install next-cloudinary
+```
+
+----------------------------------------
+
+TITLE: Installing next-cloudinary with npm
+DESCRIPTION: This command installs the `next-cloudinary` package into your Next.js project using npm, making its components and utilities available for use. It is the first step to integrate Cloudinary features into your application.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/README.md#_snippet_0
+
+LANGUAGE: bash
+CODE:
+```
+npm install next-cloudinary
+```
+
+----------------------------------------
+
+TITLE: Installing Cloudinary Node SDK - Shell
+DESCRIPTION: This command installs the Cloudinary Node.js SDK, which is required for programmatically interacting with the Cloudinary API, including signing upload requests on the server-side.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/clduploadwidget/signed-uploads.mdx#_snippet_1
+
+LANGUAGE: shell
+CODE:
+```
+npm install cloudinary
+```
+
+----------------------------------------
+
+TITLE: Handling Playback Events with CldVideoPlayer and useRef (JSX)
+DESCRIPTION: This snippet demonstrates how to attach event listeners to the CldVideoPlayer component using a 'useRef' hook to access the player instance. It includes examples for 'onMetadataLoad' to log video duration and 'onPlay' to log playback start, showcasing how to react to player lifecycle events.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldvideoplayer/examples.mdx#_snippet_13
+
+LANGUAGE: JSX
+CODE:
+```
+export const VideoPlayerWithRef = () => {
+  const myPlayerRef = useRef();
+  return (
+    <CldVideoPlayer
+      playerRef={myPlayerRef}
+      id="player-events"
+      width="2048"
+      height="1080"
+      src={`${process.env.VIDEOS_DIRECTORY}/dog-running-snow`}
+      onMetadataLoad={() => {
+        console.log('[Cloudinary Video Player] metadata-loaded');
+        console.log(`[Cloudinary Video Player] duration: ${myPlayerRef.current.duration()}`);
+      }}
+      onPlay={() => {
+        console.log('[Cloudinary Video Player] play');
+      }}
+    />
+  );
+}
+```
+
+----------------------------------------
+
+TITLE: Rendering CldImage with Hardcoded Shimmer Placeholder (Initial Example)
+DESCRIPTION: This snippet demonstrates rendering a `CldImage` component with a hardcoded `blurDataURL` for a shimmer effect. This approach is shown as an initial example, noting its limitations when loading through MDX.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/guides/placeholders.mdx#_snippet_4
+
+LANGUAGE: jsx
+CODE:
+```
+<CldImage
+    width="800"
+    height="600"
+    crop="fill"
+    src={`${process.env.IMAGES_DIRECTORY}/mountain`}
+    sizes="100w"
+    placeholder="data:image/svg+xml;base64,CiAgICA8c3ZnIHdpZHRoPSI2MDAiIGhlaWdodD0iNDAwIiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPgogICAgICA8ZGVmcz4KICAgICAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImciPgogICAgICAgICAgPHN0b3Agc3RvcC1jb2xvcj0iIzMzMyIgb2Zmc2V0PSIyMCUiIC8+CiAgICAgICAgICA8c3RvcCBzdG9wLWNvbG9yPSIjMjIyIiBvZmZzZXQ9IjUwJSIgLz4KICAgICAgICAgIDxzdG9wIHN0b3AtY29sb3I9IiMzMzMiIG9mZnNldD0iNzAlIiAvPgogICAgICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICAgIDwvZGVmcz4KICAgICAgPHJlY3Qgd2lkdGg9IjYwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9IiMzMzMiIC8+CiAgICAgIDxyZWN0IGlkPSJyIiB3aWR0aD0iNjAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0idXJsKCNnKSIgLz4KICAgICAgPGFuaW1hdGUgeGxpbms6aHJlZj0iI3IiIGF0dHJpYnV0ZU5hbWU9IngiIGZyb209Ii02MDAiIHRvPSI2MDAiIGR1cj0iMXMiIHJlcGVhdENvdW50PSJpbmRlZmluaXRlIiAgLz4KICAgIDwvc3ZnPg=="
+    alt="Mountains"
+  />
+```
+
+----------------------------------------
+
+TITLE: Generating Video Thumbnail - Next.js Cloudinary (JSX)
+DESCRIPTION: This example demonstrates how to generate an image thumbnail from a video asset. By setting `assetType` to 'video' while using `CldImage`, the component fetches a video and delivers an image representation of it, typically the first frame.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/examples.mdx#_snippet_26
+
+LANGUAGE: jsx
+CODE:
+```
+import { CldImage } from 'next-cloudinary';
+
+<CldImage
+  assetType="video"
+  width="1920"
+  height="1080"
+  src="<Your Video Public ID>"
+  sizes="100vw"
+  alt=""
+/>
+```
+
+----------------------------------------
+
+TITLE: Applying Background Removal and Overlays with CldOgImage - Next Cloudinary (JSX)
+DESCRIPTION: This example illustrates how to remove the background from an image and apply complex transformations using `CldOgImage`. It utilizes `removeBackground` for automatic background removal, `tint` for color effects, `blur` for blurring, `overlays` for adding text, and `underlay` to place another image behind the main one, creating a composite Open Graph image.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldogimage/examples.mdx#_snippet_1
+
+LANGUAGE: JSX
+CODE:
+```
+import { CldImage } from 'next-cloudinary';
+
+<CldOgImage
+  src="<Public ID>"
+  tint="100:0000FF:0p:FF1493:100p"
+  blur="2000"
+  removeBackground
+  overlays={[{
+    text: {
+      color: 'white',
+      fontFamily: 'Source Sans Pro',
+      fontSize: 120,
+      fontWeight: 'bold',
+      text: 'Next Cloudinary'
+    }
+  }]}
+  underlay="images/galaxy"
+/>
+```
+
+----------------------------------------
+
+TITLE: Implementing CldVideoPlayer Localization with Custom Labels (JSX)
+DESCRIPTION: This example illustrates how to import and use the CldVideoPlayer component to enable localization. It specifies 'language='es'' and provides a comprehensive 'languages' object with Spanish translations for common player labels and error messages, ensuring the player UI adapts to the selected locale.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldvideoplayer/examples.mdx#_snippet_12
+
+LANGUAGE: JSX
+CODE:
+```
+import { CldVideoPlayer } from 'next-cloudinary';
+
+<CldVideoPlayer
+  id="localization"
+  width="4096"
+  height="2160"
+  src="<Your Public ID>"
+  language="es"
+  languages={{
+    es: {
+      Play: "Reproducción",
+      "Play Video": "Reproduce el Video",
+      Pause: "Pausa",
+      "Current Time": "Tiempo reproducido",
+      Duration: "Duración total",
+      "Remaining Time": "Tiempo restante",
+      "Stream Type": "Tipo de secuencia",
+      LIVE: "DIRECTO",
+      Loaded: "Cargado",
+      Progress: "Progreso",
+      Fullscreen: "Pantalla completa",
+      "Non-Fullscreen": "Pantalla no completa",
+      Mute: "Silenciar",
+      Unmute: "No silenciado",
+      "Playback Rate": "Velocidad de reproducción",
+      Subtitles: "Subtítulos",
+      "subtitles off": "Subtítulos desactivados",
+      Captions: "Subtítulos especiales",
+      "captions off": "Subtítulos especiales desactivados",
+      Chapters: "Capítulos",
+      "Close Modal Dialog": "Cerca de diálogo modal",
+      "You aborted the video playback": "Ha interrumpido la reproducción del vídeo.",
+      "A network error caused the video download to fail part-way.": "Un error de red ha interrumpido la descarga del vídeo.",
+      "The video could not be loaded, either because the server or network failed or because the format is not supported.": "No se ha podido cargar el vídeo debido a un fallo de red o del servidor o porque el formato es incompatible.",
+      "The video playback was aborted due to a corruption problem or because the video used features your browser did not support.": "La reproducción de vídeo se ha interrumpido por un problema de corrupción de datos o porque el vídeo precisa funciones que su navegador no ofrece.",
+      "No compatible source was found for this video.": "No se ha encontrado ninguna fuente compatible con este vídeo."
+    }
+  }}
+/>
+```
+
+----------------------------------------
+
+TITLE: Adding Chapters and Selector - CldVideoPlayer - Next Cloudinary
+DESCRIPTION: Integrates interactive chapter navigation into the video player. Chapters are defined by timestamps and labels, and a dedicated button is added for easy selection.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldvideoplayer/examples.mdx#_snippet_3
+
+LANGUAGE: jsx
+CODE:
+```
+import { CldVideoPlayer } from 'next-cloudinary';
+
+<CldVideoPlayer
+  id="chapters-selector"
+  width="4096"
+  height="2160"
+  src="<Your Public ID>"
+  chapters={{
+    0: "Chapter 1",
+    6: "Chapter 2",
+    9: "Chapter 3"
+  }}
+  chaptersButton
+/>
+```
+
+----------------------------------------
+
+TITLE: Attaching Event Listeners to CldVideoPlayer (JSX)
+DESCRIPTION: This code block provides a complete example of setting up event callbacks for the CldVideoPlayer. It imports the component, initializes a 'useRef' hook for player access, and defines 'onMetadataLoad' and 'onPlay' handlers to execute custom logic when these player events occur, such as logging player state.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldvideoplayer/examples.mdx#_snippet_14
+
+LANGUAGE: JSX
+CODE:
+```
+import { CldVideoPlayer } from 'next-cloudinary';
+
+const myPlayerRef = useRef();
+
+<CldVideoPlayer
+  playerRef={myPlayerRef}
+  id="player-events"
+  width="4096"
+  height="2160"
+  src="<Your Public ID>"
+  onMetadataLoad={() => {
+    console.log('[Cloudinary Video Player] metadata-loaded');
+    console.log(`[Cloudinary Video Player] duration: ${myPlayerRef.current.duration()}`);
+  }}
+  onPlay={() => {
+    console.log('[Cloudinary Video Player] play');
+  }}
+/>
+```
+
+----------------------------------------
+
+TITLE: Applying Cropping and Resizing - CldVideoPlayer - Next Cloudinary
+DESCRIPTION: Demonstrates how to apply on-the-fly cropping and resizing to the video. The transformation prop allows precise control over width, height, crop mode, and gravity for dynamic video presentation.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldvideoplayer/examples.mdx#_snippet_8
+
+LANGUAGE: jsx
+CODE:
+```
+import { CldVideoPlayer } from 'next-cloudinary';
+
+<CldVideoPlayer
+  id="cropping-resizing"
+  width="500"
+  height="500"
+  src="<Your Public ID>"
+  transformation={{
+    width: 500,
+    height: 500,
+    crop: 'fill',
+    gravity: 'auto'
+  }}
+/>
+```
+
+----------------------------------------
+
+TITLE: All Next Cloudinary Environment Variables
+DESCRIPTION: Lists all available environment variables for configuring Next Cloudinary. These include Cloud Name, API Key, API Secret, Secure Distribution/CNAME, and Private CDN settings, providing comprehensive control over Cloudinary integration.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/installation.mdx#_snippet_5
+
+LANGUAGE: Shell
+CODE:
+```
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="<Your Cloud Name>"
+NEXT_PUBLIC_CLOUDINARY_API_KEY="<Your API Key>"
+CLOUDINARY_API_SECRET="<Your API Secret>"
+
+NEXT_PUBLIC_CLOUDINARY_SECURE_DISTRIBUTION="<Your Secure Distribution / CNAME>"
+NEXT_PUBLIC_CLOUDINARY_PRIVATE_CDN="<true|false>"
+```
+
+----------------------------------------
+
+TITLE: Generating Cropped and Resized Video URL with getCldVideoUrl - JavaScript
+DESCRIPTION: This example illustrates how to use getCldVideoUrl to generate a video URL with specific cropping and resizing transformations. It utilizes the 'crop: 'fill'' option to fill the specified dimensions and 'gravity: 'auto'' to intelligently determine the focus area for the crop.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/getcldvideourl/examples.mdx#_snippet_1
+
+LANGUAGE: JavaScript
+CODE:
+```
+getCldImageUrl({
+  src: 'videos/dog-running-snow',
+  width: 1080,
+  height: 1080,
+  crop: 'fill',
+  gravity: 'auto'
+})
+```
+
+----------------------------------------
+
+TITLE: Initializing Cloudinary Environment with `config` Prop in JSX
+DESCRIPTION: Shows a more comprehensive example of the `config` prop for setting up the Cloudinary environment. It includes both `cloudName` and `apiKey`, which are essential for authenticating and directing requests to your Cloudinary account.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/clduploadwidget/configuration.mdx#_snippet_9
+
+LANGUAGE: jsx
+CODE:
+```
+config={{
+  cloud: {
+    cloudName: '<Your Cloud Name>',
+    apiKey: '<Your API Key>'
+  }
+}}
+```
+
+----------------------------------------
+
+TITLE: Applying Generative Fill with getCldImageUrl in Next.js
+DESCRIPTION: This example demonstrates using `getCldImageUrl` to fill the background of an image with AI-generated content. It utilizes the `fillBackground: true` and `crop: 'pad'` options, which is currently a Beta feature, to expand the image canvas and fill the new area generatively.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/getcldimageurl/examples.mdx#_snippet_3
+
+LANGUAGE: jsx
+CODE:
+```
+import { getCldImageUrl } from 'next-cloudinary';
+
+getCldImageUrl({
+  src: '<Your Public ID>',
+  width: 960,
+  height: 600,
+  fillBackground: true,
+  crop: 'pad'
+})
+```
+
+----------------------------------------
+
+TITLE: Replace Background with Image - Next.js Cloudinary (JSX)
+DESCRIPTION: This example shows how to replace the background of a base image with another image using the `underlay` property. The `removeBackground` property is also used to automatically remove the original background before applying the underlay.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/examples.mdx#_snippet_22
+
+LANGUAGE: jsx
+CODE:
+```
+import { CldImage } from 'next-cloudinary';
+
+<CldImage
+  width="960"
+  height="600"
+  src="<Your Public ID>"
+  sizes="100vw"
+  removeBackground
+  underlay="<Your Public ID>"
+  alt=""
+/>
+```
+
+----------------------------------------
+
+TITLE: Setting Color Background after Removal with CldImage in Next.js
+DESCRIPTION: Shows how to replace a removed background with a solid color by using the `background` prop in conjunction with `removeBackground` on the `CldImage` component.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/examples.mdx#_snippet_1
+
+LANGUAGE: jsx
+CODE:
+```
+import { CldImage } from 'next-cloudinary';
+
+<CldImage
+  width="960"
+  height="600"
+  src="<Your Public ID>"
+  sizes="100vw"
+  removeBackground
+  background="blueviolet"
+  alt=""
+/>
+```
+
+----------------------------------------
+
+TITLE: Configuring Upload Sources for Signed Uploads in Next Cloudinary
+DESCRIPTION: This example demonstrates how to restrict the available file sources for a signed upload using the options prop of CldUploadWidget. It allows users to select images only from 'local' files, a 'url', or 'unsplash', enhancing control over the upload experience.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/clduploadwidget/examples.mdx#_snippet_3
+
+LANGUAGE: jsx
+CODE:
+```
+import { CldUploadWidget } from 'next-cloudinary';
+
+const [resource, setResource] = useState();
+
+<CldUploadWidget
+  options={{ sources: ['local', 'url', 'unsplash'] }}
+  signatureEndpoint="/api/sign-cloudinary-params"
+  onSuccess={(result, { widget }) => {
+    setResource(result?.info);  // { public_id, secure_url, etc }
+  }}
+  onQueuesEnd={(result, { widget }) => {
+    widget.close();
+  }}
+>
+  {({ open }) => {
+    function handleOnClick() {
+      setResource(undefined);
+      open();
+    }
+    return (
+      <button onClick={handleOnClick}>
+        Upload an Image
+      </button>
+    );
+  }}
+</CldUploadWidget>
+```
+
+----------------------------------------
+
+TITLE: Example Generated Cloudinary URL
+DESCRIPTION: This snippet shows an example of a Cloudinary URL generated by the `CldImage` component when `preserveTransformations` is used. It illustrates how original URL transformations are combined with component-derived transformations (like `c_limit,w_1600`) and a tracking parameter (`_a=BBGAABS00`).
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/basic-usage.mdx#_snippet_5
+
+LANGUAGE: text
+CODE:
+```
+https://res.cloudinary.com/<Cloud Name>/image/upload/e_background_removal/b_blueviolet/f_auto/q_auto/c_limit,w_1600/v1/cld-sample-5?_a=BBGAABS00
+```
+
+----------------------------------------
+
+TITLE: Basic Signed CldUploadButton Configuration in JSX
+DESCRIPTION: This snippet demonstrates the essential JSX configuration for a CldUploadButton to perform a signed upload. It requires both an uploadPreset and a signatureEndpoint property, which specifies the API route for obtaining a secure upload signature.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/clduploadbutton/examples.mdx#_snippet_3
+
+LANGUAGE: JSX
+CODE:
+```
+<CldUploadButton
+  signatureEndpoint="<Endpoint (ex: /api/sign-cloudinary-params)>"
+  uploadPreset="<Upload Preset>"
+/>
+```
+
+----------------------------------------
+
+TITLE: Extracting Objects with CldImage in Next.js
+DESCRIPTION: Demonstrates using the `extract` prop with a prompt and `multiple: true` to extract specific objects from an image using natural language processing. This transformation is currently in Beta.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/examples.mdx#_snippet_7
+
+LANGUAGE: jsx
+CODE:
+```
+import { CldImage } from 'next-cloudinary';
+
+<CldImage
+  src="<Your Public ID>"
+  width="960"
+  height="600"
+  extract="<Prompt>"
+  alt=""
+  sizes="100vw"
+/>
+```
+
+----------------------------------------
+
+TITLE: Replacing Background with String Prompt (JSX)
+DESCRIPTION: Shows how to use `replaceBackground` with a string prompt, guiding the generative AI to replace the background with a specific scene or object described by the prompt.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/configuration.mdx#_snippet_26
+
+LANGUAGE: jsx
+CODE:
+```
+replaceBackground="fish tank"
+```
+
+----------------------------------------
+
+TITLE: Adding Custom Text Overlay - Next.js Cloudinary (JSX)
+DESCRIPTION: This example demonstrates how to add custom text as an overlay on an image using the `overlays` property. It shows how to define text properties such as `color`, `fontFamily`, `fontSize`, `fontWeight`, `textDecoration`, `letterSpacing`, and `text` itself, along with its `position`.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/examples.mdx#_snippet_24
+
+LANGUAGE: jsx
+CODE:
+```
+import { CldImage } from 'next-cloudinary';
+
+<CldImage
+  width="1335"
+  height="891"
+  src="<Your Public ID>"
+  sizes="100vw"
+  overlays={[{
+    position: {
+      x: 140,
+      y: 140,
+      angle: -20,
+      gravity: 'south_east'
+    },
+    text: {
+      color: 'blueviolet',
+      fontFamily: 'Source Sans Pro',
+      fontSize: 280,
+      fontWeight: 'bold',
+      textDecoration: 'underline',
+      letterSpacing: 14,
+      text: 'Cool Beans'
+    }
+  }]}
+  alt=""
+/>
+```
+
+----------------------------------------
+
+TITLE: Adding Text Overlay with Cloudinary (JavaScript)
+DESCRIPTION: Provides an example of the text property used for creating text overlays. The string 'Next Cloudinary' would be the content of the text overlay.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/configuration.mdx#_snippet_83
+
+LANGUAGE: javascript
+CODE:
+```
+Next Cloudinary
+```
+
+----------------------------------------
+
+TITLE: Enabling Adaptive Bitrate Streaming - CldVideoPlayer - Next Cloudinary
+DESCRIPTION: Configures the CldVideoPlayer to use Adaptive Bitrate Streaming (ABR) for optimized video delivery. This is achieved by specifying a streaming_profile and setting hls as a sourceType.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldvideoplayer/examples.mdx#_snippet_1
+
+LANGUAGE: jsx
+CODE:
+```
+import { CldVideoPlayer } from 'next-cloudinary';
+
+<CldVideoPlayer
+  id="adaptive-bitrate-streaming"
+  width="1620"
+  height="1080"
+  src="<Your Public ID>"
+  transformation={{
+    streaming_profile: 'hd',
+  }}
+  sourceTypes={['hls']}
+/>
+```
+
+----------------------------------------
+
+TITLE: Basic Unsigned CldUploadButton Configuration in JSX
+DESCRIPTION: This snippet illustrates the minimal JSX configuration for a CldUploadButton to perform an unsigned upload. The uploadPreset property is mandatory and must correspond to a Cloudinary upload preset that permits unauthenticated requests.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/clduploadbutton/examples.mdx#_snippet_1
+
+LANGUAGE: JSX
+CODE:
+```
+<CldUploadButton
+  uploadPreset="<Upload Preset>"
+/>
+```
+
+----------------------------------------
+
+TITLE: Generative Fill Background with CldImage in Next.js
+DESCRIPTION: Shows how to use the `fillBackground` prop with `crop="pad"` to expand and intelligently fill the background of an image using Generative AI. This transformation is currently in Beta.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/examples.mdx#_snippet_8
+
+LANGUAGE: jsx
+CODE:
+```
+import { CldImage } from 'next-cloudinary';
+
+<CldImage
+  src="<Your Public ID>"
+  width="1400" //Original width 900
+  height="600"
+  crop="pad"  // Returns the given size with padding
+  fillBackground
+  alt=""
+  sizes="100vw"
+/>
+```
+
+----------------------------------------
+
+TITLE: Configuring Cloudinary Cloud Name
+DESCRIPTION: Sets the public Cloudinary Cloud Name as an environment variable. This variable is essential for Next Cloudinary components to identify your Cloudinary account and access your assets. It should be added to your `.env.local` or `.env` file.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/installation.mdx#_snippet_3
+
+LANGUAGE: Shell
+CODE:
+```
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="<Your Cloud Name>"
+```
+
+----------------------------------------
+
+TITLE: Setting Image Background after Removal with CldImage in Next.js
+DESCRIPTION: Illustrates how to use another Cloudinary public ID as an underlaying image after background removal by specifying the `underlay` prop on the `CldImage` component.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/examples.mdx#_snippet_2
+
+LANGUAGE: jsx
+CODE:
+```
+import { CldImage } from 'next-cloudinary';
+
+<CldImage
+  width="960"
+  height="600"
+  src="<Your Public ID>"
+  sizes="100vw"
+  removeBackground
+  underlay="<Your Public ID>"
+  alt=""
+/>
+```
+
+----------------------------------------
+
+TITLE: Adding Text Overlays - CldVideoPlayer - Next Cloudinary
+DESCRIPTION: Applies dynamic text directly onto the video stream. This allows customization of text content, font properties, color, position, and opacity for annotations or branding.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldvideoplayer/examples.mdx#_snippet_10
+
+LANGUAGE: jsx
+CODE:
+```
+import { CldVideoPlayer } from 'next-cloudinary';
+
+<CldVideoPlayer
+  id="text-overlays"
+  width="1620"
+  height="1080"
+  src="<Your Public ID>"
+  transformation={{
+    color: 'white',
+    overlay: {
+      font_family: "Source Sans Pro",
+      font_size: 150,
+      font_weight: "bold",
+      text: "Zen"
+    },
+    gravity: "center",
+    opacity: 80
+  }}
+/>
+```
+
+----------------------------------------
+
+TITLE: Running Next.js Development Server - Bash
+DESCRIPTION: These commands initiate the Next.js development server, making the application accessible locally for development and testing. The server typically runs on http://localhost:3000 and supports hot module replacement for live updates during development.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/next-cloudinary/tests/nextjs-app/README.md#_snippet_0
+
+LANGUAGE: bash
+CODE:
+```
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+```
+
+----------------------------------------
+
+TITLE: Configuring Next.js Application with Analytics and Global Styles (JavaScript)
+DESCRIPTION: This snippet defines the root `Nextra` component for a Next.js application, which is a custom `_app.js` implementation. It imports global CSS/SCSS styles, integrates Vercel Analytics and Google Analytics for tracking, and displays a promotional banner linking to a changelog. The `Component` and `pageProps` are standard Next.js props passed to the current page.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/_app.mdx#_snippet_0
+
+LANGUAGE: JavaScript
+CODE:
+```
+import { NextLink as Link } from '@/components/shared';
+import { Analytics } from '@vercel/analytics/react';
+import { GoogleAnalytics } from "nextjs-google-analytics";
+
+import 'nextra-theme-docs/style.css';
+import '../styles/global.scss';
+
+export default function Nextra({ Component, pageProps }) {
+  return (
+    <>
+      <GoogleAnalytics trackPageViews />
+      <div className="bg-primary">
+        <NextLink className="block text-center py-2" href="/changelog">
+          <p className="text-white font-semibold text-xs">
+            Next Cloudinary v6 now available! <span className="underline underline-offset-2">View Changelog</span>
+          </p>
+        </NextLink>
+      </div>
+      <Component {...pageProps} />
+      <Analytics />
+    </>
+  );
+}
+```
+
+----------------------------------------
+
+TITLE: Cropping Image with getCldImageUrl (Fill Mode) in Next.js
+DESCRIPTION: This example shows how to crop an image using `getCldImageUrl` with the `crop: 'fill'` option. The `fill` mode ensures the image fills the specified dimensions while maintaining its aspect ratio, with automatic gravity positioning the subject in the center.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/getcldimageurl/examples.mdx#_snippet_1
+
+LANGUAGE: jsx
+CODE:
+```
+import { getCldImageUrl } from 'next-cloudinary';
+
+getCldImageUrl({
+  src: '<Your Public ID>',
+  width: 300,
+  height: 300,
+  crop: 'fill'
+})
+```
+
+----------------------------------------
+
+TITLE: Importing Next.js and Next Cloudinary Components
+DESCRIPTION: This snippet demonstrates the necessary import statements for setting up a Next.js page that utilizes components from `nextra-theme-docs` and `next-cloudinary`. It includes core Next.js `Head` and custom `OgImage` components, along with `CldImage` and constants from the Next Cloudinary library.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/changelog.mdx#_snippet_0
+
+LANGUAGE: JavaScript
+CODE:
+```
+import Head from 'next/head';
+import { Callout, Steps, Tab, Tabs } from 'nextra-theme-docs';
+
+import OgImage from '../components/OgImage';
+
+import { CldImage } from '../../next-cloudinary';
+import { OG_IMAGE_WIDTH, OG_IMAGE_HEIGHT } from '../../next-cloudinary/src/constants/sizes';
+```
+
+----------------------------------------
+
+TITLE: Advanced Cropping with Thumb Type in CldImage (Next.js)
+DESCRIPTION: Demonstrates using an object for the `crop` prop to specify advanced cropping options like `type: 'thumb'` and `source: true` for consistent cropping across responsive sizes, providing more control over image manipulation.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/examples.mdx#_snippet_4
+
+LANGUAGE: jsx
+CODE:
+```
+import { CldImage } from 'next-cloudinary';
+
+<CldImage
+  src="<Your Public ID>"
+  width="300"
+  height="300"
+  crop={{
+    type: 'thumb',
+    width: 600,
+    height: 600,
+    source: true
+  }}
+  alt=""
+  sizes="100vw"
+/>
+```
+
+----------------------------------------
+
+TITLE: Applying Zoompan with Looping (JSX)
+DESCRIPTION: Shows how to use the `zoompan` prop as a string to automatically loop the zoom and pan effect, which is particularly useful when creating animated GIFs or videos from static images.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/configuration.mdx#_snippet_31
+
+LANGUAGE: jsx
+CODE:
+```
+zoompan="loop"
+```
+
+----------------------------------------
+
+TITLE: Changing Open Graph Image Background with getCldOgImageUrl (JSX)
+DESCRIPTION: This example illustrates how to modify the background of an Open Graph image using `getCldOgImageUrl`. It utilizes `removeBackground` to remove the original background and `underlay` to add a new background image, integrating the result into Next.js `metadata` for social card display. The Cloudinary AI Background Removal add-on is required for this feature.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/getcldogimageurl/examples.mdx#_snippet_1
+
+LANGUAGE: jsx
+CODE:
+```
+import { Metadata } from 'next';
+import { getCldOgImageUrl } from 'next-cloudinary';
+
+const url = getCldOgImageUrl({
+  src: '<Your Public ID>',
+  removeBackground: true,
+  underlay: '<Your Public ID>'
+})
+
+export const metadata: Metadata = {
+  openGraph: {
+    images: [
+      {
+        width: 1200,
+        height: 627,
+        url
+      }
+    ]
+  }
+}
+```
+
+----------------------------------------
+
+TITLE: Displaying a Basic Image with CldOgImage - Next Cloudinary (JSX)
+DESCRIPTION: This snippet demonstrates the fundamental usage of the `CldOgImage` component to display a basic image. It requires a `src` prop, which specifies the public ID of the image hosted on Cloudinary. This component is used for generating Open Graph images and does not render a visible `<img>` tag on the page.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldogimage/examples.mdx#_snippet_0
+
+LANGUAGE: JSX
+CODE:
+```
+import { CldImage } from 'next-cloudinary';
+
+<CldOgImage
+  src="<Public ID>"
+/>
+```
+
+----------------------------------------
+
+TITLE: Applying Vectorize Effect with Cloudinary (JavaScript)
+DESCRIPTION: Shows examples for applying the vectorize effect. It can be enabled with true for a default vectorize, or a string like 3:0.5 to customize its parameters.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/configuration.mdx#_snippet_77
+
+LANGUAGE: javascript
+CODE:
+```
+true
+```
+
+LANGUAGE: javascript
+CODE:
+```
+3:0.5
+```
+
+----------------------------------------
+
+TITLE: Running Project Tests with pnpm
+DESCRIPTION: This command executes all tests located in the `next-cloudinary/tests` directory. It should be run from within the `next-cloudinary` directory to ensure proper test execution and validate changes.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/README.md#_snippet_10
+
+LANGUAGE: bash
+CODE:
+```
+pnpm test
+```
+
+----------------------------------------
+
+TITLE: Applying Vignette Effect with Cloudinary (JavaScript)
+DESCRIPTION: Shows examples for applying the vignette effect. It can be enabled with true for a default vignette, or a numeric value like 30 to specify the intensity.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/configuration.mdx#_snippet_79
+
+LANGUAGE: javascript
+CODE:
+```
+true
+```
+
+LANGUAGE: javascript
+CODE:
+```
+30
+```
+
+----------------------------------------
+
+TITLE: Applying Vibrance Effect with Cloudinary (JavaScript)
+DESCRIPTION: Provides examples for applying the vibrance effect. It can be enabled with true for a default vibrance, or a numeric value like 70 to specify the intensity.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/configuration.mdx#_snippet_78
+
+LANGUAGE: javascript
+CODE:
+```
+true
+```
+
+LANGUAGE: javascript
+CODE:
+```
+70
+```
+
+----------------------------------------
+
+TITLE: Applying Sharpen Effect with Cloudinary (JavaScript)
+DESCRIPTION: Shows examples for applying the sharpen effect. It can be enabled with true for a default sharpen, or a numeric value like 100 to specify the intensity.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/configuration.mdx#_snippet_71
+
+LANGUAGE: javascript
+CODE:
+```
+true
+```
+
+LANGUAGE: javascript
+CODE:
+```
+100
+```
+
+----------------------------------------
+
+TITLE: Adjusting Saturation with Cloudinary (JavaScript)
+DESCRIPTION: Provides examples for applying the saturation effect. It can be enabled with true for a default saturation, or a numeric value like 70 to specify the saturation level.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/configuration.mdx#_snippet_67
+
+LANGUAGE: javascript
+CODE:
+```
+true
+```
+
+LANGUAGE: javascript
+CODE:
+```
+70
+```
+
+----------------------------------------
+
+TITLE: Importing Components in Next.js
+DESCRIPTION: Imports necessary components like `Head`, `OgImage`, and `Table` for building the Next.js page structure and displaying data.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldvideoplayer/configuration.mdx#_snippet_0
+
+LANGUAGE: JavaScript
+CODE:
+```
+import Head from 'next/head';
+
+import OgImage from '../../components/OgImage';
+import Table from '../../components/Table';
+```
+
+----------------------------------------
+
+TITLE: Defining onClick Handler for CldUploadButton - JavaScript
+DESCRIPTION: This snippet provides an example of a basic JavaScript anonymous function that can be used as an `onClick` handler for the `CldUploadButton` component. It accepts an `event` object as a parameter.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/clduploadbutton/configuration.mdx#_snippet_3
+
+LANGUAGE: JavaScript
+CODE:
+```
+function (event) { }
+```
+
+----------------------------------------
+
+TITLE: Generative Recolor with CldImage in Next.js
+DESCRIPTION: Explains how to recolor specific objects in an image using Generative AI by providing an array `['<Object>', '<Color>']` to the `recolor` prop. This transformation is currently in Beta.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/examples.mdx#_snippet_9
+
+LANGUAGE: jsx
+CODE:
+```
+import { CldImage } from 'next-cloudinary';
+
+<CldImage
+  src="<Your Public ID>"
+  width="960"
+  height="600"
+  crop="fill"
+  recolor={['<Object>', '<Color>']}
+  alt=""
+  sizes="100vw"
+/>
+```
+
+----------------------------------------
+
+TITLE: Applying Video Transformations in Next Cloudinary Player
+DESCRIPTION: Illustrates how to apply image transformations like resizing and cropping directly to the video using the `transformation` prop, which accepts an object or array of transformation parameters.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldvideoplayer/configuration.mdx#_snippet_16
+
+LANGUAGE: JavaScript
+CODE:
+```
+{ width: 200, height: 200, crop: 'fill' }
+```
+
+----------------------------------------
+
+TITLE: Removing Image Background with CldImage in Next.js
+DESCRIPTION: Demonstrates how to remove the background of an image using the `removeBackground` prop on the `CldImage` component. This feature requires the Cloudinary AI Background Removal add-on.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/examples.mdx#_snippet_0
+
+LANGUAGE: jsx
+CODE:
+```
+import { CldImage } from 'next-cloudinary';
+
+<CldImage
+  width="960"
+  height="600"
+  src="<Your Public ID>"
+  sizes="100vw"
+  removeBackground
+  alt=""
+/>
+```
+
+----------------------------------------
+
+TITLE: Generated HTML for CldImage with Fill Crop Mode - HTML
+DESCRIPTION: This HTML output demonstrates how the CldImage component generates `srcset` URLs when the `crop="fill"` prop is used. Each URL includes `c_fill` and `g_auto` transformations, ensuring that images are cropped to the specified dimensions and optimally positioned by Cloudinary for each responsive size.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/guides/responsive-images.mdx#_snippet_3
+
+LANGUAGE: html
+CODE:
+```
+<img
+  alt="Turtle"
+  loading="lazy"
+  width="960"
+  height="960"
+  decoding="async"
+  data-nimg="1"
+  style="color:transparent"
+  sizes="100vw"
+  srcset="
+    https://res.cloudinary.com/<Cloud Name>/image/upload/c_fill,w_640,h_640,g_auto/f_auto/q_auto/v1/<Public ID> 640w,
+    https://res.cloudinary.com/<Cloud Name>/image/upload/c_fill,w_750,h_750,g_auto/f_auto/q_auto/v1/<Public ID> 750w,
+    https://res.cloudinary.com/<Cloud Name>/image/upload/c_fill,w_828,h_828,g_auto/f_auto/q_auto/v1/<Public ID> 828w,
+    https://res.cloudinary.com/<Cloud Name>/image/upload/c_fill,w_1080,h_1080,g_auto/f_auto/q_auto/v1/<Public ID> 1080w,
+    https://res.cloudinary.com/<Cloud Name>/image/upload/c_fill,w_1200,h_1200,g_auto/f_auto/q_auto/v1/<Public ID> 1200w,
+    https://res.cloudinary.com/<Cloud Name>/image/upload/c_fill,w_1920,h_1920,g_auto/f_auto/q_auto/v1/<Public ID> 1920w,
+    https://res.cloudinary.com/<Cloud Name>/image/upload/c_fill,w_2048,h_2048,g_auto/f_auto/q_auto/v1/<Public ID> 2048w,
+    https://res.cloudinary.com/<Cloud Name>/image/upload/c_fill,w_3840,h_3840,g_auto/f_auto/q_auto/v1/<Public ID> 3840w
+  "
+  src="https://res.cloudinary.com/<Cloud Name>/image/upload/c_fill,w_3840,h_3840,g_auto/f_auto/q_auto/v1/<Public ID>"
+>
+```
+
+----------------------------------------
+
+TITLE: Applying Trim Effect with Cloudinary (JavaScript)
+DESCRIPTION: Shows examples for applying the trim effect. It can be enabled with true for a default trim, or a string like 50:yellow to customize its tolerance and color.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/configuration.mdx#_snippet_75
+
+LANGUAGE: javascript
+CODE:
+```
+true
+```
+
+LANGUAGE: javascript
+CODE:
+```
+50:yellow
+```
+
+----------------------------------------
+
+TITLE: Applying Sepia Effect with Cloudinary (JavaScript)
+DESCRIPTION: Shows examples for applying the sepia effect. It can be enabled with true for a default sepia tone, or a numeric value like 50 to specify the intensity.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/configuration.mdx#_snippet_69
+
+LANGUAGE: javascript
+CODE:
+```
+true
+```
+
+LANGUAGE: javascript
+CODE:
+```
+50
+```
+
+----------------------------------------
+
+TITLE: Importing Core Components - Next.js/React
+DESCRIPTION: This snippet imports necessary components for a Next.js page: `Head` for managing document head elements, `OgImage` for Open Graph image generation, and `Table` for displaying structured data.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/getcldogimageurl/configuration.mdx#_snippet_0
+
+LANGUAGE: JavaScript
+CODE:
+```
+import Head from 'next/head';
+
+import OgImage from '../../components/OgImage';
+import Table from '../../components/Table';
+```
+
+----------------------------------------
+
+TITLE: Generated HTML for Responsive CldImage with Limit Crop - HTML
+DESCRIPTION: This HTML snippet shows the output of the CldImage component when using the `sizes` prop. It demonstrates how Cloudinary dynamically generates multiple image URLs with varying widths (`w_<width>`) and the `c_limit` crop mode, populating the `srcset` attribute for responsive image delivery. The `f_auto` and `q_auto` parameters ensure optimal format and quality.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/guides/responsive-images.mdx#_snippet_1
+
+LANGUAGE: html
+CODE:
+```
+<img
+  alt="Turtle"
+  loading="lazy"
+  width="960"
+  height="600"
+  decoding="async"
+  data-nimg="1"
+  style="color:transparent"
+  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+  srcset="
+    https://res.cloudinary.com/<Cloud Name>/image/upload/c_limit,w_256/f_auto/q_auto/v1/<Public ID> 256w,
+    https://res.cloudinary.com/<Cloud Name>/image/upload/c_limit,w_384/f_auto/q_auto/v1/<Public ID> 384w,
+    https://res.cloudinary.com/<Cloud Name>/image/upload/c_limit,w_640/f_auto/q_auto/v1/<Public ID> 640w,
+    https://res.cloudinary.com/<Cloud Name>/image/upload/c_limit,w_750/f_auto/q_auto/v1/<Public ID> 750w,
+    https://res.cloudinary.com/<Cloud Name>/image/upload/c_limit,w_828/f_auto/q_auto/v1/<Public ID> 828w,
+    https://res.cloudinary.com/<Cloud Name>/image/upload/c_limit,w_1080/f_auto/q_auto/v1/<Public ID> 1080w,
+    https://res.cloudinary.com/<Cloud Name>/image/upload/c_limit,w_1200/f_auto/q_auto/v1/<Public ID> 1200w,
+    https://res.cloudinary.com/<Cloud Name>/image/upload/c_limit,w_1920/f_auto/q_auto/v1/<Public ID> 1920w,
+    https://res.cloudinary.com/<Cloud Name>/image/upload/c_limit,w_2048/f_auto/q_auto/v1/<Public ID> 2048w,
+    https://res.cloudinary.com/<Cloud Name>/image/upload/c_limit,w_3840/f_auto/q_auto/v1/<Public ID> 3840w
+  "
+  src="https://res.cloudinary.com/<Cloud Name>/image/upload/c_limit,w_3840/f_auto/q_auto/v1/<Public ID>"
+>
+```
+
+----------------------------------------
+
+TITLE: Advanced Cropping with getCldImageUrl (Thumb Type) in Next.js
+DESCRIPTION: This snippet illustrates advanced cropping using `getCldImageUrl` with a detailed `crop` object. It applies a `thumb` type crop to the original source image before resizing, ensuring consistent cropping across different rendered sizes by specifying `source: true`.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/getcldimageurl/examples.mdx#_snippet_2
+
+LANGUAGE: jsx
+CODE:
+```
+import { getCldImageUrl } from 'next-cloudinary';
+
+getCldImageUrl({
+  src: '<Your Public ID>',
+  width: 300,
+  height: 300,
+  crop: {
+    width: 600,
+    height: 600,
+    type: 'thumb',
+    source: true
+  }
+})
+```
+
+----------------------------------------
+
+TITLE: Adding Single Image Underlay with Cloudinary (JavaScript)
+DESCRIPTION: Shows an example of using the underlay property to add a single image as an underlay. my-public-id refers to the public ID of the image to be used as the underlay.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/configuration.mdx#_snippet_84
+
+LANGUAGE: javascript
+CODE:
+```
+my-public-id
+```
+
+----------------------------------------
+
+TITLE: Applying Unsharp Mask Effect with Cloudinary (JavaScript)
+DESCRIPTION: Provides examples for applying the unsharpMask effect. It can be enabled with true for a default unsharp mask, or a numeric value like 500 to specify the intensity.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/configuration.mdx#_snippet_76
+
+LANGUAGE: javascript
+CODE:
+```
+true
+```
+
+LANGUAGE: javascript
+CODE:
+```
+500
+```
+
+----------------------------------------
+
+TITLE: Applying Shadow Effect with Cloudinary (JavaScript)
+DESCRIPTION: Provides examples for applying the shadow effect. It can be enabled with true for a default shadow, or a string like 50,x_-15,y_15 to customize its intensity and offset.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/configuration.mdx#_snippet_70
+
+LANGUAGE: javascript
+CODE:
+```
+true
+```
+
+LANGUAGE: javascript
+CODE:
+```
+50,x_-15,y_15
+```
+
+----------------------------------------
+
+TITLE: Activating Picture-in-Picture - CldVideoPlayer - Next Cloudinary
+DESCRIPTION: Enables the browser's native Picture-in-Picture functionality for the video player. This allows the video to be displayed in a floating window on top of other applications by setting the pictureInPictureToggle prop.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldvideoplayer/examples.mdx#_snippet_2
+
+LANGUAGE: jsx
+CODE:
+```
+import { CldVideoPlayer } from 'next-cloudinary';
+
+<CldVideoPlayer
+  id="picture-in-picture"
+  width="1620"
+  height="1080"
+  src="<Your Public ID>"
+  pictureInPictureToggle
+/>
+```
+
+----------------------------------------
+
+TITLE: Customizing Zoompan Transformation (JSX)
+DESCRIPTION: Illustrates using the `zoompan` prop as an object for advanced customization, including specifying the number of loops and providing raw Cloudinary Transformation syntax options for fine-tuned control.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/cldimage/configuration.mdx#_snippet_32
+
+LANGUAGE: jsx
+CODE:
+```
+zoompan={{
+  loop: 'loop:2', // Will loop twice
+  options: 'mode_ztr;maxzoom_6.5;du_10'
+}}
+```
+
+----------------------------------------
+
+TITLE: Basic CldUploadButton Integration for Signed Uploads (JSX)
+DESCRIPTION: This snippet provides a concise example of integrating the CldUploadButton component for signed uploads. It shows how to define a state variable to store the uploaded resource's information and how to configure the onUpload callback to process the upload result and close the widget. Essential props like signatureEndpoint and uploadPreset are included for secure, authenticated uploads.
+
+SOURCE: https://github.com/cloudinary-community/next-cloudinary/blob/main/docs/pages/guides/uploading-images-and-videos.mdx#_snippet_1
+
+LANGUAGE: jsx
+CODE:
+```
+import { CldUploadButton } from 'next-cloudinary';
+
+const [resource, setResource] = useState();
+
+<CldUploadButton
+  className={styles.button}
+  onUpload={(error, result, widget) => {
+    setResource(result?.info);  // { public_id, secure_url, etc }
+    widget.close();
+  }}
+  signatureEndpoint="/api/sign-cloudinary-params"
+  uploadPreset="next-cloudinary-signed"
+>
+  Upload to Cloudinary
+</CldUploadButton>
+```

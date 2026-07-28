@@ -1,0 +1,159 @@
+'use client';
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Phone, MoreVertical } from 'lucide-react';
+import { NextLink as Link } from '@/components/shared';
+import { useState } from 'react';
+import { ChatHeaderUser } from '@/lib/types/messages';
+import { getInitials, getProfileUrl } from '@/lib/utils/messages';
+
+interface ChatHeaderProps {
+  user: ChatHeaderUser;
+}
+
+export function ChatHeader({ user }: ChatHeaderProps) {
+  const [isBlockDialogOpen, setIsBlockDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const displayName = user.displayName || user.firstName || user.lastName || 'Unknown User';
+  const initials = getInitials(user.displayName, user.firstName, user.lastName);
+  const profileUrl = getProfileUrl(user.username);
+
+  const handleBlockClick = () => {
+    setIsBlockDialogOpen(true);
+  };
+
+  const handleBlockConfirm = () => {
+    // TODO: Implement block functionality - create BlockedUser record
+    console.log('Block user:', user.userId);
+    setIsBlockDialogOpen(false);
+  };
+
+  const handleDeleteClick = () => {
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    // TODO: Implement delete conversation functionality - delete chat and messages
+    console.log('Delete conversation with:', user.userId);
+    setIsDeleteDialogOpen(false);
+  };
+
+  return (
+    <div className='sticky top-0 z-10 flex items-center justify-between bg-background py-0 px-4'>
+      <div className='flex items-center gap-3'>
+        <div className='relative'>
+          <Avatar>
+            <AvatarImage src={user.image || undefined} alt={displayName} />
+            <AvatarFallback>{initials}</AvatarFallback>
+          </Avatar>
+          {user.online && (
+            <div className='absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background bg-green-500' />
+          )}
+        </div>
+        <div>
+          <h2 className='text-sm font-semibold mb-0'>{displayName}</h2>
+          {user.online && (
+            <p className='text-xs text-green-500 font-medium'>Online</p>
+          )}
+        </div>
+      </div>
+      <div className='flex items-center gap-1'>
+        {/* <Button size='icon' variant='ghost'>
+          <Video className='h-5 w-5' />
+        </Button> */}
+        {user.phone && (
+          <Link href={`tel:${user.phone}`}>
+            <Button size='icon' variant='ghost'>
+              <Phone className='h-5 w-5' />
+            </Button>
+          </Link>
+        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size='icon' variant='ghost'>
+              <MoreVertical className='h-5 w-5' />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className='w-fit rounded-xl' align='end'>
+            {user.username && (
+              <DropdownMenuItem asChild>
+                <Link href={profileUrl} target='_blank'>
+                  View Profile
+                </Link>
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onClick={handleBlockClick}>
+              Block
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={handleDeleteClick}
+              className='text-destructive focus:text-destructive'
+            >
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Block Confirmation Dialog */}
+      <AlertDialog open={isBlockDialogOpen} onOpenChange={setIsBlockDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Block {displayName}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This user will no longer be able to send you messages. You can unblock them anytime from your settings.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBlockConfirm}
+              className='bg-dark text-white hover:bg-dark/90'
+            >
+              Block
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Conversation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete your conversation with {displayName}. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}

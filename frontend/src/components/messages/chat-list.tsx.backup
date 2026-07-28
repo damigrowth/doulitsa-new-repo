@@ -1,0 +1,71 @@
+'use client';
+
+import { useState } from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { ChatListItem } from '@/lib/types/messages';
+import { getInitials, formatCompactMessageTime } from '@/lib/utils/messages';
+
+interface ChatListProps {
+  chats: ChatListItem[];
+}
+
+export function ChatList({ chats }: ChatListProps) {
+  const [selectedChatId, setSelectedChatId] = useState(chats[0]?.id);
+
+  return (
+    <ScrollArea className='h-full'>
+      <div className='space-y-1 p-2 pr-4'>
+        {chats.map((chat) => {
+          const initials = getInitials(chat.name);
+
+          return (
+            <button
+              key={chat.id}
+              onClick={() => setSelectedChatId(chat.id)}
+              className={cn(
+                'relative flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors hover:bg-accent',
+                selectedChatId === chat.id && 'bg-accent',
+              )}
+            >
+              <div className='relative'>
+                <Avatar>
+                  <AvatarImage src={chat.avatar || undefined} alt={chat.name} />
+                  <AvatarFallback>{initials}</AvatarFallback>
+                </Avatar>
+                {chat.online && (
+                  <div className='absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background bg-green-500' />
+                )}
+              </div>
+
+              <div className='min-w-0 flex-1'>
+                <div className='flex items-center justify-between gap-2'>
+                  <span className='truncate font-medium text-2sm'>
+                    {chat.name}
+                  </span>
+                  <span className='shrink-0 text-xs text-muted-foreground'>
+                    {formatCompactMessageTime(chat.lastActivity.toISOString())}
+                  </span>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <Check className='h-3 w-3 shrink-0 text-muted-foreground' />
+                  <p className='truncate text-2sm text-muted-foreground'>
+                    {chat.lastMessage || 'No messages yet'}
+                  </p>
+                  {chat.unread > 0 && (
+                    <Badge className='ml-auto shrink-0 rounded-full text-xs h-5 w-5 p-0 flex items-center justify-center bg-third hover:bg-secondary'>
+                      {chat.unread}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </ScrollArea>
+  );
+}

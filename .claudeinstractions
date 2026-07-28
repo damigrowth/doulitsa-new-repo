@@ -1,0 +1,126 @@
+# Migration Parity Audit — Old (Next.js + Supabase) vs New (Next.js + Django + Postgres)
+
+> Paste this into your coding agent (Claude Code, Cursor, etc.) from the **parent folder** that contains all the repos, so it can read every file in both codebases.
+
+---
+
+## Your role
+
+You are a senior backend engineer doing a **migration parity audit**. I migrated a large production app from one stack to another. Your job is to compare the two codebases **feature by feature, endpoint by endpoint** and produce a written report (`MIGRATION_PARITY.md`) that lists exactly where the new app does NOT yet match the old one, so we can fix the gaps before the new app ships to production.
+
+**The golden rule:** the new app must do *everything* the old app does. The ONLY intended change is the backend technology (Supabase → Django + Postgres). Any difference in *behavior, data, validation, auth, filtering, or output* is a bug to be flagged — not an improvement to be accepted.
+
+## The two codebases
+
+- **OLD (source of truth, currently in production):** Next.js with Server Actions / route handlers, backed by **Supabase** (Postgres + Auth + RLS + Storage + possibly Realtime, Edge Functions, and SQL functions/triggers).
+- **NEW (target, not yet in production):**
+  - Frontend: Next.js (calls the new Django API instead of Supabase)
+  - Backend: **Django** (likely Django REST Framework) + **Postgres**
+
+Folder layout: all repos live in the same parent folder. First, list the directories and tell me which folder you've identified as OLD and which as NEW before going further. If it's ambiguous, ask me.
+
+---
+
+## What "parity" means — audit ALL of these categories
+
+Do not stop at API routes. Migrations from Supabase break silently in these specific places, so check every one:
+
+1. **Endpoints / Server Actions → Django views**
+   - Every Next.js Server Action, route handler, and direct Supabase call (`.from()`, `.select()`, `.insert()`, `.update()`, `.delete()`, `.rpc()`) in the OLD app must have an equivalent in the NEW Django API.
+   - Match by *what it does*, not by name. Build a one-to-one mapping table.
+
+2. **Query filters, sorting, pagination**
+   - Every `.eq()`, `.in()`, `.gt()`, `.like()`, `.or()`, `.order()`, `.range()`, `.limit()` etc. on the OLD side → confirm the equivalent query param / filter exists on the NEW side (e.g. DRF `filterset_fields`, `search_fields`, `ordering_fields`, pagination class).
+   - Flag any filter, sort option, or pagination behavior that exists in OLD but is missing or behaves differently in NEW.
+
+3. **Database schema**
+   - Compare Supabase tables/columns/types/defaults/nullability/enums/constraints/indexes against Django models + migrations.
+   - Flag missing tables, missing columns, type mismatches, missing unique/foreign-key constraints, missing indexes, and renamed fields the frontend still expects.
+
+4. **Auth & sessions**
+   - Supabase Auth (JWT, email/password, OAuth providers, magic links, password reset) → Django auth (sessions / JWT / DRF auth).
+   - Confirm every sign-up / sign-in / reset / social-login / token-refresh flow exists and returns equivalent data. This is the #1 thing that breaks — be thorough.
+
+5. **Authorization — RLS → Django permissions** *(critical, easy to miss)*
+   - Supabase **Row Level Security policies** define who can read/write which rows. These often have NO obvious equivalent in code.
+   - For every RLS policy in the OLD app (look in `supabase/migrations`, `*.sql`, dashboard exports), confirm the NEW Django side enforces the same access rules via permissions / querysets / `get_queryset()` filtering. Missing RLS equivalents are **security holes** — flag them loudly.
+
+6. **SQL functions, triggers, RPC**
+   - Supabase `.rpc('fn_name')` calls and Postgres `CREATE FUNCTION` / `CREATE TRIGGER` (plpgsql) → confirm the logic was reimplemented in Django (views, signals, model methods, or DB functions). Flag any business logic that lived in SQL and may have been dropped.
+
+7. **Validation & business rules**
+   - Field validation, required fields, allowed values, computed fields, side effects (e.g. "creating X also creates Y"). Confirm each rule survives in Django serializers/models.
+
+8. **Response shape**
+   - The NEW API responses must match what the Next.js frontend expects: same JSON keys, nesting, casing (snake_case vs camelCase!), date formats, null handling, and embedded/related objects. A renamed key silently breaks the UI. Flag every shape mismatch.
+
+9. **Supabase-specific features**
+   - **Storage** (buckets, upload/download, signed URLs) → Django file/media handling.
+   - **Realtime** subscriptions → confirm whether NEW needs polling/websockets, and flag if dropped.
+   - **Edge Functions** → confirm reimplemented in Django.
+
+10. **Environment / config**
+    - Note env vars and external integrations (email, payment, third-party APIs) referenced in OLD that must be wired up in NEW.
+
+---
+
+## Method (be systematic — the app is large)
+
+1. Inventory the OLD app first. Enumerate every data operation, endpoint, action, filter, RLS policy, SQL function, and auth flow. Cite file paths and line numbers as evidence.
+2. Then inventory the NEW Django app the same way.
+3. Match them up. For each OLD capability, find its NEW counterpart or mark it missing.
+4. **Do not guess or assume.** If you haven't read the file, say so. Every "present"/"missing" verdict must point to actual code (file path + line). If something is ambiguous, list it under "Needs human verification" rather than guessing.
+5. Work in passes if the codebase is too big for one go: do it module by module (e.g. one resource/domain at a time — users, orders, products...) and keep appending to the report.
+
+---
+
+## Output: write `MIGRATION_PARITY.md`
+
+Create the file in the parent folder. Structure it exactly like this so I can work through the gaps:
+
+```markdown
+# Migration Parity Report
+
+## Summary
+- OLD repo path: ...
+- NEW repo path: ...
+- Total capabilities audited: N
+- ✅ Matched: N   ⚠️ Partial/differs: N   ❌ Missing: N   ❓ Needs verification: N
+- Top risks (security / data loss / breaking changes), ranked.
+
+## Parity matrix
+| Capability | Category | OLD location (file:line) | NEW location (file:line) | Status | Notes / what's different |
+|---|---|---|---|---|---|
+| List orders w/ status filter + pagination | Endpoint+Filter | app/actions/orders.ts:40 | api/orders/views.py:22 | ⚠️ | NEW missing `status=cancelled` filter and `order_by=created_at` |
+| RLS: users see only own orders | AuthZ | supabase/migrations/x.sql:12 | — | ❌ | No queryset filtering in NEW — security gap |
+| ... | | | | | |
+
+Status legend: ✅ matched · ⚠️ partial/differs · ❌ missing · ❓ needs human verification
+
+## Detailed gaps (one section per ❌ / ⚠️ item)
+For each gap:
+- **What the OLD app does** (with evidence)
+- **What the NEW app does or is missing**
+- **Impact** (security / data loss / broken UI / minor)
+- **Suggested fix** in Django (concrete: which model/serializer/view/permission to add or change)
+
+## Schema diff
+Table-by-table column comparison: missing columns, type mismatches, missing constraints/indexes.
+
+## Auth & RLS gaps
+Dedicated section — every auth flow and every RLS policy with its NEW equivalent or "MISSING".
+
+## Response-shape mismatches
+Endpoints where NEW JSON keys/casing/nesting differ from what the Next.js frontend reads.
+
+## Needs human verification
+Anything you couldn't resolve from the code alone.
+```
+
+## Rules of engagement
+- Be exhaustive and skeptical. It's far better to over-flag than to let a gap reach production.
+- Prefer evidence over memory: cite file paths/line numbers for every claim.
+- Don't "fix" anything yet — this pass is **audit only**. The report is the deliverable.
+- When unsure, mark ❓ rather than guessing.
+
+Start by listing the repos and confirming which is OLD and which is NEW.

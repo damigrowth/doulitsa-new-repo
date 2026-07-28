@@ -1,0 +1,13 @@
+node_modules/
+.next/
+.git/
+.env.local
+.env
+*.log
+out/
+dist/
+build/
+coverage/
+.turbo/
+.yarn/cache/
+.yarn/install-state.gz

@@ -1,0 +1,23 @@
+# *
+User-agent: *
+Allow: /
+Allow: /ipiresies/*
+Allow: /categories/*
+Allow: /profile/*
+Allow: /s/*
+
+# Protected routes
+Disallow: /api/*
+Disallow: /dashboard/*
+Disallow: /login
+Disallow: /register
+Disallow: /reset-password
+Disallow: /forgot-password
+Disallow: /checkout/*
+Disallow: /payment/*
+
+# Host
+Host: https://doulitsa.gr
+
+# Sitemaps
+Sitemap: https://doulitsa.gr/sitemap.xml

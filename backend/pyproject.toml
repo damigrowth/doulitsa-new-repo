@@ -1,0 +1,128 @@
+[project]
+name = "django-backend"
+version = "0.1.0"
+description = "Django REST Framework backend migrated from the Next.js project."
+requires-python = ">=3.12"
+dependencies = [
+    # Core
+    "Django>=5.1,<5.2",
+    "djangorestframework>=3.15,<3.16",
+    "django-environ>=0.11",
+    "django-cors-headers>=4.4",
+    "django-filter>=24.3",
+    "drf-spectacular>=0.27",
+
+    # Auth
+    "djangorestframework-simplejwt>=5.3",
+    "django-allauth[socialaccount]>=64.0",
+    "dj-rest-auth>=6.0",
+    "argon2-cffi>=23.1",  # Modern hasher; bcrypt for legacy compat below
+    "bcrypt>=4.2",         # Better Auth bcrypt(12) compatibility for legacy passwords
+
+    # Database / cache
+    "psycopg[binary,pool]>=3.2",
+    "redis>=5.0",
+    "django-redis>=5.4",
+
+    # Realtime
+    "channels>=4.1",
+    "channels-redis>=4.2",
+    "daphne>=4.1",
+
+    # Async tasks
+    "celery>=5.4",
+    "django-celery-beat>=2.7",
+    "django-celery-results>=2.5",
+
+    # External integrations
+    "cloudinary>=1.41",
+    "stripe>=11.0",
+    "PyGithub>=2.4",
+    "zeep>=4.2",            # AADE SOAP client (Greek tax registry)
+    "requests>=2.32",       # Brevo + Worldline HTTP
+
+    # Utilities
+    "python-slugify>=8.0",
+    "Unidecode>=1.3",
+    "bleach>=6.1",
+    "python-json-logger>=2.0",
+    "django-log-request-id>=2.1",
+    "python-magic>=0.4.27",
+    "Pillow>=10.4",
+
+    # Email
+    "django-anymail>=12.0",  # Brevo backend
+
+    # CSP / security
+    "django-csp>=3.8",
+
+    # Static files (admin/Swagger CSS+JS served by Daphne in dev/prod)
+    "whitenoise>=6.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-django>=4.9",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=5.0",
+    "factory-boy>=3.3",
+    "Faker>=30.0",
+    "freezegun>=1.5",
+    "responses>=0.25",
+    "ruff>=0.7",
+    "mypy>=1.13",
+    "django-stubs[compatible-mypy]>=5.1",
+    "djangorestframework-stubs>=3.15",
+    "ipython>=8.27",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["apps*", "common*", "config*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E", "F", "W",      # pycodestyle / pyflakes
+    "I",                # isort
+    "B",                # bugbear
+    "UP",               # pyupgrade
+    "C4",               # comprehensions
+    "DJ",               # django
+    "DTZ",              # tz-aware datetimes
+    "S",                # bandit
+    "TID",              # tidy imports
+]
+ignore = [
+    "S101",   # asserts ok in tests
+    "DJ001",  # null=True on string fields - we mirror Prisma schema
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S", "DJ"]
+"**/migrations/**" = ["E501", "DJ"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.dev"
+python_files = ["test_*.py"]
+addopts = "-ra --strict-markers"
+markers = [
+    "slow: marks tests as slow",
+    "integration: requires Postgres + Redis",
+]
+
+[tool.mypy]
+plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
+strict = true
+ignore_missing_imports = true
+
+[tool.django-stubs]
+django_settings_module = "config.settings.dev"

@@ -1,0 +1,47 @@
+/* Critical CSS for LCP optimization - Above the fold styles only */
+/* These styles ensure instant rendering of the hero section */
+
+/* Brand font (Open Sans) with system fallback for instant text rendering */
+.system-font {
+  font-family:
+    var(--font-open-sans),
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-display: swap;
+}
+
+/* Performance optimizations */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevent layout shift for images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Will-change hints for animated elements */
+.animate-fade-cycle,
+.animate-spin,
+[class*='animate-'] {
+  will-change: transform, opacity;
+}
+
+/* Critical hero section styles to prevent CLS */
+.hero-section {
+  min-height: 400px;
+  contain: layout style paint;
+}
+
+/* Prevent FOIT (Flash of Invisible Text) */
+@font-face {
+  font-family: system-ui;
+  font-display: swap;
+  src: local('system-ui'), local('-apple-system'), local('BlinkMacSystemFont');
+}

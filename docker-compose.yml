@@ -1,0 +1,217 @@
+# Whole-stack dev compose: Postgres + Redis + Django + Celery worker + Celery
+# beat + Next.js. Brings everything up with one command:
+#
+#   docker compose up -d --build
+#
+# Repo layout:
+#   ./frontend   — Next.js app  (bind-mounted at /app inside the frontend container)
+#   ./backend    — Django app   (bind-mounted at /app inside the backend container)
+#
+# Inside the Docker network, services reach each other by service name:
+#   postgres:5432   redis:6379   backend:8000   frontend:3000
+#
+# On the host (your Mac), the same services are reachable at:
+#   localhost:5433  localhost:6379  localhost:8800  localhost:3010
+#
+# Host ports are picked to avoid colliding with the unrelated `advanza-*`
+# containers (which hold 5432, 8000, 3000).
+
+# Pin the compose project name so the named volumes (postgres_data,
+# backend_media) keep the same identity even though the parent directory of
+# this file has changed. Without this, moving the file would orphan the
+# seeded database and uploads.
+name: django-backend
+
+services:
+
+  # ---- Infrastructure -----------------------------------------------------
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: django
+      POSTGRES_PASSWORD: django
+      POSTGRES_DB: django
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U django"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ---- Django backend (Daphne) -------------------------------------------
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8800:8000"
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      DJANGO_SECRET_KEY: docker-dev-secret-key-not-for-production-min-50-chars-please
+      DJANGO_DEBUG: "true"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,backend"
+      DJANGO_TIME_ZONE: Europe/Athens
+      # Must match the frontend's INTERNAL_PROXY_SECRET — lets the backend trust
+      # the real visitor IP the frontend forwards on SSR calls (per-client rate
+      # limiting). See common/throttling.py.
+      INTERNAL_PROXY_SECRET: dev-internal-proxy-secret
+      DATABASE_URL: postgres://django:django@postgres:5432/django
+      DIRECT_URL: postgres://django:django@postgres:5432/django
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: django-db
+      CHANNELS_REDIS_URL: redis://redis:6379/3
+      CORS_ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:3010"
+      FRONTEND_BASE_URL: "http://localhost:3000"
+      SIMPLE_JWT_SIGNING_KEY: docker-dev-jwt-signing-key-not-for-production-min-50-chars-yes
+      # Session lifetime — refresh expires after this many days of inactivity.
+      # Refresh tokens rotate on every use, so an active user stays logged in
+      # indefinitely. After this many days idle the user is logged out.
+      SIMPLE_JWT_REFRESH_LIFETIME_DAYS: "3"
+      CRON_SECRET: docker-dev-cron-secret
+      ADMIN_API_KEY: docker-dev-admin-api-key
+      MAINTENANCE_MODE: "false"
+      PAYMENTS_ENABLED: "true"
+      PAYMENTS_TEST_MODE: "true"
+      # Cloudinary cloud name (public, non-secret). The API key/secret + upload
+      # preset and every other external-service credential (Google OAuth, Brevo,
+      # Worldline, reCAPTCHA) are read from backend/.env (gitignored) via
+      # Django's read_env() — see backend/.env. Keeping real secrets out of this
+      # tracked compose file avoids committing them to git.
+      CLOUDINARY_CLOUD_NAME: "${CLOUDINARY_CLOUD_NAME:-ddejhvzbf}"
+    volumes:
+      # Bind-mount source so edits live-reload via Django's autoreloader
+      - ./backend:/app
+      # Don't shadow the in-image .venv if one exists
+      - /app/.venv
+      # Persist uploaded media across rebuilds
+      - backend_media:/app/media
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate --fake-initial --noinput &&
+             python manage.py collectstatic --noinput &&
+             daphne -b 0.0.0.0 -p 8000 config.asgi:application"
+
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      DJANGO_SECRET_KEY: docker-dev-secret-key-not-for-production-min-50-chars-please
+      DJANGO_DEBUG: "true"
+      DATABASE_URL: postgres://django:django@postgres:5432/django
+      DIRECT_URL: postgres://django:django@postgres:5432/django
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: django-db
+      CHANNELS_REDIS_URL: redis://redis:6379/3
+      SIMPLE_JWT_SIGNING_KEY: docker-dev-jwt-signing-key-not-for-production-min-50-chars-yes
+      # Only the backend container runs migrations; celery must not race it.
+      RUN_MIGRATIONS: "0"
+    volumes:
+      - ./backend:/app
+      - /app/.venv
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A config worker -l INFO
+
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      DJANGO_SECRET_KEY: docker-dev-secret-key-not-for-production-min-50-chars-please
+      DJANGO_DEBUG: "true"
+      DATABASE_URL: postgres://django:django@postgres:5432/django
+      DIRECT_URL: postgres://django:django@postgres:5432/django
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: django-db
+      CHANNELS_REDIS_URL: redis://redis:6379/3
+      SIMPLE_JWT_SIGNING_KEY: docker-dev-jwt-signing-key-not-for-production-min-50-chars-yes
+      # Only the backend container runs migrations; celery must not race it.
+      RUN_MIGRATIONS: "0"
+    volumes:
+      - ./backend:/app
+      - /app/.venv
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A config beat -l INFO -S django
+
+  # ---- Next.js frontend ---------------------------------------------------
+
+  frontend:
+    build:
+      context: ./frontend
+      # Local dev image: runs `next dev` (no production build / type-check gate),
+      # mirroring how the app runs on a laptop.
+      dockerfile: Dockerfile.dev
+    ports:
+      # Host port 3000 — matches the OLD app so the existing Google OAuth
+      # redirect URI (http://localhost:3000/api/auth/callback/google) just works.
+      - "3000:3000"
+    environment:
+      # The browser reaches Django via the host port mapping — NOT via the
+      # internal Docker hostname (the browser runs on your Mac, not inside
+      # the network). So NEXT_PUBLIC_API_URL must use a host-side address.
+      NEXT_PUBLIC_API_URL: "http://localhost:8800"
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+      NODE_ENV: development
+      NEXT_TELEMETRY_DISABLED: "1"
+      # Server-side fetches (e.g. inside server components) can use the
+      # Docker hostname — separate var so we don't have to choose
+      DJANGO_INTERNAL_URL: "http://backend:8000"
+      # Forwarded to the backend (with the real visitor IP) so rate limiting is
+      # per-client through SSR. Must match the backend's INTERNAL_PROXY_SECRET.
+      INTERNAL_PROXY_SECRET: dev-internal-proxy-secret
+      # ALL media lives in Cloudinary — Django never stores files, it only
+      # signs upload params (/api/sign-cloudinary-params). The browser widget
+      # needs the cloud name + (public, non-secret) API key for signed uploads;
+      # the API secret stays in backend/.env only.
+      NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: "ddejhvzbf"
+      NEXT_PUBLIC_CLOUDINARY_API_KEY: "552113138292579"
+      NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: "doulitsa"
+      # Must agree with the backend's PAYMENTS_TEST_MODE so the payments UI
+      # gate matches Django's check-access answer.
+      PAYMENTS_TEST_MODE: "true"
+      # Secret for the cache-purge webhook — the route now fails closed
+      # without it.
+      REVALIDATE_CACHE_WEBHOOK_SECRET: dev-revalidate-webhook-secret
+    volumes:
+      - ./frontend:/app
+      # Don't shadow the image's node_modules — yarn install ran during build
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  backend_media:

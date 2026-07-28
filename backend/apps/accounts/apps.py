@@ -1,0 +1,11 @@
+"""Accounts Django app config."""
+from __future__ import annotations
+
+from django.apps import AppConfig
+
+
+class AccountsConfig(AppConfig):
+    name = "apps.accounts"
+    label = "accounts"
+    verbose_name = "Accounts (auth + user account management)"
+    default_auto_field = "django.db.models.BigAutoField"

@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/process-email-batches",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/auto-refresh",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/worldline-renewals",
+      "schedule": "0 6 * * *"
+    }
+  ]
+}

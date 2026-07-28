@@ -1,0 +1,1131 @@
+# Worldline / Cardlink Subscription Payments — Complete Documentation
+
+
+> Single source of truth for the Worldline (a.k.a. Cardlink, a.k.a. eurocommerce) recurring-subscription integration in this repo. Covers: how it works, the bugs we fixed (SCRUM-28), the history feature we built (SCRUM-54), every SQL migration, every changed file, all configuration, and a complete Django port guide.
+
+
+---
+
+
+## Table of contents
+
+
+1. [Overview](#1-overview)
+2. [How the integration works](#2-how-the-integration-works)
+3. [Critical Cardlink portal config](#3-critical-cardlink-portal-config)
+4. [SCRUM-28 — The Time Bug](#4-scrum-28--the-time-bug)
+5. [SCRUM-54 — Payment History Feature](#5-scrum-54--payment-history-feature)
+6. [Data model](#6-data-model)
+7. [SQL migrations](#7-sql-migrations-run-manually-on-supabase-sql-editor)
+8. [Required environment variables](#8-required-environment-variables)
+9. [Digest algorithms](#9-digest-algorithms)
+10. [Files reference](#10-files-reference-current-nextjs-codebase)
+11. [Edge cases & gotchas](#11-edge-cases--gotchas)
+12. [Operational runbook](#12-operational-runbook)
+13. [Django port — minimum viable replication](#13-django-port--minimum-viable-replication)
+14. [Deployment checklist for the new repo](#14-deployment-checklist-for-the-new-repo)
+
+
+---
+
+
+## 1. Overview
+
+
+### What we integrate with
+
+
+- **Worldline / Cardlink** — Greek bank-acquirer payment gateway (Modirum-based VPOS).
+- Two API surfaces used:
+ 1. **Redirect / hosted-form integration** for the initial subscription checkout (3DSv2 friendly).
+ 2. **Direct XML API v2.1** for server-to-server operations:
+    - `SaleRequest` — charge with a stored token (used by our cron as a backup).
+    - `RecurringOperationRequest` with `Operation=Cancel` — terminates the recurring chain.
+- The gateway is owned by the cardholder's acquiring bank. **No public REST API** for inquiring about transaction history or schedule state — push notifications + manual portal are the only ways.
+
+
+### What this work delivered
+
+
+| PR | What it solved |
+|---|---|
+| #467 → #468 → #469 (branches: `SCRUM-28-subscription-time-not-proper`, `SCRUM-28-verify-deploy`) | Wrong "next charge" date in DB + UI (off by 1-2 days vs. Cardlink reality) |
+| #470 (branch: `SCRUM-54-payments-history-for-admin-users-dashboard`) | No audit log of charge attempts — built `subscription_payment_attempts` history + admin/user UIs |
+
+
+### Commit timeline
+
+
+```
+fc990dd5  Merge PR #470  (history feature shipped)
+fe1b7036  SCRUM-54 Payments History for Admin & User's Dashboard  ←  primary feature commit
+cca60717  Merge PR #469  (verify deploy passed)
+691ffb30  trying the debug time
+105cd73e  done
+e8241e00  Merge PR #468
+d2ae20cc  removing the vercel  (rolled back vercel.json env approach after build failure)
+25c597ce  resolving all the wrong time
+839bfc2f  SCRUM-28 Subscription time not proper  ←  initial fix commit
+```
+
+
+---
+
+
+## 2. How the integration works
+
+
+### Full lifecycle (ASCII diagram)
+
+
+```
+                ┌──────────────────────────────────────────────┐
+                │ 1. INITIAL CHECKOUT (browser redirect flow)  │
+                ├──────────────────────────────────────────────┤
+user clicks ──▶│ our backend builds an HTML form with:        │
+"Upgrade"       │   • orderId (unique, encodes profile id)     │
+                │   • orderAmount, currency, payerEmail        │
+                │   • extRecurringfrequency = 30 (or 365)      │
+                │   • extRecurringenddate = today + 1825 days  │
+                │   • extTokenOptions = '100' (request token)  │
+                │   • confirmUrl / cancelUrl                   │
+                │   • digest (SHA256 of canonical field order  │
+                │     + sharedSecret)                          │
+                └─────────────┬────────────────────────────────┘
+                              │ user submits form
+                              ▼
+                ┌──────────────────────────────────────────────┐
+                │ Cardlink hosts payment page (card entry +    │
+                │ 3DSv2 challenge if required)                 │
+                └─────────────┬────────────────────────────────┘
+                              │
+           ┌──────────────────┴──────────────────┐
+           │                                     │
+           ▼  Success (CAPTURED / AUTHORIZED)    ▼  Failure (REFUSED / ERROR)
+Cardlink POSTs to confirmUrl                Cardlink POSTs to cancelUrl
+with the payment result + extToken          (or same confirmUrl with status)
+(our subscription becomes active            and the user is redirected back.
+in DB; we store the token)
+                              │
+                              ▼
+       ┌─────────────────────────────────────────────────────────┐
+       │ 2. SCHEDULED RECURRING — Cardlink fires every N days    │
+       │    (every 30 days for monthly, 365 for yearly).         │
+       │    Same-day automatic retries at 07:00 / 15:00 / 23:00  │
+       │    Athens time on failure.                              │
+       │    Each child fired gets orderId = "{masterOrderId}/N"  │
+       │    where N = Sequence (2, 3, 4, …).                     │
+       └─────────────┬───────────────────────────────────────────┘
+                     │ Cardlink POSTs notification to the
+                     │ "Recurring notify URL" configured in
+                     │ THEIR merchant portal (NOT to confirmUrl).
+                     ▼
+       ┌─────────────────────────────────────────────────────────┐
+       │ Our webhook updates the subscription row + records the  │
+       │ attempt in the history table.                           │
+       └─────────────────────────────────────────────────────────┘
+
+
+                     Parallel safety net:
+       ┌─────────────────────────────────────────────────────────┐
+       │ 3. CRON — daily 06:00 UTC, our own /api/cron/worldline- │
+       │    renewals. Finds subscriptions with:                  │
+       │      a) status=active AND currentPeriodEnd <= tomorrow  │
+       │         → "renewal due" — fire SaleRequest via XML      │
+       │      b) status=past_due AND last attempt >= 3d ago      │
+       │         → "retry" (up to MAX_RETRY_ATTEMPTS=3)          │
+       │    Marks subscription canceled after retries exhausted. │
+       └─────────────────────────────────────────────────────────┘
+```
+
+
+### Why we have BOTH Cardlink-scheduled recurring AND our own cron
+
+
+Because Cardlink's "Recurring notify URL" is configured per-merchant in their **portal**, not via API. If it's not configured, Cardlink will still charge the card on schedule but **we'll never know**. Our cron is a safety net that catches stale `currentPeriodEnd` rows and triggers a charge ourselves.
+
+
+> **⚠️ Important:** if the notify URL **is** configured AND the cron is also active, you risk **double-charging** — Cardlink charges at 07:00 Athens, our cron charges at 09:00 Athens (06:00 UTC), both succeed. Set the portal URL FIRST, then let the cron be the safety net.
+
+
+---
+
+
+## 3. Critical Cardlink portal config
+
+
+**This cannot be set via API. It must be done by the merchant in Cardlink's MPI/VPOS/FSS Manager backend:**
+
+
+| Field | Value | Why |
+|---|---|---|
+| **Recurring notify URL** | `https://<your-domain>/api/webhooks/worldline` (or Django equivalent) | Where Cardlink POSTs each recurring-child notification. Empty here = silent charges, our DB never updates. |
+| **Webhooks** (alternative section, up to 5 URLs) | Same URL | Newer mechanism. Either field works; both can be set. |
+
+
+If you skip this, the entire history feature fills only with cron-initiated entries (because that's the only code path that knows about charges).
+
+
+---
+
+
+## 4. SCRUM-28 — The Time Bug
+
+
+### Symptoms before the fix
+
+
+- User signed up at `15/03/2026 23:22` Athens (UTC+2 winter).
+- Our UI showed "Next charge: **16/04/2026**".
+- Cardlink actually charged on **14/04/2026**.
+- Discrepancy: **2 days**.
+
+
+### Two stacked root causes (≈2 days drift total)
+
+
+#### Bug A — Wrong cadence math (≈1 day off)
+
+
+The code used `setMonth(currentMonth + 1)` to compute the next charge date — i.e. "add one calendar month." But Cardlink's `extRecurringfrequency` parameter we send is **30 days**.
+
+
+| Start | +1 calendar month | +30 days (Cardlink reality) |
+|---|---|---|
+| 15/03 | 15/04 (31 days later) | **14/04** |
+| 15/02 | 15/03 (28 days later) | **17/03** (off by 2 in the other direction) |
+| 15/04 | 15/05 | **15/05** (April has 30 days — both agree) |
+
+
+#### Bug B — UTC vs Europe/Athens display drift (≈1 day off)
+
+
+Vercel server runtime defaults to **UTC**. A subscription created at `23:22 Athens local time` (UTC+2 winter) stored as `21:22 UTC`. The user dashboard rendered via `toLocaleDateString('el-GR')` **in the browser** (Athens DST UTC+3 in April) read `21:22 UTC + 3h = 00:22 next day Athens` → displayed as **the day after**. SSR rendered in UTC. → flicker between two days on refresh.
+
+
+### The fix
+
+
+**Cadence (Bug A):** wrap the date math in a helper that adds calendar days, not calendar months:
+
+
+```ts
+// src/lib/utils/date.ts
+/**
+* Add N billing-cycle days to a date, matching Cardlink's scheduled-recurring cadence.
+* Cardlink charges every extRecurringfrequency days exactly (30 monthly / 365 yearly),
+* NOT on calendar boundaries.
+*/
+export function addBillingCycleDays(start: Date, cycleDays: number): Date {
+ const result = new Date(start);
+ result.setDate(result.getDate() + cycleDays);
+ return result;
+}
+```
+
+
+Used in three write sites:
+- Webhook handler — initial payment success (`handlePaymentSuccess`)
+- Webhook handler — scheduled recurring child (`handleRecurringChild`)
+- Cron handler — `processRenewal`
+
+
+```ts
+// Before (bug):
+const periodEnd = new Date(now);
+periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+
+// After (fix):
+const cycleDays = billingInterval === 'year' ? 365 : 30;
+const periodEnd = addBillingCycleDays(now, cycleDays);
+```
+
+
+**Timezone (Bug B):** force the server's runtime timezone to Athens. On Vercel this requires a Next.js `instrumentation.ts` file (**Vercel reserves the `TZ` env var**, so it cannot be set via their Dashboard):
+
+
+```ts
+// src/instrumentation.ts
+if (process.env.NEXT_RUNTIME === 'nodejs') {
+ process.env.TZ = 'Europe/Athens';
+}
+
+
+export async function register() {
+ if (process.env.NEXT_RUNTIME === 'nodejs') {
+   process.env.TZ = 'Europe/Athens';
+ }
+}
+```
+
+
+**For Django:** set `TIME_ZONE = 'Europe/Athens'` and `USE_TZ = True` in `settings.py`. That's the proper canonical solution — Django handles this natively without the platform tricks Next.js requires.
+
+
+### Vercel cron schedules — a remaining gotcha
+
+
+The `crons` block in `vercel.json` uses cron expressions that are **always UTC**, regardless of `TZ`. So `0 6 * * *` fires at 06:00 UTC = 09:00 Athens (DST) / 08:00 (winter). On Django/Celery beat you have full control via `CELERY_BEAT_SCHEDULE` + timezone, no such limitation.
+
+
+### Production data backfill (one-shot SQL)
+
+
+Subscriptions created before the fix have wrong `currentPeriodEnd`. For the test record we ran:
+
+
+```sql
+UPDATE subscriptions
+SET "currentPeriodEnd"   = '2026-06-13 12:00:00',
+   "lastPaymentAt"      = '2026-05-14 07:06:04',
+   "paymentCount"       = 3,
+   "totalPaidLifetime"  = 7440,
+   "firstPaymentAt"     = '2026-03-15 21:22:27.183'
+WHERE id = 'cmms9cphl0001k1049ovvv5pz';
+```
+
+
+For Django port: write a one-shot management command that re-computes `currentPeriodEnd` for every active subscription by re-deriving from `firstPaymentAt + (paymentCount × 30 days)`.
+
+
+---
+
+
+## 5. SCRUM-54 — Payment History Feature
+
+
+### Goal
+Every charge attempt — successful or failed, Cardlink-initiated or our-cron-initiated — gets one row. Visible in admin (full table with pagination) and user dashboard (compact paginated list).
+
+
+### Why a separate table
+The `subscriptions` row is a **snapshot** (`lastPaymentAt`, `paymentCount`) — it stores aggregates and most-recent values only. It loses the chain of attempts: who tried, when, success or failure, why.
+
+
+### Safety rules (critical — keep these when porting to Django)
+
+
+1. **History writes are best-effort.** Wrap each write in try/except. If recording the attempt fails, **the payment must still proceed.**
+2. **Write OUTSIDE database transactions.** If you put the history INSERT inside the same transaction as the subscription UPDATE, a failed INSERT will roll back the real payment. Always write history after the payment transaction commits.
+3. **No FK conflicts.** Use the same `subscriptionId` you just upserted; capture it from the upsert's RETURNING clause.
+
+
+### The history helper (verbatim — `src/lib/payment/record-attempt.ts`)
+
+
+```ts
+import { prisma } from '@/lib/prisma/client';
+import type { PaymentAttemptStatus, PaymentAttemptSource } from '@prisma/client';
+
+
+interface RecordAttemptInput {
+ subscriptionId: string;
+ status: PaymentAttemptStatus;
+ source: PaymentAttemptSource;
+ amount: number;          // cents
+ currency?: string;
+ sequence?: number;
+ txId?: string;
+ paymentRef?: string;
+ orderId?: string;
+ message?: string;
+ errorMessage?: string;
+}
+
+
+/**
+* Best-effort write of a payment attempt to subscription_payment_attempts.
+* Wrapped in try/catch — production payment flow must not break because history
+* write failed. Always call OUTSIDE the existing $transaction(...) blocks.
+*/
+export async function recordPaymentAttempt(input: RecordAttemptInput): Promise<void> {
+ try {
+   await prisma.subscriptionPaymentAttempt.create({
+     data: {
+       subscriptionId: input.subscriptionId,
+       status: input.status,
+       source: input.source,
+       amount: input.amount,
+       currency: input.currency,
+       sequence: input.sequence,
+       txId: input.txId,
+       paymentRef: input.paymentRef,
+       orderId: input.orderId,
+       message: input.message,
+       errorMessage: input.errorMessage,
+     },
+   });
+ } catch (error) {
+   console.error(
+     '[PaymentAttempt] Failed to record attempt for subscription',
+     input.subscriptionId,
+     'source:', input.source, 'status:', input.status,
+     error,
+   );
+   // Swallow intentionally.
+ }
+}
+```
+
+
+### Write-site map
+
+
+| Source | When | Call site |
+|---|---|---|
+| `initial` | Initial CAPTURED / AUTHORIZED | `webhooks/worldline/route.ts` → `handlePaymentSuccess`, after `$transaction` commits |
+| `initial` | Initial CANCELED / REFUSED / REFUSEDRISK / ERROR | Same file, between status check + redirect |
+| `recurring_child` | Cardlink notifies successful child | Same file, `handleRecurringChild` success branch |
+| `recurring_child` | Cardlink notifies failed child | Same file, `handleRecurringChild` failure branch |
+| `cron_renewal` / `cron_retry` | XML SaleRequest succeeded | `cron/worldline-renewals/route.ts` → `processRenewal`, success branch |
+| `cron_renewal` / `cron_retry` | XML SaleRequest returned non-CAPTURED | Same, failure branch |
+| `cron_renewal` / `cron_retry` (ERROR) | Network / XML exception | Same, outer `try/catch` block |
+
+
+### UI contract
+
+
+- URL pagination param: `?historyPage=N` (default 1, omitted on page 1 for clean URLs)
+- Page size: **10 entries per page**
+- Pagination **always renders** (even at 1 page) for discoverability — prev/next disabled at the boundaries
+- User dashboard: card title shows total count `(N)`, compact list, `max-w-3xl` container
+- Admin: full table with all fields, separate query (NOT included in `getSubscription`)
+
+
+### Idempotency note
+Each Cardlink response has a unique `txId`. If you want strict idempotency (replay-safe webhooks), add a UNIQUE constraint on `txId` and `ON CONFLICT (txId) DO NOTHING` in the INSERT. We didn't add that here because Cardlink already has natural idempotency at the orderId+sequence level.
+
+
+---
+
+
+## 6. Data model
+
+
+### Table: `subscriptions`
+
+
+> All amounts in **cents** as `INTEGER`. All timestamps in UTC, stored as `TIMESTAMP(3) WITHOUT TIME ZONE` (Postgres). Render in Athens at presentation time.
+
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | TEXT PK | cuid |
+| `pid` | TEXT UNIQUE FK → profiles | one subscription per profile |
+| `provider` | enum (`stripe`, `worldline`, `paypal`, `eurobank`, `manual`) | multi-provider hooks |
+| `providerCustomerId` | TEXT UNIQUE NULL | for Worldline = the MID |
+| `providerSubscriptionId` | TEXT UNIQUE NULL | for Worldline = the initial orderId |
+| `worldlineToken` | TEXT NULL | stored card token (Cardlink's `extToken`) |
+| `worldlineTokenExp` | TEXT NULL | format YYYYMMDD |
+| `worldlineMasterOrderId` | TEXT NULL | original master orderId — used to match recurring children |
+| `plan` | enum (`free`, `promoted`) | |
+| `status` | enum (`active`, `past_due`, `canceled`, `incomplete`, `trialing`, `unpaid`) | |
+| `billingInterval` | enum (`month`, `year`) NULL | |
+| `currentPeriodStart` | TIMESTAMP NULL | |
+| `currentPeriodEnd` | TIMESTAMP NULL | **next-charge anchor**; computed as `previous_end + 30 days` |
+| `cancelAtPeriodEnd` | BOOLEAN DEFAULT false | |
+| `canceledAt` | TIMESTAMP NULL | |
+| `amount` | INT NULL | current price in cents |
+| `currency` | TEXT DEFAULT 'eur' | |
+| `paymentMethodType` / `Last4` / `Brand` | TEXT NULL | |
+| `firstPaymentAt`, `lastPaymentAt` | TIMESTAMP NULL | analytics |
+| `paymentCount` | INT DEFAULT 0 | analytics |
+| `totalPaidLifetime` | INT DEFAULT 0 | cents accumulated |
+| `discountCode`, `discountPercentOff`, `discountAmountOff` | NULL | optional coupon |
+| `billing` | JSON NULL | snapshot of invoice / receipt prefs at checkout |
+| `createdAt`, `updatedAt` | TIMESTAMP | |
+
+
+### Table: `subscription_payment_attempts` (history)
+
+
+```sql
+CREATE TYPE "PaymentAttemptStatus" AS ENUM (
+ 'CAPTURED', 'AUTHORIZED', 'REFUSED', 'REFUSEDRISK', 'CANCELED', 'ERROR'
+);
+CREATE TYPE "PaymentAttemptSource" AS ENUM (
+ 'initial', 'recurring_child', 'cron_renewal', 'cron_retry', 'manual'
+);
+
+
+CREATE TABLE "subscription_payment_attempts" (
+ "id"             TEXT NOT NULL PRIMARY KEY,
+ "subscriptionId" TEXT NOT NULL REFERENCES "subscriptions"("id") ON DELETE CASCADE,
+ "status"         "PaymentAttemptStatus" NOT NULL,
+ "source"         "PaymentAttemptSource" NOT NULL,
+ "amount"         INTEGER NOT NULL,          -- cents
+ "currency"       TEXT NOT NULL DEFAULT 'eur',
+ "sequence"       INTEGER,                   -- Cardlink Sequence (1, 2, 3, …)
+ "txId"           TEXT,                      -- Cardlink TX ID
+ "paymentRef"     TEXT,                      -- Cardlink payment reference
+ "orderId"        TEXT,                      -- full Cardlink orderId, e.g. DOLxxx/3
+ "message"        TEXT,                      -- gateway response message
+ "errorMessage"   TEXT,                      -- technical exception detail
+ "createdAt"      TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+
+CREATE INDEX ON subscription_payment_attempts (subscriptionId, createdAt);
+CREATE INDEX ON subscription_payment_attempts (status, createdAt);
+CREATE INDEX ON subscription_payment_attempts (txId);
+```
+
+
+### Status enum meanings (match Cardlink's response values exactly)
+
+
+| Status | Meaning |
+|---|---|
+| `CAPTURED` | Charged + committed to settlement |
+| `AUTHORIZED` | Authorized only, capture pending (rare with Cardlink) |
+| `REFUSED` | Card declined (insufficient funds, expired, etc.) |
+| `REFUSEDRISK` | Rejected by Cardlink's fraud / risk engine |
+| `CANCELED` | User canceled at the hosted payment page (only for `initial`) |
+| `ERROR` | Network / technical error |
+
+
+### Source enum meanings
+
+
+| Source | When |
+|---|---|
+| `initial` | User-initiated first checkout. Sequence = 1. |
+| `recurring_child` | Cardlink's scheduled-recurring webhook (Sequence ≥ 2). |
+| `cron_renewal` | Our daily cron sent an XML SaleRequest for a `currentPeriodEnd <= tomorrow` subscription. |
+| `cron_retry` | Our cron retrying a `past_due` subscription. |
+| `manual` | Admin or backfill insert. |
+
+
+### Why TWO enums (`status` AND `source`)
+- `status` answers **what happened** to this attempt (success / failure type).
+- `source` answers **who triggered** it (user checkout, Cardlink auto-charge, our cron).
+
+
+Same status (e.g. `CAPTURED`) can come from different sources. Without `source`, you cannot tell a Cardlink-initiated successful charge apart from a cron-initiated one — which matters for debugging double-charges and verifying the notify-URL config.
+
+
+---
+
+
+## 7. SQL migrations (run manually on Supabase SQL Editor)
+
+
+> ⚠️ **DO NOT auto-run.** Copy each block manually into Supabase → SQL Editor and inspect before pressing Run. Order matters: migration first, then deploy code, then (optionally) backfill.
+
+
+### 7.1 Migration — create the history table
+
+
+Safe to run on production. Adds new enums/table/indexes/FK only. Does **not** touch any existing data or column.
+
+
+```sql
+-- Enums ---------------------------------------------------------------------
+CREATE TYPE "PaymentAttemptStatus" AS ENUM (
+ 'CAPTURED', 'AUTHORIZED', 'REFUSED', 'REFUSEDRISK', 'CANCELED', 'ERROR'
+);
+
+
+CREATE TYPE "PaymentAttemptSource" AS ENUM (
+ 'initial', 'recurring_child', 'cron_renewal', 'cron_retry', 'manual'
+);
+
+
+-- Table ---------------------------------------------------------------------
+CREATE TABLE "subscription_payment_attempts" (
+ "id"             TEXT                    NOT NULL,
+ "subscriptionId" TEXT                    NOT NULL,
+ "status"         "PaymentAttemptStatus"  NOT NULL,
+ "source"         "PaymentAttemptSource"  NOT NULL,
+ "amount"         INTEGER                 NOT NULL,
+ "currency"       TEXT                    NOT NULL DEFAULT 'eur',
+ "sequence"       INTEGER,
+ "txId"           TEXT,
+ "paymentRef"     TEXT,
+ "orderId"        TEXT,
+ "message"        TEXT,
+ "errorMessage"   TEXT,
+ "createdAt"      TIMESTAMP(3)            NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ CONSTRAINT "subscription_payment_attempts_pkey" PRIMARY KEY ("id")
+);
+
+
+-- Indexes -------------------------------------------------------------------
+CREATE INDEX "subscription_payment_attempts_subscriptionId_createdAt_idx"
+ ON "subscription_payment_attempts" ("subscriptionId", "createdAt");
+CREATE INDEX "subscription_payment_attempts_status_createdAt_idx"
+ ON "subscription_payment_attempts" ("status", "createdAt");
+CREATE INDEX "subscription_payment_attempts_txId_idx"
+ ON "subscription_payment_attempts" ("txId");
+
+
+-- Foreign key ---------------------------------------------------------------
+ALTER TABLE "subscription_payment_attempts"
+ ADD CONSTRAINT "subscription_payment_attempts_subscriptionId_fkey"
+ FOREIGN KEY ("subscriptionId")
+ REFERENCES "subscriptions" ("id")
+ ON DELETE CASCADE ON UPDATE CASCADE;
+```
+
+
+### 7.2 Verification
+
+
+```sql
+SELECT typname FROM pg_type
+WHERE typname IN ('PaymentAttemptStatus', 'PaymentAttemptSource');
+-- expect 2 rows
+
+
+SELECT COUNT(*) FROM "subscription_payment_attempts";
+-- expect 0
+```
+
+
+### 7.3 Backfill (optional) — the test account history
+
+
+Idempotent: re-running is safe (uses `ON CONFLICT DO NOTHING` on the primary key).
+
+
+Fills in the 3 known Cardlink transactions for `@xfdesignstudio` that the webhook never saw (Recurring notify URL wasn't configured at the time):
+
+
+- 15/03/2026 21:22 — Sequence 1 (initial) — CAPTURED
+- 14/04/2026 04:06 UTC = 07:06 Athens — Sequence 2 first attempt — REFUSED
+- 14/04/2026 12:06 UTC = 15:06 Athens — Sequence 2 retry — CAPTURED
+- 14/05/2026 04:06 UTC = 07:06 Athens — Sequence 3 — CAPTURED
+
+
+```sql
+INSERT INTO "subscription_payment_attempts"
+ (id, "subscriptionId", status, source, amount, currency, sequence, "txId", "orderId", "createdAt")
+VALUES
+ ('backfill_init_cmms9cphl',
+  'cmms9cphl0001k1049ovvv5pz',
+  'CAPTURED', 'initial', 2480, 'eur', 1,
+  NULL,
+  'DOLcmi500fb9001hulm071dl07f9mms9cphj',
+  '2026-03-15 21:22:27'),
+
+
+ ('backfill_seq2_fail_cmms9cphl',
+  'cmms9cphl0001k1049ovvv5pz',
+  'REFUSED', 'recurring_child', 2480, 'eur', 2,
+  '34978368907',
+  'DOLcmi500fb9001hulm071dl07f9mms9cphj/2',
+  '2026-04-14 04:06:48'),
+
+
+ ('backfill_seq2_ok_cmms9cphl',
+  'cmms9cphl0001k1049ovvv5pz',
+  'CAPTURED', 'recurring_child', 2480, 'eur', 2,
+  '34979384987',
+  'DOLcmi500fb9001hulm071dl07f9mms9cphj/2',
+  '2026-04-14 12:06:58'),
+
+
+ ('backfill_seq3_ok_cmms9cphl',
+  'cmms9cphl0001k1049ovvv5pz',
+  'CAPTURED', 'recurring_child', 2480, 'eur', 3,
+  '35003587137',
+  'DOLcmi500fb9001hulm071dl07f9mms9cphj/3',
+  '2026-05-14 04:06:04')
+ON CONFLICT (id) DO NOTHING;
+```
+
+
+### 7.4 Backfill verification
+
+
+```sql
+SELECT "createdAt", status, source, sequence, amount, "orderId"
+FROM "subscription_payment_attempts"
+WHERE "subscriptionId" = 'cmms9cphl0001k1049ovvv5pz'
+ORDER BY "createdAt";
+-- expect 4 rows in chronological order
+```
+
+
+### 7.5 Rollback (only if you need to undo step 1)
+
+
+⚠️ Destructive — drops the new table and types. Use only if the migration was applied by mistake.
+
+
+```sql
+DROP TABLE IF EXISTS "subscription_payment_attempts" CASCADE;
+DROP TYPE  IF EXISTS "PaymentAttemptStatus";
+DROP TYPE  IF EXISTS "PaymentAttemptSource";
+```
+
+
+### 7.6 SCRUM-28 backfill — fix the test record's currentPeriodEnd
+
+
+```sql
+UPDATE subscriptions
+SET "currentPeriodEnd"   = '2026-06-13 12:00:00',
+   "lastPaymentAt"      = '2026-05-14 07:06:04',
+   "paymentCount"       = 3,
+   "totalPaidLifetime"  = 7440,
+   "firstPaymentAt"     = '2026-03-15 21:22:27.183'
+WHERE id = 'cmms9cphl0001k1049ovvv5pz';
+```
+
+
+---
+
+
+## 8. Required environment variables
+
+
+| Var | Where | Example |
+|---|---|---|
+| `PAYMENTS_TEST_MODE` | runtime | `true` (sandbox) / `false` (live) |
+| `WORLDLINE_TEST_MID` | sandbox MID | `0025368903` |
+| `WORLDLINE_TEST_SHARED_SECRET` | sandbox HMAC secret | (32+ chars) |
+| `WORLDLINE_LIVE_MID` | production MID | (assigned by acquirer) |
+| `WORLDLINE_LIVE_SHARED_SECRET` | production HMAC secret | (32+ chars) |
+| `CRON_SECRET` | bearer token gating `/api/cron/*` | random 32+ chars |
+| `BETTER_AUTH_URL` (Next-specific) / `SITE_URL` (Django) | absolute origin used to build `confirmUrl` / `cancelUrl` | `https://doulitsa.gr` |
+| `TZ` | runtime timezone (where settable — **NOT on Vercel Dashboard, reserved**) | `Europe/Athens` |
+
+
+### Cardlink endpoints
+
+
+| Environment | Redirect URL | XML URL |
+|---|---|---|
+| Sandbox | `https://eurocommerce-test.cardlink.gr/vpos/shophandlermpi` | `https://eurocommerce-test.cardlink.gr/vpos/xmlpayvpos` |
+| Production | `https://vpos.eurocommerce.gr/vpos/shophandlermpi` | `https://vpos.eurocommerce.gr/vpos/xmlpayvpos` |
+
+
+---
+
+
+## 9. Digest algorithms
+
+
+### 9.1 Redirect form digest (initial checkout)
+
+
+Fixed 46-field canonical order, concatenated as strings (no separator), then SHA-256 over UTF-8, then Base64-encoded. Empty fields = empty string (still concatenated in position).
+
+
+Field order (this matters — verified empirically against Cardlink sandbox):
+
+
+```
+version, mid, lang, deviceCategory, orderid, orderDesc,
+orderAmount, currency, payerEmail, payerPhone, billCountry,
+billState, billZip, billCity, billAddress, weight, dimensions,
+shipCountry, shipState, shipZip, shipCity, shipAddress,
+addFraudScore, maxPayRetries, reject3dsU, payMethod, trType,
+extInstallmentoffset, extInstallmentperiod, extRecurringfrequency,
+extRecurringenddate, blockScore, cssUrl, confirmUrl, cancelUrl,
+extTokenOptions, extToken,
+var1, var2, var3, var4, var5, var6, var7, var8, var9
+```
+
+
+**Then append the sharedSecret BEFORE hashing:**
+
+
+```
+digest = base64( sha256( utf8( concat(field_values) + sharedSecret ) ) )
+```
+
+
+For incoming response digest validation, iterate `formData` in POST insertion order, skip the `digest` field itself, concat all values, append sharedSecret, hash, compare. (Don't rely on a fixed field order for incoming — Cardlink sends whatever they want and order matters.)
+
+
+### 9.2 XML API digest (SaleRequest / RecurringOperationRequest)
+
+
+Different algorithm from the redirect form digest:
+
+
+```
+digest = base64( sha256( utf8( canonicalized_message_xml + sharedSecret ) ) )
+```
+
+
+The `canonicalized_message_xml` is the `<Message>...</Message>` element with namespaces ON the Message tag in canonical order. See `src/lib/payment/providers/worldline/xml.ts` `cancelRecurring` for the exact byte-pattern (we had to build the XML manually — fast-xml-parser produced equivalent-but-not-byte-identical output that failed verification).
+
+
+Cardlink also wants timestamps in ISO 8601 with offset (e.g. `2026-05-16T11:23:00.000+03:00`), **not** UTC `Z` suffix.
+
+
+---
+
+
+## 10. Files reference (current Next.js codebase)
+
+
+### Files added during SCRUM-28 + SCRUM-54
+
+
+1. `src/instrumentation.ts` — Next.js runtime TZ override
+2. `src/lib/payment/record-attempt.ts` — best-effort history logger
+3. `src/components/subscription/payment-attempts-list.tsx` — shared history list component (`variant: 'full' | 'compact'`)
+4. `src/components/subscription/history-pagination.tsx` — URL-based pagination component
+
+
+### Files modified during SCRUM-28 + SCRUM-54
+
+
+5. `src/lib/utils/date.ts` — added `addBillingCycleDays()` helper
+6. `src/lib/prisma/schema/subscription.prisma` — added enums + `SubscriptionPaymentAttempt` model + relation
+7. `src/app/api/webhooks/worldline/route.ts` — cadence fix + history writes (4 paths)
+8. `src/app/api/cron/worldline-renewals/route.ts` — cadence fix + history writes (3 paths)
+9. `src/app/(admin)/admin/subscriptions/[id]/page.tsx` — history card + pagination
+10. `src/app/(dashboard)/dashboard/subscription/page.tsx` — history card + pagination
+11. `src/app/(dashboard)/dashboard/subscription/subscription-management.tsx` — card resize (`max-w-lg` → `max-w-3xl`)
+12. `src/actions/admin/subscriptions.ts` — removed `paymentAttempts` from `getSubscription` include (fetched separately for pagination)
+
+
+### Pre-existing payment files (unchanged by this work, important for porting)
+
+
+- `src/lib/payment/providers/worldline/adapter.ts` — checkout session builder
+- `src/lib/payment/providers/worldline/digest.ts` — both digest algorithms
+- `src/lib/payment/providers/worldline/xml.ts` — XML SaleRequest + Cancel
+- `src/lib/payment/providers/worldline/types.ts` — TypeScript types
+- `src/lib/payment/worldline-config.ts` — env-driven config + endpoints
+- `src/lib/payment/pricing.ts` — plan amount table
+- `src/lib/payment/coupons.ts` — coupon definitions
+- `src/lib/payment/test-mode.ts` — `PAYMENTS_TEST_MODE` gate
+
+
+---
+
+
+## 11. Edge cases & gotchas
+
+
+1. **Cardlink doesn't return `var1`-`var9` in the response.** You have to look up the pending subscription by `orderid` to recover `profileId` / `billingInterval` / `discountCode`. Store these at checkout time keyed by `orderid`.
+
+
+2. **The recurring child orderId is `{master}/{N}`.** When matching to a subscription, split on `/` and use the prefix.
+
+
+3. **The Modirum-HTTPClient may POST with non-form Content-Type** (e.g. `text/plain`). Be prepared to parse the body as URL-encoded text if `request.formData()` fails.
+
+
+4. **Background confirmation POSTs.** Cardlink sends a duplicate of every result server-to-server with `User-Agent: Modirum VPOS` or `Modirum HTTPClient`. Idempotency check (was this orderid already processed?) is critical — otherwise you'll double-update.
+
+
+5. **Vercel reserves the `TZ` env var.** Cannot be set via Project Settings → Environment Variables. Use `instrumentation.ts` instead. On Django this is non-issue: `settings.TIME_ZONE`.
+
+
+6. **Cardlink retries on its own** 3 times same-day at 07:00 / 15:00 / 23:00 Athens after a failed scheduled child. Don't double-retry from the cron unless ≥ 24h have elapsed.
+
+
+7. **`paymentAttempts` table must not be the source of truth for `paymentCount` / `lastPaymentAt`.** Always derive those into the subscriptions row at write time. Some sites query the subscription row only.
+
+
+8. **Existing buggy `currentPeriodEnd` rows.** If you have data from before the cadence fix, the displayed "next charge" is wrong. Backfill or wait for the next webhook to overwrite.
+
+
+9. **Vercel cron schedules use UTC always.** Even with TZ env var set, `vercel.json` cron expressions are interpreted in UTC. Use Celery beat for timezone-aware schedules.
+
+
+10. **Existing test subscription before deploy.** The history table is empty until a real webhook fires OR you backfill manually from the Cardlink portal.
+
+
+---
+
+
+## 12. Operational runbook
+
+
+### Symptom → likely cause table
+
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| "Next charge" date is 1-2 days late vs. actual Cardlink charge | Old buggy `setMonth(+1)` data | Backfill `currentPeriodEnd` to `prev_end + 30 days` |
+| User dashboard shows different day than admin page | Server in UTC, browser in Athens, no explicit `timeZone` in format calls | Set server `TZ=Europe/Athens` OR pass explicit timezone everywhere |
+| Cardlink charged but our DB never updated | "Recurring notify URL" missing in portal | Set in Cardlink merchant portal |
+| Customer charged twice in same period | Notify URL missing AND cron is active (both fired) | Set notify URL; cron will then skip the already-updated subscription |
+| Cron silently does nothing | `worldlineToken` is NULL on the subscription row (token wasn't captured at checkout) | Investigate why `params.extToken` was empty; check `extTokenOptions='100'` was sent |
+| Digest validation fails on incoming webhook | Order of fields in form-data differs from expected, or sharedSecret mismatch | Iterate raw form-data in insertion order, append sharedSecret last |
+
+
+### Reactivating a canceled cron-killed subscription
+There's no Cardlink "reactivate" — once `RecurringOperationRequest Operation=Cancel` is sent, the chain is dead. User must re-subscribe (new checkout, new token, new master orderId).
+
+
+---
+
+
+## 13. Django port — minimum viable replication
+
+
+### 13.1 `settings.py`
+
+
+```python
+TIME_ZONE = 'Europe/Athens'
+USE_TZ = True
+```
+
+
+(This single change replaces both `instrumentation.ts` AND the Athens-calendar special-casing — Django ORM handles TZ natively.)
+
+
+### 13.2 Models (`apps/subscriptions/models.py`)
+
+
+```python
+from django.db import models
+
+
+class PaymentAttemptStatus(models.TextChoices):
+   CAPTURED    = 'CAPTURED'
+   AUTHORIZED  = 'AUTHORIZED'
+   REFUSED     = 'REFUSED'
+   REFUSEDRISK = 'REFUSEDRISK'
+   CANCELED    = 'CANCELED'
+   ERROR       = 'ERROR'
+
+
+class PaymentAttemptSource(models.TextChoices):
+   INITIAL         = 'initial'
+   RECURRING_CHILD = 'recurring_child'
+   CRON_RENEWAL    = 'cron_renewal'
+   CRON_RETRY      = 'cron_retry'
+   MANUAL          = 'manual'
+
+
+class SubscriptionPaymentAttempt(models.Model):
+   id              = models.CharField(primary_key=True, max_length=30)  # cuid
+   subscription    = models.ForeignKey(
+       'Subscription', on_delete=models.CASCADE, related_name='payment_attempts'
+   )
+   status          = models.CharField(max_length=20, choices=PaymentAttemptStatus.choices)
+   source          = models.CharField(max_length=20, choices=PaymentAttemptSource.choices)
+   amount          = models.IntegerField()
+   currency        = models.CharField(max_length=8, default='eur')
+   sequence        = models.IntegerField(null=True, blank=True)
+   tx_id           = models.CharField(max_length=128, null=True, blank=True, db_column='txId')
+   payment_ref     = models.CharField(max_length=128, null=True, blank=True, db_column='paymentRef')
+   order_id        = models.CharField(max_length=128, null=True, blank=True, db_column='orderId')
+   message         = models.TextField(null=True, blank=True)
+   error_message   = models.TextField(null=True, blank=True, db_column='errorMessage')
+   created_at      = models.DateTimeField(auto_now_add=True, db_column='createdAt')
+
+
+   class Meta:
+       db_table = 'subscription_payment_attempts'
+       indexes = [
+           models.Index(fields=['subscription', 'created_at']),
+           models.Index(fields=['status', 'created_at']),
+           models.Index(fields=['tx_id']),
+       ]
+```
+
+
+### 13.3 Cadence helper
+
+
+```python
+from datetime import timedelta
+
+
+def add_billing_cycle_days(start, cycle_days: int):
+   return start + timedelta(days=cycle_days)
+
+
+# Usage:
+cycle_days = 365 if billing_interval == 'year' else 30
+new_period_end = add_billing_cycle_days(now, cycle_days)
+```
+
+
+### 13.4 Best-effort history logger
+
+
+```python
+import logging
+log = logging.getLogger(__name__)
+
+
+def record_payment_attempt(*, subscription_id, status, source, amount, **kwargs):
+   """Wrapped in try/except — never break payment processing."""
+   try:
+       SubscriptionPaymentAttempt.objects.create(
+           subscription_id=subscription_id,
+           status=status,
+           source=source,
+           amount=amount,
+           **kwargs,
+       )
+   except Exception:
+       log.exception(
+           'Failed to record payment attempt for sub=%s source=%s status=%s',
+           subscription_id, source, status,
+       )
+```
+
+
+### 13.5 Recommended Django module layout
+
+
+```
+apps/
+ subscriptions/
+   models.py                       # Subscription, SubscriptionPaymentAttempt, enums
+   services/
+     worldline_redirect.py         # build the hosted-form params + digest
+     worldline_xml.py              # SaleRequest, Cancel via XML API
+     worldline_digest.py           # the two digest algos (form + XML)
+     record_attempt.py             # best-effort history insert
+     renewals.py                   # the cron / Celery task logic
+   views/
+     webhooks.py                   # POST handler for /webhooks/worldline/
+     checkout.py                   # creates the redirect form, returns redirect URL
+   tasks.py                        # Celery beat task definition
+   admin.py                        # Subscription + history admin pages
+```
+
+
+### 13.6 Webhook endpoint (sketch)
+
+
+```python
+# views/webhooks.py
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+
+
+@csrf_exempt
+@require_POST
+def worldline_webhook(request):
+   # 1. Parse form data (handle Modirum HTTPClient text/plain case)
+   # 2. Validate digest (see Section 9)
+   # 3. Branch:
+   #    - Sequence >= 2 → recurring child (success/fail)
+   #    - status CAPTURED/AUTHORIZED + Sequence 1 → initial success
+   #    - other status + Sequence 1 → initial failure
+   # 4. After updating Subscription row → call record_payment_attempt(...)
+   # 5. Return JSON for server-to-server, redirect for browser
+   pass
+```
+
+
+### 13.7 Celery beat task (replaces vercel.json cron)
+
+
+```python
+# settings.py
+CELERY_BEAT_SCHEDULE = {
+   'worldline-renewals': {
+       'task': 'apps.subscriptions.tasks.run_worldline_renewals',
+       'schedule': crontab(hour=6, minute=0),  # 06:00 Athens (settings.TIME_ZONE)
+   },
+}
+CELERY_TIMEZONE = 'Europe/Athens'  # NOT UTC like vercel.json
+
+
+# tasks.py
+@shared_task
+def run_worldline_renewals():
+   # Mirror processRenewal logic from cron/worldline-renewals/route.ts
+   # - Find subscriptions where current_period_end <= tomorrow
+   # - For each: executeRecurringCharge via XML
+   # - Update + record_payment_attempt
+   pass
+```
+
+
+### 13.8 Passwords from Better Auth
+
+
+You **cannot** unhash existing passwords (one-way hash). But you **don't need to** — write a custom Django password hasher that verifies the existing Better Auth scrypt format. On next login per user, Django auto-rehashes to its default Argon2.
+
+
+```python
+# myapp/hashers.py
+from django.contrib.auth.hashers import BasePasswordHasher
+import hashlib, base64
+
+
+class BetterAuthScryptHasher(BasePasswordHasher):
+   algorithm = "better_auth_scrypt"
+
+
+   def verify(self, password: str, encoded: str) -> bool:
+       _, n, r, p, salt_b64, hash_b64 = encoded.split(":")  # adjust to actual BA format
+       salt = base64.b64decode(salt_b64)
+       expected = base64.b64decode(hash_b64)
+       computed = hashlib.scrypt(
+           password.encode("utf-8"), salt=salt,
+           n=int(n), r=int(r), p=int(p),
+           dklen=len(expected),
+       )
+       return computed == expected
+
+
+   def encode(self, password, salt):
+       raise NotImplementedError("legacy hasher — read-only")
+```
+
+
+```python
+# settings.py
+PASSWORD_HASHERS = [
+   "django.contrib.auth.hashers.Argon2PasswordHasher",  # default for new
+   "myapp.hashers.BetterAuthScryptHasher",               # legacy for migration
+]
+```
+
+
+> Confirm the exact Better Auth scrypt string format by inspecting a real row in your pg_dump (`account.password` column). Better Auth uses scrypt by default per their docs.
+
+
+### 13.9 What pg_dump CAN'T migrate
+
+
+| Data | Where it lives | How to handle |
+|---|---|---|
+| **Storage bucket files** | Supabase Storage (S3-like) — **but this project uses Cloudinary, not Supabase Storage** | ✅ N/A — Cloudinary URLs continue to work without migration |
+| **Edge Functions code** | Supabase platform — not used by this project | ✅ N/A |
+| **JWT secrets / API keys** | Supabase platform-level | Regenerate in new setup |
+| **Realtime subscriptions** | runtime state | Re-establish automatically on connect |
+| **Postgres extensions** | per-database | Install on target DB **before** pg_restore |
+
+
+---
+
+
+## 14. Deployment checklist for the new repo
+
+
+When you deploy the Django port:
+
+
+- [ ] **DB**: Run the SQL migration on the new Postgres (the `CREATE TYPE` / `CREATE TABLE` block from Section 7.1)
+- [ ] **Settings**: `TIME_ZONE = 'Europe/Athens'`, `USE_TZ = True`
+- [ ] **Env vars**: Set all `WORLDLINE_*` + `CRON_SECRET` + `SITE_URL`
+- [ ] **Cardlink portal**: ⚠️ Set "Recurring notify URL" → `https://<new-domain>/webhooks/worldline/` (most-forgotten step)
+- [ ] **Disable old Vercel cron** before enabling Celery beat — otherwise both will charge
+- [ ] **Test mode**: `PAYMENTS_TEST_MODE=true` for cutover so only admins hit the new flow
+- [ ] **Backfill**: Run SCRUM-28 + SCRUM-54 backfill SQL (Sections 7.3 + 7.6)
+- [ ] **Better Auth password hasher**: implement `BetterAuthScryptHasher` so existing 350 users keep their passwords (Section 13.8)
+- [ ] **Postgres extensions**: install whatever was enabled on Supabase (check Supabase Dashboard → Database → Extensions before migration)
+- [ ] **Cloudinary**: leave env vars unchanged — URLs in the DB keep working
+- [ ] Once stable, flip `PAYMENTS_TEST_MODE=false`
+
+
+---
+
+
+*End of doc. Generated from PRs #468 + #469 + #470, all surrounding manual operations (Cardlink portal config, Supabase SQL Editor migrations), and the architectural research notes.*
+
+
+
+

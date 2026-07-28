@@ -1,0 +1,277 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* @import 'tw-animate-css'; */
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%; /* HEX: #ffffff */
+    --foreground: 220 58% 15%; /* HEX: #101f3c (brand navy) */
+    --card: 0 0% 100%; /* HEX: #ffffff */
+    --card-foreground: 220 58% 15%; /* HEX: #101f3c */
+    --popover: 0 0% 100%; /* HEX: #ffffff */
+    --popover-foreground: 220 58% 15%; /* HEX: #101f3c */
+    --primary: 217 68% 22%; /* HEX: #122f5e (brand navy) */
+    --primary-foreground: 0 0% 98%; /* HEX: #fafafa */
+    --primary-dark: 220 58% 15%; /* HEX: #101f3c (brand navy dark) */
+    --secondary: 164 82% 34%; /* HEX: #109e79 (brand emerald) */
+    --secondary-foreground: 0 0% 98%; /* HEX: #fafafa */
+    --third: 164 82% 34%; /* HEX: #109e79 (brand emerald) */
+    --fourth: 166 70% 46%; /* HEX: #23c9a2 (brand mint-green) */
+    --fifth: 166 70% 46% / 0.1; /* HEX: #23c9a2 @ 10% */
+    --sixth: 156 75% 75%; /* HEX: #8fefc8 (brand light mint) */
+    --orangy: 42.86 63.64% 95.69%; /* HEX: #fbf7ed */
+    --orangy-foreground: 40.38 85.95% 36.27%; /* HEX: #ac780d */
+    --yellowish: 43 100% 80%; /* HEX: #ffe197 (secondary yellow) */
+    --silver: 0 0% 95.7%; /* HEX: #f4f4f4 (brand gray) */
+    --bluey: 162 60% 96%; /* HEX: #eefcf7 (pale mint) */
+    --dark: 220 58% 15%; /* HEX: #101f3c */
+    --subtle: 0 0% 98.82%; /* HEX: #fcfcfc */
+    --body: 215 16% 32%; /* HEX: #45505f (cool slate) */
+    --muted: 0 0% 95.7%; /* HEX: #f4f4f4 */
+    --muted-foreground: 220 9% 46%; /* HEX: #6b7280 */
+    --accent: 0 0% 95.7%; /* HEX: #f4f4f4 */
+    --accent-foreground: 220 58% 15%; /* HEX: #101f3c */
+    --pale: 217 68% 22%; /* HEX: #122f5e (brand navy) */
+    --pale-foreground: 0 0% 98%; /* HEX: #fafafa */
+    --destructive: 0 86% 37%; /* HEX: #ef4444 */
+    --destructive-foreground: 0 0% 98%; /* HEX: #fafafa */
+    --border: 0 0% 91.4%; /* HEX: #e9e9e9 */
+    --input: 0 3% 91.4%; /* HEX: #e9e9e9 */
+    --ring: 217 68% 22%; /* HEX: #122f5e (brand navy) */
+    --chart-1: 12 76% 61%; /* HEX: #e76e50 */
+    --chart-2: 173 58% 39%; /* HEX: #2a9d90 */
+    --chart-3: 197 37% 24%; /* HEX: #274754 */
+    --chart-4: 43 74% 66%; /* HEX: #e8c468 */
+    --chart-5: 27 87% 67%; /* HEX: #f4a462 */
+    --radius: 0.5rem;
+    --sidebar-background: 0 0% 98%; /* HEX: #fafafa */
+    --sidebar-foreground: 240 5.3% 26.1%; /* HEX: #3f3f46 */
+    --sidebar-primary: 240 5.9% 10%; /* HEX: #18181b */
+    --sidebar-primary-foreground: 0 0% 98%; /* HEX: #fafafa */
+    --sidebar-accent: 240 4.8% 95.9%; /* HEX: #f4f4f5 */
+    --sidebar-accent-foreground: 240 5.9% 10%; /* HEX: #18181b */
+    --sidebar-border: 220 13% 91%; /* HEX: #e5e7eb */
+    --sidebar-ring: 217.2 91.2% 59.8%; /* HEX: #3b82f6 */
+    /* extra */
+    --headings-color: #101f3c;
+    --body-text-color: #45505f;
+    /* Custom backgrounds and hero colors */
+    --yellow-light: 55.26 87.5% 85.29%; /* HEX: #ffe598 */
+    --yellow-bright: 51.43 100% 50%; /* HEX: #ffd700 */
+    --gray-medium: 0 0% 49.02%; /* HEX: #7d7d7d */
+    --green-light: 139.13 100% 89.02%; /* HEX: #e2ffeb */
+    --purple-dark: 300 100% 25.1%; /* HEX: #821987 */
+    /* Custom green scale based on brand emerald (#109e79 / #23c9a2 / #8fefc8) */
+    --green-50: 158 70% 96%; /* Very light mint for backgrounds */
+    --green-100: 156 68% 90%; /* Light mint */
+    --green-200: 156 72% 80%; /* Lighter mint */
+    --green-300: 156 75% 75%; /* HEX: #8fefc8 brand light mint */
+    --green-400: 166 66% 56%; /* Medium green */
+    --green-500: 166 70% 46%; /* HEX: #23c9a2 brand vibrant */
+    --green-600: 164 82% 34%; /* HEX: #109e79 brand deep */
+    --green-700: 165 80% 27%; /* Dark green */
+    --green-800: 167 78% 20%; /* Very dark green */
+    --green-900: 168 75% 14%; /* Darkest green */
+  }
+  * {
+    @apply border-border outline-ring/50 box-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  body {
+    margin: 0;
+    font-family:
+      var(--font-open-sans), system-ui, -apple-system, BlinkMacSystemFont,
+      'Segoe UI', Roboto, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Base heading styles using Tailwind classes */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply mt-0 mb-2 text-[var(--headings-color)] leading-tight;
+  }
+
+  /* Heading font weights */
+  h1,
+  h2,
+  h3 {
+    @apply font-bold;
+  }
+
+  h4,
+  h5,
+  h6 {
+    @apply font-medium;
+  }
+
+  /* Heading sizes from old.css */
+  h1 {
+    @apply text-[38px];
+  }
+
+  h2 {
+    @apply text-2xl;
+  }
+
+  h3 {
+    @apply text-2xl;
+  }
+
+  h4 {
+    @apply text-lg;
+  }
+
+  h5 {
+    @apply text-[17px];
+  }
+
+  h6 {
+    @apply text-[15px];
+  }
+
+  /* Responsive h2 */
+  h2 {
+    @apply text-2xl sm:text-xl;
+  }
+
+  /* Paragraph styles */
+  p {
+    @apply m-0 text-[var(--body-text-color)] leading-relaxed font-normal;
+  }
+
+  /* Title utility classes */
+  .title {
+    @apply text-[var(--headings-color)];
+  }
+
+  .paragraph {
+    @apply text-[var(--headings-color)] font-sans;
+  }
+}
+
+@layer utilities {
+  /* Scrollbar hide utility for hero gallery carousel */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Rich text content (rendered from Tiptap HTML) */
+.rich-text h2 {
+  @apply text-lg font-semibold mt-4 mb-2;
+}
+.rich-text h3 {
+  @apply text-base font-semibold mt-3 mb-1;
+}
+.rich-text p {
+  @apply mb-2;
+}
+.rich-text ul {
+  @apply list-disc pl-5 my-2;
+}
+.rich-text ol {
+  @apply list-decimal pl-5 my-2;
+}
+.rich-text li {
+  @apply my-0.5;
+}
+.rich-text strong {
+  @apply font-bold;
+}
+.rich-text em {
+  @apply italic;
+}
+
+/* Tiptap editor styles */
+.rich-text-editor {
+  @apply flex flex-col cursor-text;
+}
+.rich-text-editor .tiptap {
+  @apply outline-none flex-1;
+}
+.rich-text-editor .tiptap p {
+  @apply mb-2;
+}
+.rich-text-editor .tiptap h2 {
+  @apply text-lg font-semibold mt-3 mb-1;
+}
+.rich-text-editor .tiptap h3 {
+  @apply text-base font-semibold mt-2 mb-1;
+}
+.rich-text-editor .tiptap ul {
+  @apply list-disc pl-5 my-2;
+}
+.rich-text-editor .tiptap ol {
+  @apply list-decimal pl-5 my-2;
+}
+.rich-text-editor .tiptap li {
+  @apply my-0.5;
+}
+.rich-text-editor .tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  @apply text-muted-foreground pointer-events-none float-left h-0;
+}

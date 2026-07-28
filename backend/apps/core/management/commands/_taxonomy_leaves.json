@@ -1,0 +1,3922 @@
+[
+  {
+    "label": "Animated Video",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "video",
+    "subdivision": "animated-video",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Βίντεο"
+  },
+  {
+    "label": "Drone Video",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "video",
+    "subdivision": "drone-video",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Βίντεο"
+  },
+  {
+    "label": "Motion Graphics",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "video",
+    "subdivision": "motion-graphics",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Βίντεο"
+  },
+  {
+    "label": "Βιντεογράφηση",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "video",
+    "subdivision": "videografisi",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Βίντεο"
+  },
+  {
+    "label": "Δημιουργία Βίντεο",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "video",
+    "subdivision": "dimiourgia-video",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Βίντεο"
+  },
+  {
+    "label": "Δημιουργία Μουσικών Βίντεο",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "video",
+    "subdivision": "dimiourgia-mousikon-video",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Βίντεο"
+  },
+  {
+    "label": "Διαφημιστικά Βίντεο",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "video",
+    "subdivision": "diafimistika-video",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Βίντεο"
+  },
+  {
+    "label": "Επεξεργασία Βίντεο",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "video",
+    "subdivision": "epexergasia-video",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Βίντεο"
+  },
+  {
+    "label": "Μοντάζ Βίντεο",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "video",
+    "subdivision": "modaz-video",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Βίντεο"
+  },
+  {
+    "label": "Παραγωγή Βίντεο",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "video",
+    "subdivision": "paragogi-video",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Βίντεο"
+  },
+  {
+    "label": "Υπότιτλοι",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "video",
+    "subdivision": "upotitloi",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Βίντεο"
+  },
+  {
+    "label": "Δελτία Τύπου",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "dimosiografia",
+    "subdivision": "deltia-tupou",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Δημοσιογραφία"
+  },
+  {
+    "label": "Δημοσιογραφική Κάλυψη",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "dimosiografia",
+    "subdivision": "dimosiografiki-kalupsi",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Δημοσιογραφία"
+  },
+  {
+    "label": "Συγγραφή Ειδησεογραφικού Άρθρου",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "dimosiografia",
+    "subdivision": "sugrafi-eidiseografikou-arthrou",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Δημοσιογραφία"
+  },
+  {
+    "label": "Συνεντεύξεις",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "dimosiografia",
+    "subdivision": "sunedeuxeis",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Δημοσιογραφία"
+  },
+  {
+    "label": "Εκτύπωση Αφισών",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "ektuposeis",
+    "subdivision": "ektuposi-afison",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Εκτυπώσεις"
+  },
+  {
+    "label": "Εκτύπωση Εντύπων",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "ektuposeis",
+    "subdivision": "ektyposi-entypon",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Εκτυπώσεις"
+  },
+  {
+    "label": "Εκτύπωση Καρτών",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "ektuposeis",
+    "subdivision": "ektuposi-karton",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Εκτυπώσεις"
+  },
+  {
+    "label": "Voice-over",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "ixos",
+    "subdivision": "voice-over",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Ήχος"
+  },
+  {
+    "label": "Δημιουργία Remix",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "ixos",
+    "subdivision": "dimiourgia-remix",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Ήχος"
+  },
+  {
+    "label": "Δημιουργία Εκφωνήσεων",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "ixos",
+    "subdivision": "dimiourgia-ekfoniseon",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Ήχος"
+  },
+  {
+    "label": "Εκφωνήσεις",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "ixos",
+    "subdivision": "ekfoniseis",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Ήχος"
+  },
+  {
+    "label": "Επεξεργασία Ήχου",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "ixos",
+    "subdivision": "epexergasia-ixou",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Ήχος"
+  },
+  {
+    "label": "Ηχητικά Εφέ",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "ixos",
+    "subdivision": "ixitika-efe",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Ήχος"
+  },
+  {
+    "label": "Ηχογράφηση",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "ixos",
+    "subdivision": "ixografisi",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Ήχος"
+  },
+  {
+    "label": "Ηχογράφηση Μουσικής",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "ixos",
+    "subdivision": "ixografisi-mousikis",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Ήχος"
+  },
+  {
+    "label": "Ηχοληψία",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "ixos",
+    "subdivision": "ixolipsia",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Ήχος"
+  },
+  {
+    "label": "Μάστερινγκ Ήχου",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "ixos",
+    "subdivision": "mastering-ixou",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Ήχος"
+  },
+  {
+    "label": "Μίξη Ήχου",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "ixos",
+    "subdivision": "mixi-ixou",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Ήχος"
+  },
+  {
+    "label": "Μίξη & Μάστερινγκ Ήχου",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "ixos",
+    "subdivision": "mixi-mastering-ixou",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Ήχος"
+  },
+  {
+    "label": "Μουσική",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "ixos",
+    "subdivision": "mousiki",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Ήχος"
+  },
+  {
+    "label": "Σύνθεση Μουσικής",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "ixos",
+    "subdivision": "sunthesi-mousikis",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Ήχος"
+  },
+  {
+    "label": "Σύνθεση Τραγουδιών",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "ixos",
+    "subdivision": "sunthesi-tragoudion",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Ήχος"
+  },
+  {
+    "label": "Αγγλικά",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "metafraseis",
+    "subdivision": "agglika",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Μεταφράσεις"
+  },
+  {
+    "label": "Γερμανικά",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "metafraseis",
+    "subdivision": "germanika",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Μεταφράσεις"
+  },
+  {
+    "label": "Διερμηνεία",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "metafraseis",
+    "subdivision": "diermineia",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Μεταφράσεις"
+  },
+  {
+    "label": "Ισπανικά",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "metafraseis",
+    "subdivision": "ispanika",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Μεταφράσεις"
+  },
+  {
+    "label": "Ιταλικά",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "metafraseis",
+    "subdivision": "italika",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Μεταφράσεις"
+  },
+  {
+    "label": "Μετάφραση Κειμένων",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "metafraseis",
+    "subdivision": "metafrasi-keimenon",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Μεταφράσεις"
+  },
+  {
+    "label": "Copywriting",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sugrafi",
+    "subdivision": "copywriting",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Συγγραφή"
+  },
+  {
+    "label": "Δημιουργία Ψηφιακού Περιεχομένου",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sugrafi",
+    "subdivision": "dimiourgia-psifiakou-periexomenou",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Συγγραφή"
+  },
+  {
+    "label": "Διαχείριση Blog",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sugrafi",
+    "subdivision": "diaxeirisi-blog",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Συγγραφή"
+  },
+  {
+    "label": "Διόρθωση Άρθρων",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sugrafi",
+    "subdivision": "diorthosi-arthron",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Συγγραφή"
+  },
+  {
+    "label": "Επιμέλεια Βιβλίου",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sugrafi",
+    "subdivision": "epimeleia-vivliou",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Συγγραφή"
+  },
+  {
+    "label": "Στιχουργία",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sugrafi",
+    "subdivision": "stixourgia",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Συγγραφή"
+  },
+  {
+    "label": "Συγγραφή Άρθρων",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sugrafi",
+    "subdivision": "sugrafi-arthron",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Συγγραφή"
+  },
+  {
+    "label": "Συγγραφή Κειμένων",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sugrafi",
+    "subdivision": "sugrafi-keimenon",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Συγγραφή"
+  },
+  {
+    "label": "Σύνταξη Βιογραφικού",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sugrafi",
+    "subdivision": "sudaxi-viografikou",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Συγγραφή"
+  },
+  {
+    "label": "3D Σχεδίαση",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "3d-sxediasi",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Social Media design",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "social-media-design",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Δημιουργία Λογοτύπου",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "dimiourgia-logotupou",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Εικονογράφηση",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "eikonografisi",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Επεξεργασία Photoshop",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "epexergasia-photoshop",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Επεξεργασία Εικόνας",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "epexergasia-eikonas",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Σχεδίαση Tattoo",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "sxediasi-tattoo",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Σχεδιασμός App",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "sxediasmos-app",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Σχεδιασμός Banners",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "sxediasmos-banners",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Σχεδιασμός Digital περιεχομένου",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "sxediasmos-digital-periexomenou",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Σχεδιασμός Infographic",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "sxediasmos-infographic",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Σχεδιασμός Menu",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "sxediasmos-menu",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Σχεδιασμός Packaging",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "sxediasmos-packaging",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Σχεδιασμός T-shirt",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "sxediasmos-t-shirt",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Σχεδιασμός Αφίσας",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "sxediasmos-afisas",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Σχεδιασμός Γραφικών",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "sxediasmos-grafikon",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Σχεδιασμός Διαφημιστικών Υλικών",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "sxediasmos-diafimistikon-ulikon",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Σχεδιασμός Εντύπων",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "sxediasmos-edupon",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Σχεδιασμός Εξωφύλλου",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "sxediasmos-exofullou",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Σχεδιασμός Επαγγελματικής Κάρτας",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "sxediasmos-epagelmatikis-kartas",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Σχεδιασμός Καρτούν",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "sxediasmos-kartoun",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Σχεδιασμός Λογοτύπου",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "sxediasmos-logotupou",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Σχεδιασμός Παρουσίασης",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "sxediasmos-parousiasis",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "Σχεδιασμός Φυλλαδίων",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "sxediasmos",
+    "subdivision": "sxediasmos-fulladion",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Σχεδιασμός"
+  },
+  {
+    "label": "3D Φωτογράφιση",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "fotografia",
+    "subdivision": "3d-fotografisi",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Φωτογραφία"
+  },
+  {
+    "label": "Φωτογράφιση",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "fotografia",
+    "subdivision": "fotografisi",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Φωτογραφία"
+  },
+  {
+    "label": "Φωτογράφιση 360°",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "fotografia",
+    "subdivision": "fotografisi-360",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Φωτογραφία"
+  },
+  {
+    "label": "Φωτογράφιση Πορτραίτου",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "fotografia",
+    "subdivision": "fotografisi-portraitou",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Φωτογραφία"
+  },
+  {
+    "label": "Φωτογράφιση Προϊόντων",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "fotografia",
+    "subdivision": "fotografisi-proiodon",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Φωτογραφία"
+  },
+  {
+    "label": "Φωτογράφιση Τοπίου",
+    "category": "dimiourgia-periexomenou",
+    "subcategory": "fotografia",
+    "subdivision": "fotografisi-topiou",
+    "category_label": "Δημιουργία Περιεχομένου",
+    "subcategory_label": "Φωτογραφία"
+  },
+  {
+    "label": "Διακόσμηση Εκδήλωσης",
+    "category": "ekdiloseis",
+    "subcategory": "diakosmisi-ekdiloseon",
+    "subdivision": "diakosmisi-ekdilosis",
+    "category_label": "Εκδηλώσεις",
+    "subcategory_label": "Διακόσμηση Εκδηλώσεων"
+  },
+  {
+    "label": "Live Μουσική",
+    "category": "ekdiloseis",
+    "subcategory": "diaskedasi",
+    "subdivision": "live-mousiki",
+    "category_label": "Εκδηλώσεις",
+    "subcategory_label": "Διασκέδαση"
+  },
+  {
+    "label": "Stand Up Comedy",
+    "category": "ekdiloseis",
+    "subcategory": "diaskedasi",
+    "subdivision": "stand-up-comedy",
+    "category_label": "Εκδηλώσεις",
+    "subcategory_label": "Διασκέδαση"
+  },
+  {
+    "label": "Μουσική DJ",
+    "category": "ekdiloseis",
+    "subcategory": "diaskedasi",
+    "subdivision": "mousiki-dj",
+    "category_label": "Εκδηλώσεις",
+    "subcategory_label": "Διασκέδαση"
+  },
+  {
+    "label": "Χοροί",
+    "category": "ekdiloseis",
+    "subcategory": "diaskedasi",
+    "subdivision": "xoroi",
+    "category_label": "Εκδηλώσεις",
+    "subcategory_label": "Διασκέδαση"
+  },
+  {
+    "label": "Catering",
+    "category": "ekdiloseis",
+    "subcategory": "estiasi",
+    "subdivision": "catering",
+    "category_label": "Εκδηλώσεις",
+    "subcategory_label": "Εστίαση"
+  },
+  {
+    "label": "Μενού",
+    "category": "ekdiloseis",
+    "subcategory": "estiasi",
+    "subdivision": "menou",
+    "category_label": "Εκδηλώσεις",
+    "subcategory_label": "Εστίαση"
+  },
+  {
+    "label": "Προετοιμασία Γευμάτων",
+    "category": "ekdiloseis",
+    "subcategory": "estiasi",
+    "subdivision": "proetoimasia-geumaton",
+    "category_label": "Εκδηλώσεις",
+    "subcategory_label": "Εστίαση"
+  },
+  {
+    "label": "Σέρβις",
+    "category": "ekdiloseis",
+    "subcategory": "estiasi",
+    "subdivision": "servis",
+    "category_label": "Εκδηλώσεις",
+    "subcategory_label": "Εστίαση"
+  },
+  {
+    "label": "Διοργάνωση εκδήλωσης",
+    "category": "ekdiloseis",
+    "subcategory": "organosi-ekdiloseon",
+    "subdivision": "diorganosi-ekdilosis",
+    "category_label": "Εκδηλώσεις",
+    "subcategory_label": "Οργάνωση Εκδηλώσεων"
+  },
+  {
+    "label": "Διοργάνωση πάρτυ",
+    "category": "ekdiloseis",
+    "subcategory": "organosi-ekdiloseon",
+    "subdivision": "diorganosi-party",
+    "category_label": "Εκδηλώσεις",
+    "subcategory_label": "Οργάνωση Εκδηλώσεων"
+  },
+  {
+    "label": "Οργάνωση Βάπτισης",
+    "category": "ekdiloseis",
+    "subcategory": "organosi-ekdiloseon",
+    "subdivision": "organosi-vaptisis",
+    "category_label": "Εκδηλώσεις",
+    "subcategory_label": "Οργάνωση Εκδηλώσεων"
+  },
+  {
+    "label": "Οργάνωση Γάμου",
+    "category": "ekdiloseis",
+    "subcategory": "organosi-ekdiloseon",
+    "subdivision": "organosi-gamou",
+    "category_label": "Εκδηλώσεις",
+    "subcategory_label": "Οργάνωση Εκδηλώσεων"
+  },
+  {
+    "label": "Οργάνωση Εκδήλωσης",
+    "category": "ekdiloseis",
+    "subcategory": "organosi-ekdiloseon",
+    "subdivision": "organosi-ekdilosis",
+    "category_label": "Εκδηλώσεις",
+    "subcategory_label": "Οργάνωση Εκδηλώσεων"
+  },
+  {
+    "label": "Παρουσίαση Εκδήλωσης",
+    "category": "ekdiloseis",
+    "subcategory": "parousiasi-ekdiloseon",
+    "subdivision": "parousiasi-ekdilosis",
+    "category_label": "Εκδηλώσεις",
+    "subcategory_label": "Παρουσίαση Εκδηλώσεων"
+  },
+  {
+    "label": "Φωτογράφιση Γάμου",
+    "category": "ekdiloseis",
+    "subcategory": "fotografisi-ekdiloseon",
+    "subdivision": "fotografisi-gamou",
+    "category_label": "Εκδηλώσεις",
+    "subcategory_label": "Φωτογράφιση Εκδηλώσεων"
+  },
+  {
+    "label": "Piercing",
+    "category": "eveksia-frontida",
+    "subcategory": "aisthitiki",
+    "subdivision": "piercing",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Αισθητική"
+  },
+  {
+    "label": "Αποτρίχωση",
+    "category": "eveksia-frontida",
+    "subcategory": "aisthitiki",
+    "subdivision": "apotrixosi",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Αισθητική"
+  },
+  {
+    "label": "Βλεφαρίδες",
+    "category": "eveksia-frontida",
+    "subcategory": "aisthitiki",
+    "subdivision": "vlefarides",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Αισθητική"
+  },
+  {
+    "label": "Θεραπείες Δέρματος",
+    "category": "eveksia-frontida",
+    "subcategory": "aisthitiki",
+    "subdivision": "therapeies-dermatos",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Αισθητική"
+  },
+  {
+    "label": "Θεραπείες Σώματος",
+    "category": "eveksia-frontida",
+    "subcategory": "aisthitiki",
+    "subdivision": "therapeies-somatos",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Αισθητική"
+  },
+  {
+    "label": "Λιπογλυπτική",
+    "category": "eveksia-frontida",
+    "subcategory": "aisthitiki",
+    "subdivision": "lipogluptiki",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Αισθητική"
+  },
+  {
+    "label": "Μακιγιάζ",
+    "category": "eveksia-frontida",
+    "subcategory": "aisthitiki",
+    "subdivision": "makigiaz",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Αισθητική"
+  },
+  {
+    "label": "Μανικιούρ",
+    "category": "eveksia-frontida",
+    "subcategory": "aisthitiki",
+    "subdivision": "manikiour",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Αισθητική"
+  },
+  {
+    "label": "Πεντικιούρ",
+    "category": "eveksia-frontida",
+    "subcategory": "aisthitiki",
+    "subdivision": "pedikiour",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Αισθητική"
+  },
+  {
+    "label": "Περιποίηση Προσώπου",
+    "category": "eveksia-frontida",
+    "subcategory": "aisthitiki",
+    "subdivision": "peripoiisi-prosopou",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Αισθητική"
+  },
+  {
+    "label": "Τατουάζ",
+    "category": "eveksia-frontida",
+    "subcategory": "aisthitiki",
+    "subdivision": "tatouaz",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Αισθητική"
+  },
+  {
+    "label": "Τεχνητά νύχια",
+    "category": "eveksia-frontida",
+    "subcategory": "aisthitiki",
+    "subdivision": "texnita-nuxia",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Αισθητική"
+  },
+  {
+    "label": "Φρύδια",
+    "category": "eveksia-frontida",
+    "subcategory": "aisthitiki",
+    "subdivision": "frudia",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Αισθητική"
+  },
+  {
+    "label": "Αποκατάσταση παθήσεων",
+    "category": "eveksia-frontida",
+    "subcategory": "apokatastasi",
+    "subdivision": "apokatastasi-pathiseon",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Αποκατάσταση"
+  },
+  {
+    "label": "Αποκατάσταση ρήξης",
+    "category": "eveksia-frontida",
+    "subcategory": "apokatastasi",
+    "subdivision": "apokatastasi-riksis",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Αποκατάσταση"
+  },
+  {
+    "label": "Αποκατάσταση τραυματισμών",
+    "category": "eveksia-frontida",
+    "subcategory": "apokatastasi",
+    "subdivision": "apokatastasi-traumatismon",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Αποκατάσταση"
+  },
+  {
+    "label": "Εργοθεραπεία",
+    "category": "eveksia-frontida",
+    "subcategory": "apokatastasi",
+    "subdivision": "ergotherapeia",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Αποκατάσταση"
+  },
+  {
+    "label": "Λογοθεραπεία",
+    "category": "eveksia-frontida",
+    "subcategory": "apokatastasi",
+    "subdivision": "logotherapeia",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Αποκατάσταση"
+  },
+  {
+    "label": "Λογοθεραπευτική αξιολόγηση",
+    "category": "eveksia-frontida",
+    "subcategory": "apokatastasi",
+    "subdivision": "logotherapeutiki-axiologisi",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Αποκατάσταση"
+  },
+  {
+    "label": "Υδροθεραπεία",
+    "category": "eveksia-frontida",
+    "subcategory": "apokatastasi",
+    "subdivision": "udrotherapeia",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Αποκατάσταση"
+  },
+  {
+    "label": "Φυσικοθεραπεία",
+    "category": "eveksia-frontida",
+    "subcategory": "apokatastasi",
+    "subdivision": "fusikotherapeia",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Αποκατάσταση"
+  },
+  {
+    "label": "Χειροπρακτική θεραπεία",
+    "category": "eveksia-frontida",
+    "subcategory": "apokatastasi",
+    "subdivision": "xeiropraktiki-therapeia",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Αποκατάσταση"
+  },
+  {
+    "label": "Απεικονιστικές εξετάσεις",
+    "category": "eveksia-frontida",
+    "subcategory": "diagnostikes-upiresies",
+    "subdivision": "apeikonistikes-exetaseis",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Διαγνωστικές Υπηρεσίες"
+  },
+  {
+    "label": "Διαγνωστικές Εξετάσεις",
+    "category": "eveksia-frontida",
+    "subcategory": "diagnostikes-upiresies",
+    "subdivision": "diagnostikes-exetaseis",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Διαγνωστικές Υπηρεσίες"
+  },
+  {
+    "label": "Δίαιτα",
+    "category": "eveksia-frontida",
+    "subcategory": "diatrofi",
+    "subdivision": "diaita",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Διατροφή"
+  },
+  {
+    "label": "Πρόγραμμα Διατροφής",
+    "category": "eveksia-frontida",
+    "subcategory": "diatrofi",
+    "subdivision": "programma-diatrofis",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Διατροφή"
+  },
+  {
+    "label": "Συμβουλευτική Διατροφής",
+    "category": "eveksia-frontida",
+    "subcategory": "diatrofi",
+    "subdivision": "sumvouleutiki-diatrofis",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Διατροφή"
+  },
+  {
+    "label": "Personal Training",
+    "category": "eveksia-frontida",
+    "subcategory": "euexia",
+    "subdivision": "personal-training",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Ευεξία"
+  },
+  {
+    "label": "Θεραπευτικό Μασάζ",
+    "category": "eveksia-frontida",
+    "subcategory": "euexia",
+    "subdivision": "therapeutiko-masaz",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Ευεξία"
+  },
+  {
+    "label": "Μασάζ Ευεξίας",
+    "category": "eveksia-frontida",
+    "subcategory": "euexia",
+    "subdivision": "masaz-euexias",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Ευεξία"
+  },
+  {
+    "label": "Προγράμματα Απώλειας Βάρους",
+    "category": "eveksia-frontida",
+    "subcategory": "euexia",
+    "subdivision": "programmata-apoleias-varous",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Ευεξία"
+  },
+  {
+    "label": "Προγράμματα Ευεξίας",
+    "category": "eveksia-frontida",
+    "subcategory": "euexia",
+    "subdivision": "programmata-euexias",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Ευεξία"
+  },
+  {
+    "label": "Σάουνα & Χαμάμ",
+    "category": "eveksia-frontida",
+    "subcategory": "euexia",
+    "subdivision": "saouna-xamam",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Ευεξία"
+  },
+  {
+    "label": "Χαλαρωτικό Μασάζ",
+    "category": "eveksia-frontida",
+    "subcategory": "euexia",
+    "subdivision": "xalarotiko-masaz",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Ευεξία"
+  },
+  {
+    "label": "CheckUp",
+    "category": "eveksia-frontida",
+    "subcategory": "iatrikes-upiresies",
+    "subdivision": "checkup",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Ιατρικές Υπηρεσίες"
+  },
+  {
+    "label": "Δερματολογικά",
+    "category": "eveksia-frontida",
+    "subcategory": "iatrikes-upiresies",
+    "subdivision": "dermatologika",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Ιατρικές Υπηρεσίες"
+  },
+  {
+    "label": "Δερματολογική εξέταση & διάγνωση",
+    "category": "eveksia-frontida",
+    "subcategory": "iatrikes-upiresies",
+    "subdivision": "dermatologiki-exetasi-diagnosi",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Ιατρικές Υπηρεσίες"
+  },
+  {
+    "label": "Διάγνωση",
+    "category": "eveksia-frontida",
+    "subcategory": "iatrikes-upiresies",
+    "subdivision": "diagnosi",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Ιατρικές Υπηρεσίες"
+  },
+  {
+    "label": "Προληπτικοί ιατρικοί έλεγχοι",
+    "category": "eveksia-frontida",
+    "subcategory": "iatrikes-upiresies",
+    "subdivision": "proliptikoi-iatrikoi-elegxoi",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Ιατρικές Υπηρεσίες"
+  },
+  {
+    "label": "Ψυχοθεραπεία",
+    "category": "eveksia-frontida",
+    "subcategory": "iatrikes-upiresies",
+    "subdivision": "psuxotherapeia",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Ιατρικές Υπηρεσίες"
+  },
+  {
+    "label": "Ψυχολογική Στήριξη",
+    "category": "eveksia-frontida",
+    "subcategory": "iatrikes-upiresies",
+    "subdivision": "psuxologiki-stirixi",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Ιατρικές Υπηρεσίες"
+  },
+  {
+    "label": "Εξέταση",
+    "category": "eveksia-frontida",
+    "subcategory": "iatrikes-upiresies",
+    "subdivision": "exetasi",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Ιατρικές Υπηρεσίες"
+  },
+  {
+    "label": "Επίσκεψη",
+    "category": "eveksia-frontida",
+    "subcategory": "iatrikes-upiresies",
+    "subdivision": "episkepsi",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Ιατρικές Υπηρεσίες"
+  },
+  {
+    "label": "Θεραπείες",
+    "category": "eveksia-frontida",
+    "subcategory": "iatrikes-upiresies",
+    "subdivision": "therapeies",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Ιατρικές Υπηρεσίες"
+  },
+  {
+    "label": "Βαφή Μαλλιών",
+    "category": "eveksia-frontida",
+    "subcategory": "peripoiisi",
+    "subdivision": "vafi-mallion",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Περιποίηση"
+  },
+  {
+    "label": "Κούρεμα",
+    "category": "eveksia-frontida",
+    "subcategory": "peripoiisi",
+    "subdivision": "kourema",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Περιποίηση"
+  },
+  {
+    "label": "Ξύρισμα",
+    "category": "eveksia-frontida",
+    "subcategory": "peripoiisi",
+    "subdivision": "xurisma",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Περιποίηση"
+  },
+  {
+    "label": "Τριμάρισμα",
+    "category": "eveksia-frontida",
+    "subcategory": "peripoiisi",
+    "subdivision": "trimarisma",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Περιποίηση"
+  },
+  {
+    "label": "Χτένισμα",
+    "category": "eveksia-frontida",
+    "subcategory": "peripoiisi",
+    "subdivision": "xtenisma",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Περιποίηση"
+  },
+  {
+    "label": "Φροντίδα ηλικιωμένων",
+    "category": "eveksia-frontida",
+    "subcategory": "frontida",
+    "subdivision": "frodida-ilikiomenon",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Φροντίδα"
+  },
+  {
+    "label": "Βόλτα & φροντίδα σκύλων",
+    "category": "eveksia-frontida",
+    "subcategory": "frontida-katoikidion",
+    "subdivision": "volta-frodida-skulon",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Φροντίδα Κατοικιδίων"
+  },
+  {
+    "label": "Εκπαίδευση Κατοικίδιων",
+    "category": "eveksia-frontida",
+    "subcategory": "frontida-katoikidion",
+    "subdivision": "ekpaideusi-katoikidion",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Φροντίδα Κατοικιδίων"
+  },
+  {
+    "label": "Εκπαίδευση Σκύλων",
+    "category": "eveksia-frontida",
+    "subcategory": "frontida-katoikidion",
+    "subdivision": "ekpaideusi-skulon",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Φροντίδα Κατοικιδίων"
+  },
+  {
+    "label": "Εξέταση ζώων",
+    "category": "eveksia-frontida",
+    "subcategory": "frontida-katoikidion",
+    "subdivision": "exetasi-zoon",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Φροντίδα Κατοικιδίων"
+  },
+  {
+    "label": "Κτηνιατρικές Υπηρεσίες",
+    "category": "eveksia-frontida",
+    "subcategory": "frontida-katoikidion",
+    "subdivision": "ktiniatrikes-upiresies",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Φροντίδα Κατοικιδίων"
+  },
+  {
+    "label": "Φροντίδα κατοικίδιων ζώων",
+    "category": "eveksia-frontida",
+    "subcategory": "frontida-katoikidion",
+    "subdivision": "frodida-katoikidion-zoon",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Φροντίδα Κατοικιδίων"
+  },
+  {
+    "label": "Χειρουργικές επεμβάσεις ζώων",
+    "category": "eveksia-frontida",
+    "subcategory": "frontida-katoikidion",
+    "subdivision": "xeirourgikes-epemvaseis-zoon",
+    "category_label": "Ευεξία & Φροντίδα",
+    "subcategory_label": "Φροντίδα Κατοικιδίων"
+  },
+  {
+    "label": "Μαθήματα Padel",
+    "category": "mathimata",
+    "subcategory": "athlitismos",
+    "subdivision": "mathimata-padel",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Αθλητισμός"
+  },
+  {
+    "label": "Μαθήματα Μπάσκετ",
+    "category": "mathimata",
+    "subcategory": "athlitismos",
+    "subdivision": "mathimata-mpasket",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Αθλητισμός"
+  },
+  {
+    "label": "Μαθήματα Ποδοσφαίρου",
+    "category": "mathimata",
+    "subcategory": "athlitismos",
+    "subdivision": "mathimata-podosfairou",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Αθλητισμός"
+  },
+  {
+    "label": "Μαθήματα Σκι",
+    "category": "mathimata",
+    "subcategory": "athlitismos",
+    "subdivision": "mathimata-ski",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Αθλητισμός"
+  },
+  {
+    "label": "Μαθήματα Τένις",
+    "category": "mathimata",
+    "subcategory": "athlitismos",
+    "subdivision": "mathimata-tenis",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Αθλητισμός"
+  },
+  {
+    "label": "Πολεμικές Τέχνες",
+    "category": "mathimata",
+    "subcategory": "athlitismos",
+    "subdivision": "polemikes-texnes",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Αθλητισμός"
+  },
+  {
+    "label": "Προετοιμασία Αγώνων",
+    "category": "mathimata",
+    "subcategory": "athlitismos",
+    "subdivision": "proetoimasia-agonon",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Αθλητισμός"
+  },
+  {
+    "label": "Προπονήσεις",
+    "category": "mathimata",
+    "subcategory": "athlitismos",
+    "subdivision": "proponiseis",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Αθλητισμός"
+  },
+  {
+    "label": "Ιδιαίτερα Μαθήματα",
+    "category": "mathimata",
+    "subcategory": "ekpaideusi",
+    "subdivision": "idiaitera-mathimata",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Εκπαίδευση"
+  },
+  {
+    "label": "Life coaching",
+    "category": "mathimata",
+    "subcategory": "mathimata-euexias",
+    "subdivision": "life-coaching",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Μαθήματα Ευεξίας"
+  },
+  {
+    "label": "Μαθήματα Pilates",
+    "category": "mathimata",
+    "subcategory": "mathimata-euexias",
+    "subdivision": "mathimata-pilates",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Μαθήματα Ευεξίας"
+  },
+  {
+    "label": "Μαθήματα Tai Chi",
+    "category": "mathimata",
+    "subcategory": "mathimata-euexias",
+    "subdivision": "mathimata-tai-chi",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Μαθήματα Ευεξίας"
+  },
+  {
+    "label": "Μαθήματα Yoga",
+    "category": "mathimata",
+    "subcategory": "mathimata-euexias",
+    "subdivision": "mathimata-yoga",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Μαθήματα Ευεξίας"
+  },
+  {
+    "label": "Διδασκαλία Μουσικής",
+    "category": "mathimata",
+    "subcategory": "mathimata-mousikis",
+    "subdivision": "didaskalia-mousikis",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Μαθήματα Μουσικής"
+  },
+  {
+    "label": "Διδασκαλία Μουσικών Οργάνων",
+    "category": "mathimata",
+    "subcategory": "mathimata-mousikis",
+    "subdivision": "didaskalia-mousikon-organon",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Μαθήματα Μουσικής"
+  },
+  {
+    "label": "Μαθήματα Ορθοφωνίας",
+    "category": "mathimata",
+    "subcategory": "mathimata-mousikis",
+    "subdivision": "mathimata-orthofonias",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Μαθήματα Μουσικής"
+  },
+  {
+    "label": "Μαθήματα Φωνητικής",
+    "category": "mathimata",
+    "subcategory": "mathimata-mousikis",
+    "subdivision": "mathimata-fonitikis",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Μαθήματα Μουσικής"
+  },
+  {
+    "label": "Μάθημα Οδήγησης Αυτοκινήτου",
+    "category": "mathimata",
+    "subcategory": "mathimata-odigisis",
+    "subdivision": "mathima-odigisis-aytokinitoy",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Μαθήματα Οδήγησης"
+  },
+  {
+    "label": "Μαθήματα Σκάφους",
+    "category": "mathimata",
+    "subcategory": "mathimata-odigisis",
+    "subdivision": "mathimata-skafous",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Μαθήματα Οδήγησης"
+  },
+  {
+    "label": "Μαθήματα Πληροφορικής",
+    "category": "mathimata",
+    "subcategory": "mathimata-pliroforikis",
+    "subdivision": "mathimata-pliroforikis",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Μαθήματα Πληροφορικής"
+  },
+  {
+    "label": "Μαθήματα Σχεδίου",
+    "category": "mathimata",
+    "subcategory": "mathimata-texnon",
+    "subdivision": "mathimata-sxediou",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Μαθήματα Τεχνών"
+  },
+  {
+    "label": "Μαθήματα Τεχνικών",
+    "category": "mathimata",
+    "subcategory": "mathimata-texnon",
+    "subdivision": "mathimata-texnikon",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Μαθήματα Τεχνών"
+  },
+  {
+    "label": "Μαθήματα Τεχνών",
+    "category": "mathimata",
+    "subcategory": "mathimata-texnon",
+    "subdivision": "mathimata-texnon",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Μαθήματα Τεχνών"
+  },
+  {
+    "label": "Μαθήματα Υποκριτικής",
+    "category": "mathimata",
+    "subcategory": "mathimata-texnon",
+    "subdivision": "mathimata-upokritikis",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Μαθήματα Τεχνών"
+  },
+  {
+    "label": "Μαθήματα Latin",
+    "category": "mathimata",
+    "subcategory": "mathimata-xorou",
+    "subdivision": "mathimata-latin",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Μαθήματα Χορού"
+  },
+  {
+    "label": "Μαθήματα Χορού",
+    "category": "mathimata",
+    "subcategory": "mathimata-xorou",
+    "subdivision": "mathimata-xorou",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Μαθήματα Χορού"
+  },
+  {
+    "label": "Ιδιαίτερα Μαθήματα Ξένων Γλωσσών",
+    "category": "mathimata",
+    "subcategory": "xenes-glosses",
+    "subdivision": "idiaitera-mathimata-xenon-glosson",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Ξένες Γλώσσες"
+  },
+  {
+    "label": "Μαθήματα Ξένων Γλωσσών",
+    "category": "mathimata",
+    "subcategory": "xenes-glosses",
+    "subdivision": "mathimata-xenon-glosson",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Ξένες Γλώσσες"
+  },
+  {
+    "label": "Ιδιαίτερα Πανεπιστημιακά Μαθήματα",
+    "category": "mathimata",
+    "subcategory": "panepistimiaka-mathimata",
+    "subdivision": "idiaitera-panepistimiaka-mathimata",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Πανεπιστημιακά Μαθήματα"
+  },
+  {
+    "label": "Πανεπιστημιακά Μαθήματα",
+    "category": "mathimata",
+    "subcategory": "panepistimiaka-mathimata",
+    "subdivision": "panepistimiaka-mathimata",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Πανεπιστημιακά Μαθήματα"
+  },
+  {
+    "label": "Προγράμματα Επαγγελματικής Κατάρτισης",
+    "category": "mathimata",
+    "subcategory": "panepistimiaka-mathimata",
+    "subdivision": "programmata-epagelmatikis-katartisis",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Πανεπιστημιακά Μαθήματα"
+  },
+  {
+    "label": "Ιδιαίτερα Σχολικά Μαθήματα",
+    "category": "mathimata",
+    "subcategory": "sxolika-mathimata",
+    "subdivision": "idiaitera-sxolika-mathimata",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Σχολικά Μαθήματα"
+  },
+  {
+    "label": "Σχολικά Μαθήματα",
+    "category": "mathimata",
+    "subcategory": "sxolika-mathimata",
+    "subdivision": "sxolika-mathimata",
+    "category_label": "Μαθήματα",
+    "subcategory_label": "Σχολικά Μαθήματα"
+  },
+  {
+    "label": "Στρατηγική Branding",
+    "category": "marketing",
+    "subcategory": "branding",
+    "subdivision": "stratigiki-branding",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Branding"
+  },
+  {
+    "label": "Σχεδιασμός Εταιρικής Ταυτότητας",
+    "category": "marketing",
+    "subcategory": "branding",
+    "subdivision": "sxediasmos-etairikis-tautotitas",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Branding"
+  },
+  {
+    "label": "Digital Marketing",
+    "category": "marketing",
+    "subcategory": "digital-marketing",
+    "subdivision": "digital-marketing",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Digital Marketing"
+  },
+  {
+    "label": "Email Marketing",
+    "category": "marketing",
+    "subcategory": "digital-marketing",
+    "subdivision": "email-marketing",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Digital Marketing"
+  },
+  {
+    "label": "Influencer Marketing",
+    "category": "marketing",
+    "subcategory": "digital-marketing",
+    "subdivision": "influencer-marketing",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Digital Marketing"
+  },
+  {
+    "label": "Performance Marketing",
+    "category": "marketing",
+    "subcategory": "digital-marketing",
+    "subdivision": "performance-marketing",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Digital Marketing"
+  },
+  {
+    "label": "Search Engine Marketing",
+    "category": "marketing",
+    "subcategory": "digital-marketing",
+    "subdivision": "search-engine-marketing",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Digital Marketing"
+  },
+  {
+    "label": "SEO",
+    "category": "marketing",
+    "subcategory": "digital-marketing",
+    "subdivision": "seo",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Digital Marketing"
+  },
+  {
+    "label": "Social Media",
+    "category": "marketing",
+    "subcategory": "digital-marketing",
+    "subdivision": "social-media",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Digital Marketing"
+  },
+  {
+    "label": "Βελτιστοποίηση SEO",
+    "category": "marketing",
+    "subcategory": "digital-marketing",
+    "subdivision": "veltistopoiisi-seo",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Digital Marketing"
+  },
+  {
+    "label": "Δημιουργία Αναρτήσεων Social Media",
+    "category": "marketing",
+    "subcategory": "digital-marketing",
+    "subdivision": "dimiourgia-anartiseon-social-media",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Digital Marketing"
+  },
+  {
+    "label": "Δημιουργία Ψηφιακής Καμπάνιας",
+    "category": "marketing",
+    "subcategory": "digital-marketing",
+    "subdivision": "dimiourgia-psifiakis-kabanias",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Digital Marketing"
+  },
+  {
+    "label": "Διαφημίσεις CPC",
+    "category": "marketing",
+    "subcategory": "digital-marketing",
+    "subdivision": "diafimiseis-cpc",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Digital Marketing"
+  },
+  {
+    "label": "Διαφημίσεις Facebook",
+    "category": "marketing",
+    "subcategory": "digital-marketing",
+    "subdivision": "diafimiseis-facebook",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Digital Marketing"
+  },
+  {
+    "label": "Διαφημίσεις Google",
+    "category": "marketing",
+    "subcategory": "digital-marketing",
+    "subdivision": "diafimiseis-google",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Digital Marketing"
+  },
+  {
+    "label": "Διαφημίσεις Instagram",
+    "category": "marketing",
+    "subcategory": "digital-marketing",
+    "subdivision": "diafimiseis-instagram",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Digital Marketing"
+  },
+  {
+    "label": "Διαφημίσεις Linkedin",
+    "category": "marketing",
+    "subcategory": "digital-marketing",
+    "subdivision": "diafimiseis-linkedin",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Digital Marketing"
+  },
+  {
+    "label": "Διαφημίσεις Social Media",
+    "category": "marketing",
+    "subcategory": "digital-marketing",
+    "subdivision": "diafimiseis-social-media",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Digital Marketing"
+  },
+  {
+    "label": "Διαφημίσεις TIkTok",
+    "category": "marketing",
+    "subcategory": "digital-marketing",
+    "subdivision": "diafimiseis-tiktok",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Digital Marketing"
+  },
+  {
+    "label": "Διαχείριση Social Media",
+    "category": "marketing",
+    "subcategory": "digital-marketing",
+    "subdivision": "diaxeirisi-social-media",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Digital Marketing"
+  },
+  {
+    "label": "Καμπάνιες Facebook Ads",
+    "category": "marketing",
+    "subcategory": "digital-marketing",
+    "subdivision": "kabanies-facebook-ads",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Digital Marketing"
+  },
+  {
+    "label": "Καμπάνιες Google Ads",
+    "category": "marketing",
+    "subcategory": "digital-marketing",
+    "subdivision": "kabanies-google-ads",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Digital Marketing"
+  },
+  {
+    "label": "Προώθηση Instagram",
+    "category": "marketing",
+    "subcategory": "digital-marketing",
+    "subdivision": "proothisi-instagram",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Digital Marketing"
+  },
+  {
+    "label": "Δημόσιες Σχέσεις",
+    "category": "marketing",
+    "subcategory": "pr",
+    "subdivision": "dimosies-sxeseis",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "PR"
+  },
+  {
+    "label": "Δημόσιες Σχέσεις Κρίσεων",
+    "category": "marketing",
+    "subcategory": "pr",
+    "subdivision": "dimosies-sxeseis-kriseon",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "PR"
+  },
+  {
+    "label": "Διαχείριση Εταιρικής Φήμης",
+    "category": "marketing",
+    "subcategory": "pr",
+    "subdivision": "diaxeirisi-etairikis-fimis",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "PR"
+  },
+  {
+    "label": "Δειγματοδιανομή",
+    "category": "marketing",
+    "subcategory": "promotion",
+    "subdivision": "deigmatodianomi",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Promotion"
+  },
+  {
+    "label": "Διανομή Εντύπων",
+    "category": "marketing",
+    "subcategory": "promotion",
+    "subdivision": "dianomi-edupon",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Promotion"
+  },
+  {
+    "label": "Διανομή Φυλλαδίων",
+    "category": "marketing",
+    "subcategory": "promotion",
+    "subdivision": "dianomi-fulladion",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Promotion"
+  },
+  {
+    "label": "Προωθητικές Ενέργειες",
+    "category": "marketing",
+    "subcategory": "promotion",
+    "subdivision": "proothitikes-energeies",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Promotion"
+  },
+  {
+    "label": "Τηλεφωνικές Πωλήσεις",
+    "category": "marketing",
+    "subcategory": "promotion",
+    "subdivision": "tilefonikes-poliseis",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Promotion"
+  },
+  {
+    "label": "Παραγωγή Διαφημιστικών Σποτ",
+    "category": "marketing",
+    "subcategory": "diafimisi",
+    "subdivision": "paragogi-diafimistikon-spot",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Διαφήμιση"
+  },
+  {
+    "label": "Στρατηγικός Σχεδιασμός Διαφημίσεων",
+    "category": "marketing",
+    "subcategory": "diafimisi",
+    "subdivision": "stratigikos-sxediasmos-diafimiseon",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Διαφήμιση"
+  },
+  {
+    "label": "Ανάπτυξη Στρατηγικής Επικοινωνίας",
+    "category": "marketing",
+    "subcategory": "epikoinonia",
+    "subdivision": "anaptuxi-stratigikis-epikoinonias",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Επικοινωνία"
+  },
+  {
+    "label": "Διαχείριση Κρίσεων",
+    "category": "marketing",
+    "subcategory": "epikoinonia",
+    "subdivision": "diaxeirisi-kriseon",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Επικοινωνία"
+  },
+  {
+    "label": "Ανάλυση Αγοράς",
+    "category": "marketing",
+    "subcategory": "marketing",
+    "subdivision": "analusi-agoras",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Μάρκετινγκ"
+  },
+  {
+    "label": "Δημιουργία Διαφημιστικών Εκστρατειών",
+    "category": "marketing",
+    "subcategory": "marketing",
+    "subdivision": "dimiourgia-diafimistikon-ekstrateion",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Μάρκετινγκ"
+  },
+  {
+    "label": "Δημιουργία Διαφημιστικών Κειμένων",
+    "category": "marketing",
+    "subcategory": "marketing",
+    "subdivision": "dimiourgia-diafimistikon-keimenon",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Μάρκετινγκ"
+  },
+  {
+    "label": "Δημιουργία Στρατηγικής Επικοινωνίας",
+    "category": "marketing",
+    "subcategory": "marketing",
+    "subdivision": "dimiourgia-stratigikis-epikoinonias",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Μάρκετινγκ"
+  },
+  {
+    "label": "Διαφημιστική Καμπάνια",
+    "category": "marketing",
+    "subcategory": "marketing",
+    "subdivision": "diafimistiki-kabania",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Μάρκετινγκ"
+  },
+  {
+    "label": "Εκπόνηση Business Plan",
+    "category": "marketing",
+    "subcategory": "marketing",
+    "subdivision": "ekponisi-business-plan",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Μάρκετινγκ"
+  },
+  {
+    "label": "Έρευνα Μάρκετινγκ",
+    "category": "marketing",
+    "subcategory": "marketing",
+    "subdivision": "ereuna-marketing",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Μάρκετινγκ"
+  },
+  {
+    "label": "Στρατηγική Marketing",
+    "category": "marketing",
+    "subcategory": "marketing",
+    "subdivision": "stratigiki-marketing",
+    "category_label": "Μάρκετινγκ",
+    "subcategory_label": "Μάρκετινγκ"
+  },
+  {
+    "label": "Ανάπτυξη εφαρμογών AI",
+    "category": "pliroforiki",
+    "subcategory": "ai",
+    "subdivision": "anaptuxi-efarmogon-ai",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "AI"
+  },
+  {
+    "label": "Προγραμματισμός AI",
+    "category": "pliroforiki",
+    "subcategory": "ai",
+    "subdivision": "programmatismos-ai",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "AI"
+  },
+  {
+    "label": "Αξιολόγηση Ασφαλείας Δικτύου",
+    "category": "pliroforiki",
+    "subcategory": "cybersecurity",
+    "subdivision": "axiologisi-asfaleias-diktuou",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Cybersecurity"
+  },
+  {
+    "label": "Έλεγχος Cybersecurity",
+    "category": "pliroforiki",
+    "subcategory": "cybersecurity",
+    "subdivision": "elegxos-cybersecurity",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Cybersecurity"
+  },
+  {
+    "label": "Κατασκευή Eshop",
+    "category": "pliroforiki",
+    "subcategory": "ecommerce",
+    "subdivision": "kataskeui-eshop",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Ecommerce"
+  },
+  {
+    "label": "Κατασκευή Plugin",
+    "category": "pliroforiki",
+    "subcategory": "plugins",
+    "subdivision": "kataskeui-plugin",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Plugins"
+  },
+  {
+    "label": "Web Analytics",
+    "category": "pliroforiki",
+    "subcategory": "analusi-dedomenon",
+    "subdivision": "web-analytics",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Ανάλυση Δεδομένων"
+  },
+  {
+    "label": "Ανάλυση Δεδομένων",
+    "category": "pliroforiki",
+    "subcategory": "analusi-dedomenon",
+    "subdivision": "analusi-dedomenon",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Ανάλυση Δεδομένων"
+  },
+  {
+    "label": "Βάσεις Δεδομένων",
+    "category": "pliroforiki",
+    "subcategory": "analusi-dedomenon",
+    "subdivision": "vaseis-dedomenon",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Ανάλυση Δεδομένων"
+  },
+  {
+    "label": "Δημιουργία Αναφορών",
+    "category": "pliroforiki",
+    "subcategory": "analusi-dedomenon",
+    "subdivision": "dimiourgia-anaforon",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Ανάλυση Δεδομένων"
+  },
+  {
+    "label": "Machine Learning",
+    "category": "pliroforiki",
+    "subcategory": "anaptuxi-efarmogon",
+    "subdivision": "machine-learning",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Ανάπτυξη Εφαρμογών"
+  },
+  {
+    "label": "Ανάπτυξη Web Εφαρμογών",
+    "category": "pliroforiki",
+    "subcategory": "anaptuxi-efarmogon",
+    "subdivision": "anaptuxi-web-efarmogon",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Ανάπτυξη Εφαρμογών"
+  },
+  {
+    "label": "Ανάπτυξη Εφαρμογών",
+    "category": "pliroforiki",
+    "subcategory": "anaptuxi-efarmogon",
+    "subdivision": "anaptuxi-efarmogon",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Ανάπτυξη Εφαρμογών"
+  },
+  {
+    "label": "Κατασκευή Mobile App",
+    "category": "pliroforiki",
+    "subcategory": "anaptuxi-efarmogon",
+    "subdivision": "kataskeui-mobile-app",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Ανάπτυξη Εφαρμογών"
+  },
+  {
+    "label": "Συντήρηση Εφαρμογών Κινητών",
+    "category": "pliroforiki",
+    "subcategory": "anaptuxi-efarmogon",
+    "subdivision": "sudirisi-efarmogon-kiniton",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Ανάπτυξη Εφαρμογών"
+  },
+  {
+    "label": "UX/UI Design",
+    "category": "pliroforiki",
+    "subcategory": "anaptuxi-logismikou",
+    "subdivision": "uxui-design",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Ανάπτυξη Λογισμικού"
+  },
+  {
+    "label": "Ανάπτυξη Games",
+    "category": "pliroforiki",
+    "subcategory": "anaptuxi-logismikou",
+    "subdivision": "anaptuxi-games",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Ανάπτυξη Λογισμικού"
+  },
+  {
+    "label": "Ανάπτυξη Λογισμικού",
+    "category": "pliroforiki",
+    "subcategory": "anaptuxi-logismikou",
+    "subdivision": "anaptuxi-logismikou",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Ανάπτυξη Λογισμικού"
+  },
+  {
+    "label": "Δημιουργία Ιστοσελίδας",
+    "category": "pliroforiki",
+    "subcategory": "anaptuxi-logismikou",
+    "subdivision": "dimiourgia-istoselidas",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Ανάπτυξη Λογισμικού"
+  },
+  {
+    "label": "Δοκιμή Εφαρμογών",
+    "category": "pliroforiki",
+    "subcategory": "anaptuxi-logismikou",
+    "subdivision": "dokimi-efarmogon",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Ανάπτυξη Λογισμικού"
+  },
+  {
+    "label": "Συντήρηση Λογισμικού",
+    "category": "pliroforiki",
+    "subcategory": "anaptuxi-logismikou",
+    "subdivision": "sudirisi-logismikou",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Ανάπτυξη Λογισμικού"
+  },
+  {
+    "label": "Διάγνωση & Επίλυση Προβλημάτων",
+    "category": "pliroforiki",
+    "subcategory": "diktua",
+    "subdivision": "diagnosi-epilusi-provlimaton",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Δίκτυα"
+  },
+  {
+    "label": "Διαχείριση Δικτύων",
+    "category": "pliroforiki",
+    "subcategory": "diktua",
+    "subdivision": "diaxeirisi-diktuon",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Δίκτυα"
+  },
+  {
+    "label": "Υποστήριξη Δικτύων",
+    "category": "pliroforiki",
+    "subcategory": "diktua",
+    "subdivision": "upostirixi-diktuon",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Δίκτυα"
+  },
+  {
+    "label": "Δίκτυα",
+    "category": "pliroforiki",
+    "subcategory": "diktua",
+    "subdivision": "diktua",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Δίκτυα"
+  },
+  {
+    "label": "Εγκατάσταση & Διαμόρφωση Δικτύων",
+    "category": "pliroforiki",
+    "subcategory": "diktua",
+    "subdivision": "egatastasi-diamorfosi-diktuon",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Δίκτυα"
+  },
+  {
+    "label": "Εγκατάσταση & Συντήρηση Δικτύων",
+    "category": "pliroforiki",
+    "subcategory": "diktua",
+    "subdivision": "egatastasi-sudirisi-diktuon",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Δίκτυα"
+  },
+  {
+    "label": "Ιστοσελίδα Wordpress",
+    "category": "pliroforiki",
+    "subcategory": "kataskeui-istoselidon",
+    "subdivision": "istoselida-wordpress",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Κατασκευή Ιστοσελίδων"
+  },
+  {
+    "label": "Κατασκευή Ιστοσελίδας",
+    "category": "pliroforiki",
+    "subcategory": "kataskeui-istoselidon",
+    "subdivision": "kataskeui-istoselidas",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Κατασκευή Ιστοσελίδων"
+  },
+  {
+    "label": "Συντήρηση Ιστοσελίδας",
+    "category": "pliroforiki",
+    "subcategory": "kataskeui-istoselidon",
+    "subdivision": "sudirisi-istoselidas",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Κατασκευή Ιστοσελίδων"
+  },
+  {
+    "label": "Σχεδιασμός Ιστοσελίδας",
+    "category": "pliroforiki",
+    "subcategory": "kataskeui-istoselidon",
+    "subdivision": "sxediasmos-istoselidas",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Κατασκευή Ιστοσελίδων"
+  },
+  {
+    "label": "Ενσωμάτωση API",
+    "category": "pliroforiki",
+    "subcategory": "programmatismos",
+    "subdivision": "ensomatosi-api",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Προγραμματισμός"
+  },
+  {
+    "label": "Προγραμματισμός",
+    "category": "pliroforiki",
+    "subcategory": "programmatismos",
+    "subdivision": "programmatismos",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Προγραμματισμός"
+  },
+  {
+    "label": "UX/UI Test",
+    "category": "pliroforiki",
+    "subcategory": "sxediasmos-istoselidon",
+    "subdivision": "ux-ui-test",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Σχεδιασμός Ιστοσελίδων"
+  },
+  {
+    "label": "Βελτιστοποίηση Εμπειρίας Χρήστη (UX)",
+    "category": "pliroforiki",
+    "subcategory": "sxediasmos-istoselidon",
+    "subdivision": "veltistopoiisi-ebeirias-xristi-ux",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Σχεδιασμός Ιστοσελίδων"
+  },
+  {
+    "label": "Σχεδιασμός E-shop",
+    "category": "pliroforiki",
+    "subcategory": "sxediasmos-istoselidon",
+    "subdivision": "sxediasmos-e-shop",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Σχεδιασμός Ιστοσελίδων"
+  },
+  {
+    "label": "Αναβάθμιση",
+    "category": "pliroforiki",
+    "subcategory": "upostirixi-it",
+    "subdivision": "anavathmisi",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Υποστήριξη IT"
+  },
+  {
+    "label": "Αναβάθμιση Λογισμικού",
+    "category": "pliroforiki",
+    "subcategory": "upostirixi-it",
+    "subdivision": "anavathmisi-logismikou",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Υποστήριξη IT"
+  },
+  {
+    "label": "Εγκατάσταση Εξοπλισμού",
+    "category": "pliroforiki",
+    "subcategory": "upostirixi-it",
+    "subdivision": "egatastasi-exoplismou",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Υποστήριξη IT"
+  },
+  {
+    "label": "Εγκατάσταση Λογισμικού",
+    "category": "pliroforiki",
+    "subcategory": "upostirixi-it",
+    "subdivision": "egatastasi-logismikou",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Υποστήριξη IT"
+  },
+  {
+    "label": "Ενημερώσεις & Αναβαθμίσεις Εφαρμογών",
+    "category": "pliroforiki",
+    "subcategory": "upostirixi-it",
+    "subdivision": "enimeroseis-anavathmiseis-efarmogon",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Υποστήριξη IT"
+  },
+  {
+    "label": "Επισκευή Υπολογιστών",
+    "category": "pliroforiki",
+    "subcategory": "upostirixi-it",
+    "subdivision": "episkeui-upologiston",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Υποστήριξη IT"
+  },
+  {
+    "label": "Μεταφορά Δεδομένων",
+    "category": "pliroforiki",
+    "subcategory": "upostirixi-it",
+    "subdivision": "metafora-dedomenon",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Υποστήριξη IT"
+  },
+  {
+    "label": "Συμβουλευτική IT",
+    "category": "pliroforiki",
+    "subcategory": "upostirixi-it",
+    "subdivision": "sumvouleutiki-it",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Υποστήριξη IT"
+  },
+  {
+    "label": "Τεχνική Υποστήριξη",
+    "category": "pliroforiki",
+    "subcategory": "upostirixi-it",
+    "subdivision": "texniki-upostirixi",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Υποστήριξη IT"
+  },
+  {
+    "label": "Υποστήριξη IT",
+    "category": "pliroforiki",
+    "subcategory": "upostirixi-it",
+    "subdivision": "upostirixi-it",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Υποστήριξη IT"
+  },
+  {
+    "label": "Υποστήριξη Η/Υ",
+    "category": "pliroforiki",
+    "subcategory": "upostirixi-it",
+    "subdivision": "upostirixi-iu",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Υποστήριξη IT"
+  },
+  {
+    "label": "Υποστήριξη Ιστοσελίδας",
+    "category": "pliroforiki",
+    "subcategory": "upostirixi-it",
+    "subdivision": "upostirixi-istoselidas",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Υποστήριξη IT"
+  },
+  {
+    "label": "Hosting Ιστοσελίδων",
+    "category": "pliroforiki",
+    "subcategory": "filoxenia-istoselidon",
+    "subdivision": "hosting-istoselidon",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Φιλοξενία Ιστοσελίδων"
+  },
+  {
+    "label": "Δημιουργία email",
+    "category": "pliroforiki",
+    "subcategory": "filoxenia-istoselidon",
+    "subdivision": "dimiourgia-email",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Φιλοξενία Ιστοσελίδων"
+  },
+  {
+    "label": "Διαχείριση Servers",
+    "category": "pliroforiki",
+    "subcategory": "filoxenia-istoselidon",
+    "subdivision": "diaxeirisi-servers",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Φιλοξενία Ιστοσελίδων"
+  },
+  {
+    "label": "Κατοχύρωση Domain",
+    "category": "pliroforiki",
+    "subcategory": "filoxenia-istoselidon",
+    "subdivision": "katoxurosi-domain",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Φιλοξενία Ιστοσελίδων"
+  },
+  {
+    "label": "Google Maps",
+    "category": "pliroforiki",
+    "subcategory": "google-cloud",
+    "subdivision": "google-maps",
+    "category_label": "Πληροφορική",
+    "subcategory_label": "Google Cloud"
+  },
+  {
+    "label": "Απεντομώσεις",
+    "category": "texnika",
+    "subcategory": "apedomoseis-apolumanseis",
+    "subdivision": "apedomoseis",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Απεντομώσεις & Απολυμάνσεις"
+  },
+  {
+    "label": "Απεντομώσεις Κατοικιών",
+    "category": "texnika",
+    "subcategory": "apedomoseis-apolumanseis",
+    "subdivision": "apedomoseis-katoikion",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Απεντομώσεις & Απολυμάνσεις"
+  },
+  {
+    "label": "Απεντομώσεις Χώρων",
+    "category": "texnika",
+    "subcategory": "apedomoseis-apolumanseis",
+    "subdivision": "apedomoseis-xoron",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Απεντομώσεις & Απολυμάνσεις"
+  },
+  {
+    "label": "Απολυμάνσεις",
+    "category": "texnika",
+    "subcategory": "apedomoseis-apolumanseis",
+    "subdivision": "apolumanseis",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Απεντομώσεις & Απολυμάνσεις"
+  },
+  {
+    "label": "Αρχιτεκτονική Επίβλεψη",
+    "category": "texnika",
+    "subcategory": "arxitektoniki",
+    "subdivision": "arxitektoniki-epivlepsi",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Αρχιτεκτονική"
+  },
+  {
+    "label": "Αρχιτεκτονική Μελέτη",
+    "category": "texnika",
+    "subcategory": "arxitektoniki",
+    "subdivision": "arxitektoniki-meleti",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Αρχιτεκτονική"
+  },
+  {
+    "label": "Σχεδιασμός & Διαμόρφωση Τοπίου",
+    "category": "texnika",
+    "subcategory": "arxitektoniki",
+    "subdivision": "sxediasmos-diamorfosi-topiou",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Αρχιτεκτονική"
+  },
+  {
+    "label": "Σχεδιασμός & Επίβλεψη Αρχιτεκτονικών Έργων",
+    "category": "texnika",
+    "subcategory": "arxitektoniki",
+    "subdivision": "sxediasmos-epivlepsi-arxitektonikon-ergon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Αρχιτεκτονική"
+  },
+  {
+    "label": "Σχεδιασμός & Επιβλέψη Κατασκευών",
+    "category": "texnika",
+    "subcategory": "arxitektoniki",
+    "subdivision": "sxediasmos-epivlepsi-kataskeuon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Αρχιτεκτονική"
+  },
+  {
+    "label": "Άνοιγμα Πόρτας",
+    "category": "texnika",
+    "subcategory": "asfaleia",
+    "subdivision": "anoigma-portas",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Ασφάλεια"
+  },
+  {
+    "label": "Αντικατάσταση Κλειδαριών",
+    "category": "texnika",
+    "subcategory": "asfaleia",
+    "subdivision": "adikatastasi-kleidarion",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Ασφάλεια"
+  },
+  {
+    "label": "Ασφαλιστικές Υπηρεσίες",
+    "category": "texnika",
+    "subcategory": "asfaleia",
+    "subdivision": "asfalistikes-upiresies",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Ασφάλεια"
+  },
+  {
+    "label": "Εγκατάσταση Συναγερμών",
+    "category": "texnika",
+    "subcategory": "asfaleia",
+    "subdivision": "egatastasi-sunagermon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Ασφάλεια"
+  },
+  {
+    "label": "Εγκατάσταση Συστημάτων Ασφαλείας",
+    "category": "texnika",
+    "subcategory": "asfaleia",
+    "subdivision": "egatastasi-sustimaton-asfaleias",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Ασφάλεια"
+  },
+  {
+    "label": "Επισκευή Συναγερμών",
+    "category": "texnika",
+    "subcategory": "asfaleia",
+    "subdivision": "episkeui-sunagermon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Ασφάλεια"
+  },
+  {
+    "label": "Ξεκλείδωμα Αυτοκινήτου",
+    "category": "texnika",
+    "subcategory": "asfaleia",
+    "subdivision": "xekleidoma-autokinitou",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Ασφάλεια"
+  },
+  {
+    "label": "Συνοδεία VIP",
+    "category": "texnika",
+    "subcategory": "asfaleia",
+    "subdivision": "sunodeia-vip",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Ασφάλεια"
+  },
+  {
+    "label": "Συντήρηση Συστημάτων Ασφαλείας",
+    "category": "texnika",
+    "subcategory": "asfaleia",
+    "subdivision": "sudirisi-sustimaton-asfaleias",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Ασφάλεια"
+  },
+  {
+    "label": "Τοποθέτηση Καμερών",
+    "category": "texnika",
+    "subcategory": "asfaleia",
+    "subdivision": "topothetisi-kameron",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Ασφάλεια"
+  },
+  {
+    "label": "Υπηρεσίες Ασφάλειας",
+    "category": "texnika",
+    "subcategory": "asfaleia",
+    "subdivision": "upiresies-asfaleias",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Ασφάλεια"
+  },
+  {
+    "label": "Φύλαξη Χώρων",
+    "category": "texnika",
+    "subcategory": "asfaleia",
+    "subdivision": "fulaxi-xoron",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Ασφάλεια"
+  },
+  {
+    "label": "Διακόσμηση Εξωτερικών Χώρων",
+    "category": "texnika",
+    "subcategory": "diakosmisi",
+    "subdivision": "diakosmisi-exoterikon-xoron",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Διακόσμηση"
+  },
+  {
+    "label": "Διακόσμηση Εσωτερικών Χώρων",
+    "category": "texnika",
+    "subcategory": "diakosmisi",
+    "subdivision": "diakosmisi-esoterikon-xoron",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Διακόσμηση"
+  },
+  {
+    "label": "Smart Home",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "smart-home",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Αλλαγή Διακόπτη",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "allagi-diakopti",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Αλλαγή Πριζών",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "allagi-prizon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Αλλαγή Φοράς Πόρτας",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "allagi-foras-portas",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Ανελκυστήρες",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "anelkustires",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Απεγκατάσταση Ηλεκτρικού Θερμοσίφωνα",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "apegatastasi-ilektrikou-thermosifona",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Απεγκατάσταση Θερμαντικών Σωμάτων",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "apegatastasi-thermadikon-somaton",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Απεγκατάσταση Κλιματιστικού",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "apegatastasi-klimatistikou",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Εγκατάσταση Ανεμιστήρα Οροφής",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "egatastasi-anemistira-orofis",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Εγκατάσταση Απορροφητήρα",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "egatastasi-aporrofitira",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Εγκατάσταση Ηλιακού Θερμοσίφωνα",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "egatastasi-iliakou-thermosifona",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Εγκατάσταση Θερμαντικών Σωμάτων",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "egatastasi-thermadikon-somaton",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Εγκατάσταση Θερμοσίφωνα",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "egatastasi-thermosifona",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Εγκατάσταση Κουφωμάτων",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "egatastasi-koufomaton",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Εγκατάσταση Συσκευών",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "egatastasi-suskeuon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Εγκατάσταση Φούρνου",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "egatastasi-fournou",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Εγκατάσταση Φωτιστικού Οροφής",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "egatastasi-fotistikou-orofis",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Επιτοίχια Εγκατάσταση Βάσης Τηλεόρασης",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "epitoixia-egatastasi-vasis-tileorasis",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Ηλιακοί Θερμοσίφωνες",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "iliakoi-thermosifones",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Κλιματιστικά",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "klimatistika",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Συναρμολόγηση Εξοπλισμού",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "sunarmologisi-exoplismou",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Συναρμολόγηση Επίπλων",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "sunarmologisi-epiplon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Σύνδεση Κουζίνας",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "sundesi-kouzinas",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Σύνδεση Πλυντηρίου Πιάτων",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "sundesi-pludiriou-piaton",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Σύνδεση Πλυντηρίου Ρούχων",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "sundesi-pludiriou-rouxon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Σύνδεση Στεγνωτηρίου",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "sundesi-stegnotiriou",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Συστήματα Θέρμανσης",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "sustimata-thermansis",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Συστήματα Σκίασης",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "sustimata-skiasis",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Συστήματα Φωτισμού",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "sustimata-fotismou",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Τέντες",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "tedes",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Τεχνικές Εργασίες Εγκατάστασης",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "texnikes-ergasies-egatastasis",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Τζάκια",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "tzakia",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Τζάμια & Κρύσταλλα",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "tzamia-krustalla",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Τοποθέτηση Θυροτηλεφώνου",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "topothetisi-thurotilefonou",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Τοποθέτηση Πλακιδίων",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "topothetisi-plakidion",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Υγρομόνωση",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "ugromonosi",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "Φυσικό Αέριο",
+    "category": "texnika",
+    "subcategory": "egatastasi",
+    "subdivision": "fusiko-aerio",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Εγκατάσταση"
+  },
+  {
+    "label": "ΑΠΕ",
+    "category": "texnika",
+    "subcategory": "energeia",
+    "subdivision": "ape",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Ενέργεια"
+  },
+  {
+    "label": "Έκδοση Πιστοποιητικών",
+    "category": "texnika",
+    "subcategory": "energeia",
+    "subdivision": "ekdosi-pistopoiitikon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Ενέργεια"
+  },
+  {
+    "label": "Περιβαλλοντική Αδειοδότηση Έργων",
+    "category": "texnika",
+    "subcategory": "energeia",
+    "subdivision": "perivallodiki-adeiodotisi-ergon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Ενέργεια"
+  },
+  {
+    "label": "Φωτοβολταϊκά",
+    "category": "texnika",
+    "subcategory": "energeia",
+    "subdivision": "fotovoltaika",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Ενέργεια"
+  },
+  {
+    "label": "Service",
+    "category": "texnika",
+    "subcategory": "episkeues",
+    "subdivision": "service",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Επισκευές"
+  },
+  {
+    "label": "Service Συσκευών",
+    "category": "texnika",
+    "subcategory": "episkeues",
+    "subdivision": "service-suskeuon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Επισκευές"
+  },
+  {
+    "label": "Επισκευές",
+    "category": "texnika",
+    "subcategory": "episkeues",
+    "subdivision": "episkeues",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Επισκευές"
+  },
+  {
+    "label": "Ηλεκτρονικά",
+    "category": "texnika",
+    "subcategory": "episkeues",
+    "subdivision": "ilektronika",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Επισκευές"
+  },
+  {
+    "label": "LPG",
+    "category": "texnika",
+    "subcategory": "episkeui-autokinitou",
+    "subdivision": "lpg",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Επισκευή Αυτοκινήτου"
+  },
+  {
+    "label": "Service Αυτοκινήτου",
+    "category": "texnika",
+    "subcategory": "episkeui-autokinitou",
+    "subdivision": "service-autokinitou",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Επισκευή Αυτοκινήτου"
+  },
+  {
+    "label": "Αλλαγή Χρώματος Αυτοκινήτου",
+    "category": "texnika",
+    "subcategory": "episkeui-autokinitou",
+    "subdivision": "allagi-xromatos-autokinitou",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Επισκευή Αυτοκινήτου"
+  },
+  {
+    "label": "Αντικατάσταση Ελαστικών",
+    "category": "texnika",
+    "subcategory": "episkeui-autokinitou",
+    "subdivision": "adikatastasi-elastikon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Επισκευή Αυτοκινήτου"
+  },
+  {
+    "label": "Βαφή Αυτοκινήτου",
+    "category": "texnika",
+    "subcategory": "episkeui-autokinitou",
+    "subdivision": "vafi-autokinitou",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Επισκευή Αυτοκινήτου"
+  },
+  {
+    "label": "Βάψιμο Αυτοκινήτου",
+    "category": "texnika",
+    "subcategory": "episkeui-autokinitou",
+    "subdivision": "vapsimo-autokinitou",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Επισκευή Αυτοκινήτου"
+  },
+  {
+    "label": "Διαγνωστικός Έλεγχος Αυτοκινήτου",
+    "category": "texnika",
+    "subcategory": "episkeui-autokinitou",
+    "subdivision": "diagnostikos-elegxos-autokinitou",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Επισκευή Αυτοκινήτου"
+  },
+  {
+    "label": "Εγκατάσταση LPG",
+    "category": "texnika",
+    "subcategory": "episkeui-autokinitou",
+    "subdivision": "egatastasi-lpg",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Επισκευή Αυτοκινήτου"
+  },
+  {
+    "label": "Εγκατάσταση Ηλεκτρολογικών Συστημάτων",
+    "category": "texnika",
+    "subcategory": "ilektrologika",
+    "subdivision": "egatastasi-ilektrologikon-sustimaton",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Ηλεκτρολογικά"
+  },
+  {
+    "label": "Ηλεκτρολογικά",
+    "category": "texnika",
+    "subcategory": "ilektrologika",
+    "subdivision": "ilektrologika",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Ηλεκτρολογικά"
+  },
+  {
+    "label": "Συντήρηση Ηλεκτρολογικών",
+    "category": "texnika",
+    "subcategory": "ilektrologika",
+    "subdivision": "sudirisi-ilektrologikon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Ηλεκτρολογικά"
+  },
+  {
+    "label": "Αφαίρεση λεκέδων",
+    "category": "texnika",
+    "subcategory": "katharismoi",
+    "subdivision": "afairesi-lekedon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Καθαρισμοί"
+  },
+  {
+    "label": "Βιολογικός Καθαρισμός",
+    "category": "texnika",
+    "subcategory": "katharismoi",
+    "subdivision": "viologikos-katharismos",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Καθαρισμοί"
+  },
+  {
+    "label": "Βιολογικός Καθαρισμός Αυτοκινήτων",
+    "category": "texnika",
+    "subcategory": "katharismoi",
+    "subdivision": "viologikos-katharismos-autokiniton",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Καθαρισμοί"
+  },
+  {
+    "label": "Γενικός Καθαρισμός",
+    "category": "texnika",
+    "subcategory": "katharismoi",
+    "subdivision": "genikos-katharismos",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Καθαρισμοί"
+  },
+  {
+    "label": "Γυάλισμα Μαρμάρων",
+    "category": "texnika",
+    "subcategory": "katharismoi",
+    "subdivision": "gualisma-marmaron",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Καθαρισμοί"
+  },
+  {
+    "label": "Καθαρισμοί",
+    "category": "texnika",
+    "subcategory": "katharismoi",
+    "subdivision": "katharismoi",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Καθαρισμοί"
+  },
+  {
+    "label": "Καθαρισμός κατοικιών & γραφείων",
+    "category": "texnika",
+    "subcategory": "katharismoi",
+    "subdivision": "katharismos-katoikion-grafeion",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Καθαρισμοί"
+  },
+  {
+    "label": "Καθαρισμός & Φύλαξη Χαλιών",
+    "category": "texnika",
+    "subcategory": "katharismoi",
+    "subdivision": "katharismos-fulaxi-xalion",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Καθαρισμοί"
+  },
+  {
+    "label": "Μάρμαρα",
+    "category": "texnika",
+    "subcategory": "katharismoi",
+    "subdivision": "marmara",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Καθαρισμοί"
+  },
+  {
+    "label": "Στεγνό Καθάρισμα",
+    "category": "texnika",
+    "subcategory": "katharismoi",
+    "subdivision": "stegno-katharisma",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Καθαρισμοί"
+  },
+  {
+    "label": "Αλουμίνια",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "alouminia",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Βάψιμο",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "vapsimo",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Γυψοσανίδες",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "gupsosanides",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Δάπεδα",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "dapeda",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Διαχείριση Κατασκευαστικών Έργων",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "diaxeirisi-kataskeuastikon-ergon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Εγκατάσταση",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "egatastasi",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Εγκατάσταση PVC",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "egatastasi-pvc",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Εγκατάσταση Ασανσέρ",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "egatastasi-asanser",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Εγκατάσταση Δαπέδων",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "egatastasi-dapedon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Ελαιοχρωματισμοί",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "elaioxromatismoi",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Ηχομόνωση",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "ixomonosi",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Θέρμανση",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "thermansi",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Κάγκελα",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "kagela",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Κατασκευαστικά Έργα",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "kataskeuastika-erga",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Κατασκευή Επιγραφών",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "kataskeui-epigrafon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Κατασκευή Επίπλων",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "kataskeui-epiplon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Κατασκευή Πισίνας",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "kataskeui-pisinas",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Κλιματισμός",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "klimatismos",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Κοπή Ξυλείας",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "kopi-xuleias",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Κουφώμάτα",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "koufomata",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Μερεμέτια",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "meremetia",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Μονώσεις",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "monoseis",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Ξύλινες Κατασκευές",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "xulines-kataskeues",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Ξυλουργικά",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "xulourgika",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Οικοδομικά Έργα",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "oikodomika-erga",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Οικοδομικές Εργασίες",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "oikodomikes-ergasies",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Περιφράξεις",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "perifraxeis",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Ραφή Ρούχων",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "rafi-rouxon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Ρολά",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "rola",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Σιδηροκατασκευές",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "sidirokataskeues",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Στέγες",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "steges",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Συντήρηση Ασανσέρ",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "sudirisi-asanser",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Ταπετσαρίες",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "tapetsaries",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Τοποθέτηση Κουρτινόξυλου",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "topothetisi-kourtinoxulou",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Τοποθέτηση Πατώματος",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "topothetisi-patomatos",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Τοποθέτηση Στόρι Σκίασης",
+    "category": "texnika",
+    "subcategory": "kataskeues",
+    "subdivision": "topothetisi-stori-skiasis",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κατασκευές"
+  },
+  {
+    "label": "Αγροτική Παραγωγή",
+    "category": "texnika",
+    "subcategory": "kipos",
+    "subdivision": "agrotiki-paragogi",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κήπος"
+  },
+  {
+    "label": "Γεωπονικές Υπηρεσίες",
+    "category": "texnika",
+    "subcategory": "kipos",
+    "subdivision": "geoponikes-upiresies",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κήπος"
+  },
+  {
+    "label": "Διαμόρφωση Κήπων",
+    "category": "texnika",
+    "subcategory": "kipos",
+    "subdivision": "diamorfosi-kipon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κήπος"
+  },
+  {
+    "label": "Συντηρήσεις Κήπων",
+    "category": "texnika",
+    "subcategory": "kipos",
+    "subdivision": "sudiriseis-kipon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Κήπος"
+  },
+  {
+    "label": "Μηχανολογικά",
+    "category": "texnika",
+    "subcategory": "mixaniki",
+    "subdivision": "mixanologika",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Μηχανική"
+  },
+  {
+    "label": "Τοπογραφικά Έργα",
+    "category": "texnika",
+    "subcategory": "mixaniki",
+    "subdivision": "topografika-erga",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Μηχανική"
+  },
+  {
+    "label": "Διαχείριση & Συντήρηση Εγκαταστάσεων",
+    "category": "texnika",
+    "subcategory": "suntirisi",
+    "subdivision": "diaxeirisi-sudirisi-egatastaseon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Συντήρηση"
+  },
+  {
+    "label": "Επιδιορθώσεις",
+    "category": "texnika",
+    "subcategory": "suntirisi",
+    "subdivision": "epidiorthoseis",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Συντήρηση"
+  },
+  {
+    "label": "Καλοριφέρ",
+    "category": "texnika",
+    "subcategory": "suntirisi",
+    "subdivision": "kalorifer",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Συντήρηση"
+  },
+  {
+    "label": "Καυστήρες",
+    "category": "texnika",
+    "subcategory": "suntirisi",
+    "subdivision": "kaustires",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Συντήρηση"
+  },
+  {
+    "label": "Μεταποιήσεις",
+    "category": "texnika",
+    "subcategory": "suntirisi",
+    "subdivision": "metapoiiseis",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Συντήρηση"
+  },
+  {
+    "label": "Πισίνες",
+    "category": "texnika",
+    "subcategory": "suntirisi",
+    "subdivision": "pisines",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Συντήρηση"
+  },
+  {
+    "label": "Συντηρήσεις",
+    "category": "texnika",
+    "subcategory": "suntirisi",
+    "subdivision": "sudiriseis",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Συντήρηση"
+  },
+  {
+    "label": "Συντήρηση",
+    "category": "texnika",
+    "subcategory": "suntirisi",
+    "subdivision": "sudirisi",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Συντήρηση"
+  },
+  {
+    "label": "Συντήρηση Θερμοσίφωνα",
+    "category": "texnika",
+    "subcategory": "suntirisi",
+    "subdivision": "sudirisi-thermosifona",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Συντήρηση"
+  },
+  {
+    "label": "Συντήρηση Κλιματιστικού",
+    "category": "texnika",
+    "subcategory": "suntirisi",
+    "subdivision": "sudirisi-klimatistikou",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Συντήρηση"
+  },
+  {
+    "label": "Συντήρηση Πισίνας",
+    "category": "texnika",
+    "subcategory": "suntirisi",
+    "subdivision": "suntirisi-pisinas",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Συντήρηση"
+  },
+  {
+    "label": "Τεχνικές Εργασίες Συντήρησης",
+    "category": "texnika",
+    "subcategory": "suntirisi",
+    "subdivision": "texnikes-ergasies-sudirisis",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Συντήρηση"
+  },
+  {
+    "label": "Τεχνικές Υπηρεσίες",
+    "category": "texnika",
+    "subcategory": "suntirisi",
+    "subdivision": "texnikes-upiresies",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Συντήρηση"
+  },
+  {
+    "label": "Γλυπτική",
+    "category": "texnika",
+    "subcategory": "texni",
+    "subdivision": "gluptiki",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Τέχνη"
+  },
+  {
+    "label": "Έργα Τέχνης",
+    "category": "texnika",
+    "subcategory": "texni",
+    "subdivision": "erga-texnis",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Τέχνη"
+  },
+  {
+    "label": "Κεραμικά",
+    "category": "texnika",
+    "subcategory": "texni",
+    "subdivision": "keramika",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Τέχνη"
+  },
+  {
+    "label": "Σχεδιασμός Ρούχων",
+    "category": "texnika",
+    "subcategory": "texni",
+    "subdivision": "sxediasmos-rouxon",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Τέχνη"
+  },
+  {
+    "label": "Αποφράξεις",
+    "category": "texnika",
+    "subcategory": "udraulika",
+    "subdivision": "apofraxeis",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Υδραυλικά"
+  },
+  {
+    "label": "Υδραυλικά",
+    "category": "texnika",
+    "subcategory": "udraulika",
+    "subdivision": "udraulika",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Υδραυλικά"
+  },
+  {
+    "label": "Ανακαινίσεις",
+    "category": "texnika",
+    "subcategory": "upiresies-mixanikon",
+    "subdivision": "anakainiseis",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Υπηρεσίες Μηχανικών"
+  },
+  {
+    "label": "Έκδοση Αδειών",
+    "category": "texnika",
+    "subcategory": "upiresies-mixanikon",
+    "subdivision": "ekdosi-adeion",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Υπηρεσίες Μηχανικών"
+  },
+  {
+    "label": "Κατασκευή",
+    "category": "texnika",
+    "subcategory": "upiresies-mixanikon",
+    "subdivision": "kataskeui",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Υπηρεσίες Μηχανικών"
+  },
+  {
+    "label": "Μελέτες",
+    "category": "texnika",
+    "subcategory": "upiresies-mixanikon",
+    "subdivision": "meletes",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Υπηρεσίες Μηχανικών"
+  },
+  {
+    "label": "Σχέδιο",
+    "category": "texnika",
+    "subcategory": "upiresies-mixanikon",
+    "subdivision": "sxedio",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Υπηρεσίες Μηχανικών"
+  },
+  {
+    "label": "Επισκευή Κοσμημάτων",
+    "category": "texnika",
+    "subcategory": "xrusoxoia",
+    "subdivision": "episkeui-kosmimaton",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Χρυσοχοΐα"
+  },
+  {
+    "label": "Κατασκευή Κοσμημάτων",
+    "category": "texnika",
+    "subcategory": "xrusoxoia",
+    "subdivision": "kataskeui-kosmimaton",
+    "category_label": "Τεχνικά",
+    "subcategory_label": "Χρυσοχοΐα"
+  },
+  {
+    "label": "Διανομή Δεμάτων",
+    "category": "ypostiriksi",
+    "subcategory": "dianomes",
+    "subdivision": "dianomi-dematon",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Διανομές"
+  },
+  {
+    "label": "Διανομή Προϊόντων",
+    "category": "ypostiriksi",
+    "subcategory": "dianomes",
+    "subdivision": "dianomi-proiodon",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Διανομές"
+  },
+  {
+    "label": "Διανομή Τροφίμων",
+    "category": "ypostiriksi",
+    "subcategory": "dianomes",
+    "subdivision": "dianomi-trofimon",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Διανομές"
+  },
+  {
+    "label": "Εφοδιασμός",
+    "category": "ypostiriksi",
+    "subcategory": "dianomes",
+    "subdivision": "efodiasmos",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Διανομές"
+  },
+  {
+    "label": "Διαχείριση Ακινήτων",
+    "category": "ypostiriksi",
+    "subcategory": "diaxeirisi-akiniton",
+    "subdivision": "diaxeirisi-akiniton",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Διαχείριση Ακινήτων"
+  },
+  {
+    "label": "Διαχείριση Κοινοχρήστων",
+    "category": "ypostiriksi",
+    "subcategory": "diaxeirisi-akiniton",
+    "subdivision": "diaxeirisi-koinoxriston",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Διαχείριση Ακινήτων"
+  },
+  {
+    "label": "Διαχείριση Κτιρίων",
+    "category": "ypostiriksi",
+    "subcategory": "diaxeirisi-akiniton",
+    "subdivision": "diaxeirisi-ktirion",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Διαχείριση Ακινήτων"
+  },
+  {
+    "label": "Ενοικίαση Χώρων",
+    "category": "ypostiriksi",
+    "subcategory": "diaxeirisi-akiniton",
+    "subdivision": "enoikiasi-xoron",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Διαχείριση Ακινήτων"
+  },
+  {
+    "label": "Κτηματομεσιτικά",
+    "category": "ypostiriksi",
+    "subcategory": "diaxeirisi-akiniton",
+    "subdivision": "ktimatomesitika",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Διαχείριση Ακινήτων"
+  },
+  {
+    "label": "Ενοικίαση εξοπλισμού",
+    "category": "ypostiriksi",
+    "subcategory": "exoplismos",
+    "subdivision": "enoikiasi-exoplismou",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Εξοπλισμός"
+  },
+  {
+    "label": "Παροχή εξοπλισμού",
+    "category": "ypostiriksi",
+    "subcategory": "exoplismos",
+    "subdivision": "paroxi-exoplismou",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Εξοπλισμός"
+  },
+  {
+    "label": "Διεκπεραιώσεις",
+    "category": "ypostiriksi",
+    "subcategory": "idiotikes-upiresies",
+    "subdivision": "diekperaioseis",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Ιδιωτικές Υπηρεσίες"
+  },
+  {
+    "label": "Εκπόνηση Εργασιών",
+    "category": "ypostiriksi",
+    "subcategory": "idiotikes-upiresies",
+    "subdivision": "ekponisi-ergasion",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Ιδιωτικές Υπηρεσίες"
+  },
+  {
+    "label": "Εκπόνηση Πτυχιακής",
+    "category": "ypostiriksi",
+    "subcategory": "idiotikes-upiresies",
+    "subdivision": "ekponisi-ptuxiakis",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Ιδιωτικές Υπηρεσίες"
+  },
+  {
+    "label": "Ιδιωτικές Έρευνες",
+    "category": "ypostiriksi",
+    "subcategory": "idiotikes-upiresies",
+    "subdivision": "idiotikes-ereunes",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Ιδιωτικές Υπηρεσίες"
+  },
+  {
+    "label": "Διεθνείς Μεταφορές",
+    "category": "ypostiriksi",
+    "subcategory": "metafores",
+    "subdivision": "diethneis-metafores",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Μεταφορές"
+  },
+  {
+    "label": "Μετακομίσεις",
+    "category": "ypostiriksi",
+    "subcategory": "metafores",
+    "subdivision": "metakomiseis",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Μεταφορές"
+  },
+  {
+    "label": "Μεταφορά Εμπορευμάτων",
+    "category": "ypostiriksi",
+    "subcategory": "metafores",
+    "subdivision": "metafora-eboreumaton",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Μεταφορές"
+  },
+  {
+    "label": "Μεταφορά Επιβατών",
+    "category": "ypostiriksi",
+    "subcategory": "metafores",
+    "subdivision": "metafora-epivaton",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Μεταφορές"
+  },
+  {
+    "label": "Μεταφορά Κατοικιδίων",
+    "category": "ypostiriksi",
+    "subcategory": "metafores",
+    "subdivision": "metafora-katoikidion",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Μεταφορές"
+  },
+  {
+    "label": "Μεταφορά Οχήματος",
+    "category": "ypostiriksi",
+    "subcategory": "metafores",
+    "subdivision": "metafora-oximatos",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Μεταφορές"
+  },
+  {
+    "label": "Οδήγηση σκάφους",
+    "category": "ypostiriksi",
+    "subcategory": "metafores",
+    "subdivision": "odigisi-skafous",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Μεταφορές"
+  },
+  {
+    "label": "Υπηρεσίες Μεταφοράς",
+    "category": "ypostiriksi",
+    "subcategory": "metafores",
+    "subdivision": "upiresies-metaforas",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Μεταφορές"
+  },
+  {
+    "label": "Υπηρεσίες Οδήγησης",
+    "category": "ypostiriksi",
+    "subcategory": "metafores",
+    "subdivision": "upiresies-odigisis",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Μεταφορές"
+  },
+  {
+    "label": "GDPR",
+    "category": "ypostiriksi",
+    "subcategory": "nomika",
+    "subdivision": "gdpr",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Νομικά"
+  },
+  {
+    "label": "Νομικές συμβουλές",
+    "category": "ypostiriksi",
+    "subcategory": "nomika",
+    "subdivision": "nomikes-sumvoules",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Νομικά"
+  },
+  {
+    "label": "Νομικές υπηρεσίες",
+    "category": "ypostiriksi",
+    "subcategory": "nomika",
+    "subdivision": "nomikes-upiresies",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Νομικά"
+  },
+  {
+    "label": "Συμβόλαια",
+    "category": "ypostiriksi",
+    "subcategory": "nomika",
+    "subdivision": "sumvolaia",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Νομικά"
+  },
+  {
+    "label": "Συμβουλές",
+    "category": "ypostiriksi",
+    "subcategory": "nomika",
+    "subdivision": "sumvoules",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Νομικά"
+  },
+  {
+    "label": "Ανάλυση",
+    "category": "ypostiriksi",
+    "subcategory": "oikonomikes-upiresies",
+    "subdivision": "analusi",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Οικονομικές Υπηρεσίες"
+  },
+  {
+    "label": "Εκτίμηση αξίας",
+    "category": "ypostiriksi",
+    "subcategory": "oikonomikes-upiresies",
+    "subdivision": "ektimisi-axias",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Οικονομικές Υπηρεσίες"
+  },
+  {
+    "label": "Λογιστικές Υπηρεσίες",
+    "category": "ypostiriksi",
+    "subcategory": "oikonomikes-upiresies",
+    "subdivision": "logistikes-upiresies",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Οικονομικές Υπηρεσίες"
+  },
+  {
+    "label": "Παροχή συμβουλών",
+    "category": "ypostiriksi",
+    "subcategory": "oikonomikes-upiresies",
+    "subdivision": "paroxi-sumvoulon",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Οικονομικές Υπηρεσίες"
+  },
+  {
+    "label": "Υπολογισμός Φόρου",
+    "category": "ypostiriksi",
+    "subcategory": "oikonomikes-upiresies",
+    "subdivision": "upologismos-forou",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Οικονομικές Υπηρεσίες"
+  },
+  {
+    "label": "Φορολογικές δηλώσεις",
+    "category": "ypostiriksi",
+    "subcategory": "oikonomikes-upiresies",
+    "subdivision": "forologikes-diloseis",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Οικονομικές Υπηρεσίες"
+  },
+  {
+    "label": "Leasing Αυτοκινήτων",
+    "category": "ypostiriksi",
+    "subcategory": "oximata",
+    "subdivision": "leasing-autokiniton",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Οχήματα"
+  },
+  {
+    "label": "Εκτελωνισμοί",
+    "category": "ypostiriksi",
+    "subcategory": "oximata",
+    "subdivision": "ektelonismoi",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Οχήματα"
+  },
+  {
+    "label": "Ενοικίαση Αυτοκινήτων",
+    "category": "ypostiriksi",
+    "subcategory": "oximata",
+    "subdivision": "enoikiasi-autokiniton",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Οχήματα"
+  },
+  {
+    "label": "Πάρκινγκ",
+    "category": "ypostiriksi",
+    "subcategory": "oximata",
+    "subdivision": "parking",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Οχήματα"
+  },
+  {
+    "label": "Ανακυκλώσεις",
+    "category": "ypostiriksi",
+    "subcategory": "perivallon",
+    "subdivision": "anakukloseis",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Περιβάλλον"
+  },
+  {
+    "label": "HR",
+    "category": "ypostiriksi",
+    "subcategory": "sumvouleutikes-upiresies",
+    "subdivision": "hr",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Συμβουλευτικές Υπηρεσίες"
+  },
+  {
+    "label": "Διαχείριση έργων",
+    "category": "ypostiriksi",
+    "subcategory": "sumvouleutikes-upiresies",
+    "subdivision": "diaxeirisi-ergon",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Συμβουλευτικές Υπηρεσίες"
+  },
+  {
+    "label": "Συμβουλευτικές υπηρεσίες",
+    "category": "ypostiriksi",
+    "subcategory": "sumvouleutikes-upiresies",
+    "subdivision": "sumvouleutikes-upiresies",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Συμβουλευτικές Υπηρεσίες"
+  },
+  {
+    "label": "Συμβουλευτική Επιχειρήσεων",
+    "category": "ypostiriksi",
+    "subcategory": "sumvouleutikes-upiresies",
+    "subdivision": "sumvouleutiki-epixeiriseon",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Συμβουλευτικές Υπηρεσίες"
+  },
+  {
+    "label": "Data Entry",
+    "category": "ypostiriksi",
+    "subcategory": "upostirixi-pelaton",
+    "subdivision": "data-entry",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Υποστήριξη Πελατών"
+  },
+  {
+    "label": "Virtual Assistant",
+    "category": "ypostiriksi",
+    "subcategory": "upostirixi-pelaton",
+    "subdivision": "virtual-assistant",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Υποστήριξη Πελατών"
+  },
+  {
+    "label": "Διαχείριση Eshop",
+    "category": "ypostiriksi",
+    "subcategory": "upostirixi-pelaton",
+    "subdivision": "diaxeirisi-eshop",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Υποστήριξη Πελατών"
+  },
+  {
+    "label": "Υποστήριξη Eshop",
+    "category": "ypostiriksi",
+    "subcategory": "upostirixi-pelaton",
+    "subdivision": "upostirixi-eshop",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Υποστήριξη Πελατών"
+  },
+  {
+    "label": "Υποστήριξη Πελατών",
+    "category": "ypostiriksi",
+    "subcategory": "upostirixi-pelaton",
+    "subdivision": "upostirixi-pelaton",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Υποστήριξη Πελατών"
+  },
+  {
+    "label": "E-books Fitness & Ευεξίας",
+    "category": "ypostiriksi",
+    "subcategory": "psifiaka-proionta",
+    "subdivision": "e-books-fitness-and-euexias",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Ψηφιακά Προϊόντα"
+  },
+  {
+    "label": "E-books Αυτοβελτίωσης",
+    "category": "ypostiriksi",
+    "subcategory": "psifiaka-proionta",
+    "subdivision": "e-books-autoveltiosis",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Ψηφιακά Προϊόντα"
+  },
+  {
+    "label": "E-books Επιχειρηματικότητας",
+    "category": "ypostiriksi",
+    "subcategory": "psifiaka-proionta",
+    "subdivision": "e-books-epixeirimatikotitas",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Ψηφιακά Προϊόντα"
+  },
+  {
+    "label": "E-books Μάρκετινγκ",
+    "category": "ypostiriksi",
+    "subcategory": "psifiaka-proionta",
+    "subdivision": "e-books-marketingk",
+    "category_label": "Υποστήριξη",
+    "subcategory_label": "Ψηφιακά Προϊόντα"
+  }
+]

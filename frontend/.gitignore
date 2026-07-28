@@ -1,0 +1,70 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# IDE / Editor
+.cursorrules
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+todos.js
+src/lib/models/entries.js
+
+# Strapi directory
+strapi-node/
+strapi/
+yarn
+.yarn
+.env
+src/app/sentry-example-page/page.jsx
+src/app/api/sentry-example-api/route.js
+src/testing/sockets.js
+src/testing/message.js
+src/testing/direct-chat.js
+src/testing/chat.js
+new-registration.md
+authentication_flow.md
+src/testing
+src/testing/schema-chat.json
+src/testing/schema-freelancer.json
+src/testing/schema-message.json
+src/testing/schema-notification.json
+src/testing/custom-auth.js
+src/testing/lifecycles.js
+sentry.server.config.js
+sentry.edge.config.js
+sentry.client.config.js
+README.md
+public/css/animate.css
+docs
+legacy
+*.md

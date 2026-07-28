@@ -1,0 +1,13 @@
+export { default as ServiceAbout } from './service-about';
+export { default as ServiceAddons } from './service-addons';
+export { default as ServiceBuy } from './service-buy';
+export { default as ServiceCalculatedPrice } from './service-calculated-price';
+export { default as ServiceContact } from './service-contact';
+export { default as ServiceFAQ } from './service-faq';
+export { default as ServiceInfo } from './service-info';
+export { default as ServiceMedia } from './service-media';
+export { default as ServiceMeta } from './service-meta';
+export { default as ServiceOrderFixed } from './service-order-fixed';
+export { default as ServiceRelated } from './service-related';
+export { default as ServiceAdditional } from './service-additional';
+export { ReportServiceDialog } from './report-service-dialog';
