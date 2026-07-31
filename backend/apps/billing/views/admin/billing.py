@@ -49,6 +49,20 @@ class AdminSubscriptionDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class AdminSubscriptionPaymentsView(APIView):
+    """GET /api/admin/billing/subscriptions/{id}/payments?page=N — full payment
+    history for any subscription (OLD admin/subscriptions/[id]/page.tsx:127-141)."""
+
+    permission_classes = [IsAuthenticated, _VIEW]
+
+    def get(self, request, sub_id):
+        try:
+            page = int(request.query_params.get("page", 1))
+        except (TypeError, ValueError):
+            page = 1
+        return Response(svc.list_payment_attempts(subscription_id=sub_id, page=page))
+
+
 class AdminSubscriptionStatusView(APIView):
     permission_classes = [IsAuthenticated, _EDIT]
 

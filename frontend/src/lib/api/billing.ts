@@ -20,6 +20,17 @@ export const cancelSubscription = (cancelAtPeriodEnd = true) =>
 export const getMySubscription = () =>
   api.get<{ subscription: unknown }>('/billing/subscription');
 
+export interface PaymentAttemptsResponse {
+  attempts: Array<{
+    id: string; status: string; source: string; amount: number; currency: string;
+    sequence: number | null; txId: string | null; orderId: string | null; createdAt: string;
+  }>;
+  total: number; page: number; totalPages: number; pageSize: number;
+}
+
+export const getMyPaymentAttempts = (page = 1) =>
+  api.get<PaymentAttemptsResponse>('/billing/subscription/payments', { query: { page } });
+
 // ---- payment-flow routes (kept at original Next.js paths) ---------------
 
 export const checkPaymentsAccess = () =>

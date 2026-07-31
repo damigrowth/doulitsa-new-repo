@@ -172,10 +172,8 @@ def execute_recurring_charge(
     message_id = f"m{int(datetime.now(timezone.utc).timestamp() * 1000)}"
     timestamp = datetime.now(timezone.utc).isoformat()
 
-    # Canonical Message element used for the digest (matches fast-xml-parser output:
-    # the digest is computed over the <Message>...</Message> fragment, xml.ts:91-95).
-    message_xml = (
-        f'<Message version="2.1" messageId="{_xml_escape(message_id)}" timeStamp="{_xml_escape(timestamp)}">'
+    # Inner SaleRequest body — identical in both serializations below.
+    body = (
         f"<SaleRequest>"
         f"<Authentication><Mid>{_xml_escape(cfg['mid'])}</Mid></Authentication>"
         f"<OrderInfo>"
@@ -193,14 +191,29 @@ def execute_recurring_charge(
         f"</RecurringParameters>"
         f"</PaymentInfo>"
         f"</SaleRequest>"
+    )
+
+    # Cardlink validates against the VPOS XML schema (namespace REQUIRED on the
+    # VPOS root) and verifies the digest over the CANONICALIZED Message — i.e.
+    # the Message as it looks after inheriting the VPOS namespaces and having its
+    # attributes reordered by c14n (xmlns, xmlns:ns2, messageId, timeStamp,
+    # version). Mirrors OLD cancelRecurring (xml.ts:157-181); the OLD
+    # executeRecurringCharge built a bare <VPOS> and Cardlink rejected it with
+    # "unexpected element VPOS" (error XE) — this fixes that.
+    canonical_message_xml = (
+        f'<Message xmlns="{_VPOS_NS}" xmlns:ns2="{_XMLDSIG_NS}" '
+        f'messageId="{_xml_escape(message_id)}" timeStamp="{_xml_escape(timestamp)}" version="2.1">'
+        f"{body}"
         f"</Message>"
     )
-    digest = _calculate_xml_digest(message_xml, cfg["shared_secret"])
+    digest = _calculate_xml_digest(canonical_message_xml, cfg["shared_secret"])
 
     final_xml = (
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        "<VPOS>"
-        f"{message_xml}"
+        f'<VPOS xmlns="{_VPOS_NS}" xmlns:ns2="{_XMLDSIG_NS}">'
+        f'<Message version="2.1" messageId="{_xml_escape(message_id)}" timeStamp="{_xml_escape(timestamp)}">'
+        f"{body}"
+        f"</Message>"
         f"<Digest>{_xml_escape(digest)}</Digest>"
         "</VPOS>"
     )

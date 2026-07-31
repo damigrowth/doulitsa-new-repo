@@ -327,10 +327,17 @@ CELERY_BEAT_SCHEDULE = {
         "task": "apps.services.tasks.auto_refresh_promoted",
         "schedule": crontab(minute=0, hour=0),
     },
-    "billing-process-worldline-renewals": {
-        "task": "apps.billing.tasks.process_worldline_renewals",
-        "schedule": crontab(minute=0, hour=6),
-    },
+    # DISABLED — recurring billing is Cardlink-SCHEDULED: Cardlink charges the
+    # renewals automatically and notifies /api/webhooks/worldline (XML advice),
+    # which our handler processes. This self-managed cron would ISSUE A SECOND
+    # charge via the XML API (double-billing), and on the O1 "PAYMENT via XML API
+    # not allowed" rejection it wrongly flips the sub to past_due + un-features
+    # it. Re-enable ONLY if you switch to self-managed renewals (turn OFF
+    # Cardlink scheduled-recurring first) and Cardlink enables XML-API PAYMENT.
+    # "billing-process-worldline-renewals": {
+    #     "task": "apps.billing.tasks.process_worldline_renewals",
+    #     "schedule": crontab(minute=0, hour=6),
+    # },
     "accounts-cleanup-pending-registrations": {
         "task": "apps.accounts.tasks.cleanup_expired_pending_registrations",
         "schedule": crontab(minute=0),  # hourly, on the hour

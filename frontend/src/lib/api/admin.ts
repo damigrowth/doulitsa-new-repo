@@ -155,6 +155,8 @@ export const adminSubscriptions = {
   list: (q: Record<string, unknown> = {}) =>
     api.get<AdminSubscriptionsListResponse>('/admin/billing', { query: q as Record<string, string | number | boolean | undefined | null> }),
   get: (id: string) => api.get(`/admin/billing/${id}`),
+  payments: (id: string, page = 1) =>
+    api.get(`/admin/billing/${id}/payments`, { query: { page } }),
   status: (id: string, status: string) => api.patch(`/admin/billing/${id}/status`, { status }),
   delete: (id: string) => api.delete(`/admin/billing/${id}`),
   stats: () => api.get<AdminSubscriptionStats>('/admin/billing/stats'),

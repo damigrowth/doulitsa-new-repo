@@ -151,6 +151,20 @@ class GetSubscriptionView(APIView):
         return Response({"subscription": sub})
 
 
+class MyPaymentAttemptsView(APIView):
+    """GET /api/billing/subscription/payments?page=N — the caller's own payment
+    history (OLD promote/page.tsx used a direct prisma query; this restores it)."""
+
+    permission_classes = [IsAuthenticated, IsProOrAdmin]
+
+    def get(self, request):
+        try:
+            page = int(request.query_params.get("page", 1))
+        except (TypeError, ValueError):
+            page = 1
+        return Response(svc.list_payment_attempts_for_user(user=request.user, page=page))
+
+
 # ----- Payment-flow routes (rows 5, 6, 7) --------------------------------
 
 

@@ -48,3 +48,8 @@ export async function createManualSubscription(input: { profileId: string; endDa
     endDate: input.endDate instanceof Date ? input.endDate.toISOString() : input.endDate,
   }));
 }
+
+
+export async function getSubscriptionPayments(subscriptionId: string, page = 1) {
+  return adminSubscriptions.payments(subscriptionId, page);
+}

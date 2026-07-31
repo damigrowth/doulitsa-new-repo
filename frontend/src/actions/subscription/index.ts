@@ -5,3 +5,5 @@ export { restoreSubscription } from './restore-subscription';
 export { toggleFeaturedService } from './toggle-featured-service';
 export { syncSubscriptionBilling } from './sync-billing';
 export { validateCoupon } from './validate-coupon';
+export { getMyPaymentAttempts } from './get-payment-attempts';
+export type { PaymentHistory } from './get-payment-attempts';

@@ -1,5 +1,5 @@
 import { requireProUser, getCurrentUser } from '@/actions/auth/server';
-import { getSubscription } from '@/actions/subscription';
+import { getSubscription, getMyPaymentAttempts } from '@/actions/subscription';
 import { getDashboardMetadata } from '@/lib/seo/pages';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BillingForm } from '@/components';
@@ -7,11 +7,17 @@ import { SubscriptionStatus, type Subscription } from '@/lib/prisma-types';
 import SubscriptionManagement from './subscription-management';
 import CancelSubscriptionButton from './cancel-subscription-button';
 import PlanComparison from '@/components/subscription/plan-comparison';
+import { PaymentAttemptsList } from '@/components/subscription/payment-attempts-list';
+import { HistoryPagination } from '@/components/subscription/history-pagination';
 
 export const metadata = getDashboardMetadata('Προώθηση');
 export const dynamic = 'force-dynamic';
 
-export default async function SubscriptionPage() {
+interface PageProps {
+  searchParams: Promise<{ historyPage?: string }>;
+}
+
+export default async function SubscriptionPage({ searchParams }: PageProps) {
   await requireProUser();
 
   const subResult = await getSubscription();
@@ -26,6 +32,17 @@ export default async function SubscriptionPage() {
   const isActive = subscription?.status === SubscriptionStatus.active;
   const isCanceling = isActive && subscription?.cancelAtPeriodEnd;
 
+  // Payment history (paginated via ?historyPage), mirrors OLD promote/page.tsx.
+  const sp = await searchParams;
+  const requestedPage = Math.max(1, parseInt(sp.historyPage || '1', 10) || 1);
+  const historyResult = subscription
+    ? await getMyPaymentAttempts(requestedPage)
+    : null;
+  const history = historyResult?.success ? historyResult.data : null;
+  const attemptsTotal = history?.total ?? 0;
+  const totalHistoryPages = history?.totalPages ?? 1;
+  const currentHistoryPage = history?.page ?? 1;
+
   return (
     <div className='max-w-5xl w-full mx-auto space-y-6'>
       <div>
@@ -38,6 +55,29 @@ export default async function SubscriptionPage() {
       <SubscriptionManagement subscription={subscription || null} />
 
       {!isActive && <PlanComparison />}
+
+      {isActive && (
+        <Card className='w-full max-w-3xl shadow-lg'>
+          <CardHeader className='pb-3'>
+            <CardTitle className='text-lg'>
+              Τελευταίες χρεώσεις
+              {attemptsTotal > 0 && (
+                <span className='ml-2 text-sm font-normal text-muted-foreground'>
+                  ({attemptsTotal})
+                </span>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <PaymentAttemptsList attempts={history?.attempts ?? []} variant='compact' />
+            <HistoryPagination
+              currentPage={currentHistoryPage}
+              totalPages={totalHistoryPages}
+              basePath='/dashboard/promote'
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {isActive && user && (
         <Card className='w-full max-w-3xl shadow-lg'>

@@ -7,6 +7,7 @@ from apps.billing.views.public.billing import (
     CancelSubscriptionView,
     CheckoutSessionView,
     GetSubscriptionView,
+    MyPaymentAttemptsView,
     RestoreSubscriptionView,
     SyncBillingView,
     ToggleFeaturedServiceView,
@@ -23,5 +24,6 @@ urlpatterns = [
     path("coupons/validate", ValidateCouponView.as_view(), name="validate-coupon"),             # 118
     path("subscription/restore", RestoreSubscriptionView.as_view(), name="restore"),            # 119
     path("subscription/cancel", CancelSubscriptionView.as_view(), name="cancel"),               # 120
+    path("subscription/payments", MyPaymentAttemptsView.as_view(), name="subscription-payments"),
     path("subscription", GetSubscriptionView.as_view(), name="subscription"),                   # 121
 ]

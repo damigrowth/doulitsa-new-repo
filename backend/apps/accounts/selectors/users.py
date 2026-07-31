@@ -84,6 +84,10 @@ def serialize_session_user(user: User) -> dict[str, Any]:
         "confirmed": user.confirmed,
         "blocked": user.blocked,
         "banned": user.banned,
+        # The frontend payments gate (lib/payment/test-mode.ts) reads
+        # `user.testUser` to allow checkout in test mode — must be in the
+        # session payload or a test user can never reach the payment page.
+        "testUser": user.test_user,
         "banReason": user.ban_reason,
         "banExpires": user.ban_expires.isoformat() if user.ban_expires else None,
         "provider": user.provider,

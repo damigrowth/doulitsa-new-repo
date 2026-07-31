@@ -57,7 +57,21 @@ export default function SubscriptionManagement({
           <div>
             <p className='text-muted-foreground'>Χρέωση</p>
             <p className='font-medium'>
-              {subscription.billingInterval === BillingInterval.year ? '180€/έτος' : '20€/μήνα'}
+              {(() => {
+                const suffix =
+                  subscription.billingInterval === BillingInterval.year ? '/έτος' : '/μήνα';
+                // The full price actually charged (incl. VAT) is stored on the
+                // subscription in cents. Fall back to the gross plan price if it's
+                // missing (223.20€ yearly / 24.80€ monthly = net + 24% ΦΠΑ).
+                const grossCents =
+                  subscription.amount ??
+                  (subscription.billingInterval === BillingInterval.year ? 22320 : 2480);
+                const euros = grossCents / 100;
+                const formatted = Number.isInteger(euros)
+                  ? euros.toString()
+                  : euros.toFixed(2).replace('.', ',');
+                return `${formatted}€${suffix}`;
+              })()}
             </p>
           </div>
           <div>

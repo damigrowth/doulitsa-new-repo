@@ -1,5 +1,5 @@
 import { requirePermission } from '@/actions/auth/server';
-import { getSubscription } from '@/actions/admin/subscriptions';
+import { getSubscription, getSubscriptionPayments } from '@/actions/admin/subscriptions';
 import { notFound } from 'next/navigation';
 import { ADMIN_RESOURCES } from '@/lib/auth/roles';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,8 @@ import { SiteHeader } from '@/components/admin/site-header';
 import { NextLink } from '@/components';
 import { formatDate, formatTime } from '@/lib/utils/date';
 import { CopyableId } from '@/components/admin/subscriptions/copyable-id';
+import { PaymentAttemptsList, type PaymentAttemptRow } from '@/components/subscription/payment-attempts-list';
+import { HistoryPagination } from '@/components/subscription/history-pagination';
 import {
   SubscriptionStatus,
   SubscriptionPlan,
@@ -26,6 +28,7 @@ export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ historyPage?: string }>;
 }
 
 /**
@@ -129,10 +132,13 @@ function formatAmount(amount: number | null, currency: string | null = 'eur') {
 
 export default async function AdminSubscriptionDetailPage({
   params,
+  searchParams,
 }: PageProps) {
   await requirePermission(ADMIN_RESOURCES.SUBSCRIPTIONS, '/admin/subscriptions');
 
   const { id } = await params;
+  const sp = searchParams ? await searchParams : {};
+  const historyPage = Math.max(1, parseInt(sp.historyPage || '1', 10) || 1);
   const result = await getSubscription(id);
 
   if (!result.success || !result.data) {
@@ -141,6 +147,30 @@ export default async function AdminSubscriptionDetailPage({
 
   const subscription = result.data as SubscriptionDetail;
   const profile = subscription.profile;
+
+  // Payment-attempt history (paginated via ?historyPage). Best-effort.
+  const paymentsRaw = (await getSubscriptionPayments(subscription.id, historyPage).catch(
+    () => null,
+  )) as {
+    attempts?: Array<Record<string, unknown>>;
+    total?: number;
+    page?: number;
+    totalPages?: number;
+  } | null;
+  const paymentAttempts: PaymentAttemptRow[] = (paymentsRaw?.attempts ?? []).map((a) => ({
+    id: String(a.id),
+    status: a.status as PaymentAttemptRow['status'],
+    source: a.source as PaymentAttemptRow['source'],
+    amount: Number(a.amount ?? 0),
+    currency: String(a.currency ?? 'eur'),
+    sequence: (a.sequence as number | null) ?? null,
+    txId: (a.txId as string | null) ?? null,
+    orderId: (a.orderId as string | null) ?? null,
+    createdAt: new Date(String(a.createdAt)),
+  }));
+  const attemptsTotal = paymentsRaw?.total ?? 0;
+  const totalHistoryPages = paymentsRaw?.totalPages ?? 1;
+  const currentHistoryPage = paymentsRaw?.page ?? 1;
   const billing = subscription.billing as {
     receipt?: boolean;
     invoice?: boolean;
@@ -559,6 +589,26 @@ export default async function AdminSubscriptionDetailPage({
                 </CardContent>
               </Card>
             </div>
+
+            {/* Payment Attempts History */}
+            <Card>
+              <CardHeader className='pb-3'>
+                <CardTitle className='text-sm'>
+                  Ιστορικό Χρεώσεων
+                  <span className='ml-2 text-xs font-normal text-muted-foreground'>
+                    ({attemptsTotal})
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <PaymentAttemptsList attempts={paymentAttempts} variant='full' />
+                <HistoryPagination
+                  currentPage={currentHistoryPage}
+                  totalPages={totalHistoryPages}
+                  basePath={`/admin/subscriptions/${subscription.id}`}
+                />
+              </CardContent>
+            </Card>
 
           </div>
         </div>

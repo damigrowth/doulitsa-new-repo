@@ -125,6 +125,51 @@ def get_for_user(user: User) -> dict[str, Any] | None:
     return _row(sub)
 
 
+HISTORY_PAGE_SIZE = 10
+
+
+def _attempt_row(a) -> dict[str, Any]:
+    """One payment-attempt row (matches OLD PaymentAttemptRow — payment-attempts-list.tsx)."""
+    return {
+        "id": a.id,
+        "status": a.status,
+        "source": a.source,
+        "amount": a.amount,
+        "currency": a.currency,
+        "sequence": a.sequence,
+        "txId": a.tx_id,
+        "orderId": a.order_id,
+        "createdAt": a.created_at.isoformat() if a.created_at else None,
+    }
+
+
+def list_payment_attempts(*, subscription_id: str, page: int = 1, page_size: int = HISTORY_PAGE_SIZE) -> dict[str, Any]:
+    """Paginated payment-attempt history for one subscription (OLD promote/page.tsx:38-55).
+
+    Newest first. Returns {attempts, total, page, totalPages, pageSize}.
+    """
+    from apps.billing.models import SubscriptionPaymentAttempt
+
+    page = max(1, int(page or 1))
+    page_size = max(1, min(int(page_size or HISTORY_PAGE_SIZE), 100))
+    qs = SubscriptionPaymentAttempt.objects.filter(subscription_id=subscription_id).order_by("-created_at")
+    total = qs.count()
+    total_pages = max(1, (total + page_size - 1) // page_size)
+    page = min(page, total_pages)
+    offset = (page - 1) * page_size
+    rows = [_attempt_row(a) for a in qs[offset:offset + page_size]]
+    return {"attempts": rows, "total": total, "page": page, "totalPages": total_pages, "pageSize": page_size}
+
+
+def list_payment_attempts_for_user(*, user: User, page: int = 1) -> dict[str, Any]:
+    """The caller's own subscription payment history (empty when no subscription)."""
+    profile = _profile_or_400(user)
+    sub = Subscription.objects.filter(profile=profile).first()
+    if sub is None:
+        return {"attempts": [], "total": 0, "page": 1, "totalPages": 1, "pageSize": HISTORY_PAGE_SIZE}
+    return list_payment_attempts(subscription_id=sub.id, page=page)
+
+
 def sync_billing_from_profile(*, user: User) -> dict[str, Any]:
     """Fallback billing sync (sync-billing.ts:11-66).
 
