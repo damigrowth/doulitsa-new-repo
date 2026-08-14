@@ -318,15 +318,22 @@ class WorldlineWebhookView(APIView):
         elif is_form_ct:
             # multipart — fall back to Django's parsed QueryDict order.
             items = list(request.POST.items())
-        elif is_s2s:
-            # Non-standard Content-Type from Modirum — parse body as url-encoded text.
+        else:
+            # Non-standard Content-Type (Modirum S2S, or the browser auto-submit
+            # form proxied as text/plain). OLD route.ts fell back to
+            # URLSearchParams parsing regardless of source — mirror that.
             try:
                 items = parse_qsl(request.body.decode("utf-8"), keep_blank_values=True)
             except Exception:  # noqa: BLE001
-                return Response({"status": "ok", "message": "unknown format, acknowledged"})
-        else:
-            logger.error("[Worldline Webhook] Unexpected Content-Type: %s", content_type)
-            return self._redirect("error=payment")
+                if is_s2s:
+                    return Response({"status": "ok", "message": "unknown format, acknowledged"})
+                logger.error("[Worldline Webhook] Unexpected Content-Type: %s", content_type)
+                return self._redirect("error=payment")
+            if not items:
+                if is_s2s:
+                    return Response({"status": "ok", "message": "unknown format, acknowledged"})
+                logger.error("[Worldline Webhook] Unexpected Content-Type: %s", content_type)
+                return self._redirect("error=payment")
 
         params = {k: v for k, v in items}
 

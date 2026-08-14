@@ -111,12 +111,21 @@ def validate_response_digest_from_items(items: list[tuple[str, str]], shared_sec
     validateResponseDigestFromFormData (digest.ts:40-58), which concatenates all
     non-digest values in POST-body order then base64-sha256s with the secret.
     """
+    # Cardlink signs only the real response fields. When the result returns via
+    # the browser auto-submit form (not server-to-server), the browser appends
+    # its own control fields — `_charset_` (empty hidden input) and the submit
+    # button — which are NOT part of Cardlink's digest. Excluding them here (in
+    # addition to `digest` itself) makes the browser-redirect path validate the
+    # same as the S2S path.
+    non_digest_control_fields = {"digest", "_charset_", "submitButton"}
     digest = ""
     values: list[str] = []
     keys: list[str] = []
     for key, value in items:
         if key == "digest":
             digest = str(value)
+        elif key in non_digest_control_fields:
+            continue
         else:
             keys.append(str(key))
             values.append(str(value))
