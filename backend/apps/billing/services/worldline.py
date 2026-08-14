@@ -113,14 +113,33 @@ def validate_response_digest_from_items(items: list[tuple[str, str]], shared_sec
     """
     digest = ""
     values: list[str] = []
+    keys: list[str] = []
     for key, value in items:
         if key == "digest":
             digest = str(value)
         else:
+            keys.append(str(key))
             values.append(str(value))
     concatenated = "".join(values) + shared_secret
     calculated = base64.b64encode(sha256(concatenated.encode("utf-8")).digest()).decode("ascii")
-    return bool(digest) and calculated == digest
+    ok = bool(digest) and calculated == digest
+
+    if not ok:
+        # Diagnostic (no PII — keys/hashes/secret fingerprint only). Also test a
+        # key-sorted ordering so the log tells us whether the failure is a
+        # wrong/empty secret vs. a field-ordering mismatch.
+        pairs = list(zip(keys, values))
+        sorted_pairs = sorted(pairs, key=lambda kv: kv[0])
+        sorted_concat = "".join(v for _, v in sorted_pairs) + shared_secret
+        sorted_calc = base64.b64encode(sha256(sorted_concat.encode("utf-8")).digest()).decode("ascii")
+        logger.error(
+            "[Worldline Webhook] Digest mismatch. received=%s post_order_calc=%s "
+            "sorted_calc=%s keys=%s secret_len=%d secret_fp=%s",
+            digest, calculated, sorted_calc, keys,
+            len(shared_secret or ""),
+            (shared_secret[:1] + "…" + shared_secret[-1:]) if shared_secret else "<empty>",
+        )
+    return ok
 
 
 # ---------------------------------------------------------------------------
