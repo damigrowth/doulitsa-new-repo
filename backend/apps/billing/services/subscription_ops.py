@@ -432,8 +432,11 @@ def _handle_payment_success(
         logger.error("[Worldline Webhook] No profileId in payment response")
         return
 
+    from apps.billing.services.advice import recurring_override_days
+
     now = datetime.now(timezone.utc)
-    cycle_days = 365 if billing_interval == "year" else 30
+    override = recurring_override_days()
+    cycle_days = override if override > 0 else (365 if billing_interval == "year" else 30)
     period_end = _add_billing_cycle_days(now, cycle_days)
     amount_cents = _amount_to_cents(params.get("orderAmount"))
     coupon = find_coupon(coupon_code) if coupon_code else None
@@ -546,9 +549,14 @@ def _handle_recurring_child(params: dict[str, Any], sequence: int) -> dict[str, 
         return {"kind": "json", "status": "error", "message": "Subscription not found", "status_code": 404}
 
     if status_value in ("CAPTURED", "AUTHORIZED"):
+        from apps.billing.services.advice import recurring_override_days
+
         now = datetime.now(timezone.utc)
         new_period_start = sub.current_period_end or now
-        cycle_days = 365 if sub.billing_interval == BillingInterval.YEAR else 30
+        override = recurring_override_days()
+        cycle_days = override if override > 0 else (
+            365 if sub.billing_interval == BillingInterval.YEAR else 30
+        )
         new_period_end = _add_billing_cycle_days(new_period_start, cycle_days)
         amount_cents = _amount_to_cents(params.get("orderAmount"))
 
