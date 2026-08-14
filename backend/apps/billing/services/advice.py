@@ -78,6 +78,104 @@ def _parse_amount_cents(value: str | None) -> int | None:
         return None
 
 
+def recurring_override_days() -> int:
+    """TEST override: when WORLDLINE_RECURRING_OVERRIDE_DAYS > 0, every recurring
+    cycle uses that many days instead of 30/365. Set it to 1 on the test env to
+    make Cardlink charge daily so renewals can be watched in the dashboard.
+    0 (default) = real cadence (monthly/yearly)."""
+    from django.conf import settings
+
+    try:
+        return max(0, int(getattr(settings, "WORLDLINE_RECURRING_OVERRIDE_DAYS", 0) or 0))
+    except (TypeError, ValueError):
+        return 0
+
+
+def _cycle_days_for(sub) -> int:
+    override = recurring_override_days()
+    if override:
+        return override
+    return 365 if sub.billing_interval == BillingInterval.YEAR else 30
+
+
+def _message_timestamp(body: str):
+    """Parse the <Message timeStamp="..."> ISO value (the charge moment)."""
+    m = re.search(r'<(?:\w+:)?Message[^>]*\btimeStamp="([^"]+)"', body)
+    if not m:
+        return None
+    from datetime import datetime as _dt
+
+    raw = m.group(1).strip()
+    try:
+        # Python 3.11+ fromisoformat handles offsets and 'Z'.
+        dt = _dt.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
+_ATTR_RE = re.compile(r'([\w:.-]+)="([^"]*)"')
+
+
+def _build_digest_candidates(body: str, raw_message: str) -> list[tuple[str, str]]:
+    """Every plausible XML-C14N rendering of <Message> for digest verification.
+
+    On the wire, <Message> inherits its namespaces from the <VPOS> root; Cardlink
+    hashes the CANONICALIZED form, which re-declares those namespaces on Message
+    itself (default xmlns first, then prefixed ones) and sorts the element's own
+    attributes by name. Modirum's exact canonicalizer output isn't documented, so
+    (like the OLD app, which found live on 2026-08-12 that raw-substring hashing
+    mismatched) we try: raw as-received, namespace/attribute-order combinations,
+    and a self-closing-tag expansion (C14N always writes <x></x>).
+    Ports buildDigestCandidates (webhooks/worldline/advice/route.ts).
+    """
+    candidates: list[tuple[str, str]] = [("raw", raw_message)]
+
+    open_tag = re.match(r"^<Message([^>]*)>", raw_message)
+    if not open_tag:
+        return candidates
+
+    # Namespace declarations inherited from the root element (e.g. <VPOS ...>).
+    root_tag = re.search(r"<[A-Za-z][\w:.-]*\s([^>]*)>", body)
+    inherited_ns: list[tuple[str, str]] = []
+    if root_tag:
+        for m in _ATTR_RE.finditer(root_tag.group(1)):
+            if m.group(1) == "xmlns" or m.group(1).startswith("xmlns:"):
+                inherited_ns.append((m.group(1), m.group(2)))
+    # C14N namespace order: default namespace first, then by prefix.
+    inherited_ns.sort(key=lambda kv: ("" if kv[0] == "xmlns" else kv[0]))
+
+    own_attrs: list[tuple[str, str]] = []
+    for m in _ATTR_RE.finditer(open_tag.group(1)):
+        if m.group(1) != "xmlns" and not m.group(1).startswith("xmlns:"):
+            own_attrs.append((m.group(1), m.group(2)))
+    sorted_attrs = sorted(own_attrs, key=lambda kv: kv[0])
+
+    inner_and_close = raw_message[len(open_tag.group(0)):]
+
+    def render(parts: list[tuple[str, str]]) -> str:
+        joined = " ".join(f'{k}="{v}"' for k, v in parts)
+        return f"<Message {joined}>{inner_and_close}"
+
+    default_ns_only = [kv for kv in inherited_ns if kv[0] == "xmlns"]
+
+    candidates.append(("ns-all+attrs-sorted", render([*inherited_ns, *sorted_attrs])))
+    candidates.append(("ns-all+attrs-original", render([*inherited_ns, *own_attrs])))
+    candidates.append(("ns-default+attrs-sorted", render([*default_ns_only, *sorted_attrs])))
+    candidates.append(("ns-default+attrs-original", render([*default_ns_only, *own_attrs])))
+
+    # C14N never emits self-closing tags: <x/> becomes <x></x>.
+    expanded = re.sub(
+        r"<([\w:.-]+)([^<>]*?)\s*/>", r"<\1\2></\1>",
+        render([*inherited_ns, *sorted_attrs]),
+    )
+    candidates.append(("c14n+selfclose-expanded", expanded))
+
+    return candidates
+
+
 def handle_worldline_advice(body: str) -> dict:
     """Validate and route one advice message. Ports POST (route.ts:84-150)."""
     message_match = re.search(r"<(?:\w+:)?Message.*?</(?:\w+:)?Message>", body, re.DOTALL)
@@ -96,16 +194,26 @@ def handle_worldline_advice(body: str) -> dict:
         logger.error("[Worldline Advice] Shared secret not configured")
         return {"status_code": 500, "body": {"status": "error", "message": "config"}}
 
-    digest_calculated = wl._calculate_xml_digest(message_match.group(0), shared_secret)
-    if digest_calculated != digest_received:
+    # Try every plausible canonical form; Cardlink hashes the C14N <Message>, not
+    # the raw bytes on the wire (see _build_digest_candidates).
+    candidates = _build_digest_candidates(body, message_match.group(0))
+    matched_variant = None
+    for variant, canonical in candidates:
+        if wl._calculate_xml_digest(canonical, shared_secret) == digest_received:
+            matched_variant = variant
+            break
+
+    if matched_variant is None:
         logger.error(
-            "[Worldline Advice] Digest validation failed. received: %s calculated: %s body snippet: %s",
-            digest_received, digest_calculated, body[:1000],
+            "[Worldline Advice] Digest validation failed on all variants. received: %s "
+            "tried: %s body snippet: %s",
+            digest_received, ", ".join(v for v, _ in candidates), body[:1000],
         )
         return {
             "status_code": 400,
             "body": {"status": "error", "message": "digest validation failed"},
         }
+    logger.info("[Worldline Advice] Digest OK (variant: %s)", matched_variant)
 
     advice_type_match = re.search(r'<(?:\w+:)?Advice\s[^>]*type="([^"]+)"', body, re.IGNORECASE)
     advice_type = advice_type_match.group(1) if advice_type_match else "Unknown"
@@ -178,15 +286,32 @@ def _handle_recurring_advice(body: str) -> dict:
 
     if status_value in ("CAPTURED", "AUTHORIZED"):
         now = datetime.now(timezone.utc)
-        new_period_start = sub.current_period_end or now
-        cycle_days = 365 if sub.billing_interval == BillingInterval.YEAR else 30
-        new_period_end = wl.add_billing_cycle_days(new_period_start, cycle_days)
+        cycle_days = _cycle_days_for(sub)
         charged_cents = amount_cents if amount_cents is not None else (sub.amount or 0)
+
+        # Cardlink schedules the next child N days after the CHARGE, so the new
+        # period must anchor on the charge moment. Normally the stored
+        # current_period_end IS that anchor; but if advices were missed and the
+        # stored date is stale (before this charge), anchoring on it would compute
+        # a period that is already over. Use whichever is later — a single late/
+        # re-sent advice then self-heals the subscription to the correct future
+        # date (route.ts:handleRecurringAdvice period anchoring).
+        charged_at = _message_timestamp(body) or now
+        stored_end = sub.current_period_end
+        anchor = stored_end if (stored_end and stored_end >= charged_at) else charged_at
+        new_period_start = anchor
+        new_period_end = wl.add_billing_cycle_days(anchor, cycle_days)
+
+        # Re-sent advices can arrive out of order (newest first). An advice whose
+        # charge predates the CURRENT period start is historical: count/record the
+        # payment but do NOT move the already-advanced period window again.
+        is_historical = bool(sub.current_period_start and charged_at < sub.current_period_start)
 
         with transaction.atomic():
             sub.status = SubscriptionStatus.ACTIVE
-            sub.current_period_start = new_period_start
-            sub.current_period_end = new_period_end
+            if not is_historical:
+                sub.current_period_start = new_period_start
+                sub.current_period_end = new_period_end
             sub.last_payment_at = now
             sub.payment_count = (sub.payment_count or 0) + 1
             sub.total_paid_lifetime = (sub.total_paid_lifetime or 0) + charged_cents
@@ -195,6 +320,11 @@ def _handle_recurring_advice(body: str) -> dict:
             sub.canceled_at = None
             sub.save()
             _revalidate_featured(sub.profile_id, True)
+        if is_historical:
+            logger.info(
+                "[Worldline Advice] Historical advice (charged %s) — payment recorded, period unchanged",
+                charged_at.isoformat(),
+            )
 
         # Best-effort audit log (record_attempt is internally try/except'd).
         record_payment_attempt(

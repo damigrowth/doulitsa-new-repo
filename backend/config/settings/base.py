@@ -18,6 +18,7 @@ env = environ.Env(
     CORS_ALLOWED_ORIGINS=(list, []),
     PAYMENTS_ENABLED=(bool, True),
     PAYMENTS_TEST_MODE=(bool, True),
+    WORLDLINE_RECURRING_OVERRIDE_DAYS=(int, 0),
     MAINTENANCE_MODE=(bool, False),
 )
 environ.Env.read_env(BASE_DIR / ".env")
@@ -466,6 +467,10 @@ MAINTENANCE_MESSAGE = env.str("MAINTENANCE_MESSAGE", default="We'll be right bac
 
 PAYMENTS_ENABLED = env.bool("PAYMENTS_ENABLED", default=True)
 PAYMENTS_TEST_MODE = env.bool("PAYMENTS_TEST_MODE", default=True)
+# TEST-ONLY: force every Worldline recurring cycle to N days (Cardlink charges
+# every N days, and each advice advances the period N days). Set 1 on the test
+# env to watch daily renewals in the dashboard. 0 (default) = real 30/365 cadence.
+WORLDLINE_RECURRING_OVERRIDE_DAYS = env.int("WORLDLINE_RECURRING_OVERRIDE_DAYS", default=0)
 
 # ---------------------------------------------------------------------------
 # Logging

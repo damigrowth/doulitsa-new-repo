@@ -372,7 +372,12 @@ def build_checkout_form_fields(
     # Recurring end date: max allowed by Cardlink is 1825 days (~5 years) — adapter.ts:71-74.
     end_date = datetime.now(timezone.utc) + timedelta(days=1825)
     recurring_end_date = end_date.strftime("%Y%m%d")
-    recurring_frequency = "365" if billing_interval == "year" else "30"
+    # TEST override (WORLDLINE_RECURRING_OVERRIDE_DAYS): when >0, Cardlink is asked
+    # to charge every N days (set 1 on test to watch daily renewals). Default 0 =
+    # real cadence: 365 (yearly) / 30 (monthly).
+    from apps.billing.services.advice import recurring_override_days
+    override = recurring_override_days()
+    recurring_frequency = str(override) if override else ("365" if billing_interval == "year" else "30")
 
     billing = billing or {}
     address = (billing.get("address") or {}) if isinstance(billing.get("address"), dict) else {}
