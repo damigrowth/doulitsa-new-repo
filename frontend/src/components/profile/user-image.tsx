@@ -106,6 +106,9 @@ export default function UserImage({
         <AvatarImage
           src={optimizedImage}
           alt={alt || 'profile-image'}
+          // Forwarded to Radix's preflight loader too — without it Google-hosted
+          // avatars (lh3.googleusercontent.com) fail to load and show initials.
+          referrerPolicy='no-referrer'
           className='object-cover'
         />
       ) : null}

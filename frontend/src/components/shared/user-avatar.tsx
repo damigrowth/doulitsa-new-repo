@@ -183,28 +183,28 @@ export default function UserAvatar({
           className,
         )}
       >
-        {/* Always render the image with a plain <img> so the URL is fetched
-            directly (Radix's AvatarImage preflights via `new Image()` and
-            sometimes never emits the <img> at all for cross-origin avatars
-            like Google profile pictures). The fallback below sits underneath
-            and shows initials until the image paints, or permanently if it
-            errors out. */}
+        {/* Radix AvatarImage tracks the real load state, so the initials
+            fallback below is rendered ONLY while the image is missing/loading
+            or if it errors — never underneath a loaded image. (A previous
+            version used a plain <img> on top of an always-rendered fallback:
+            for logos that are transparent PNGs the initials bled through the
+            transparent areas.) `referrerPolicy='no-referrer'` is forwarded to
+            Radix's preflight loader as well, which is what makes cross-origin
+            Google profile pictures load correctly. */}
         {imageUrl && (
-          // Plain <img> so the URL paints directly without Radix's `new Image()`
-          // preflight that sometimes never resolves for cross-origin avatars.
-          // No `onError` handler — that would be a function prop, which can't
-          // cross the Server → Client boundary when this component is consumed
-          // from a Server Component (e.g. /articles/[slug]). The fallback below
-          // sits underneath and shows initials until the img paints.
-          <img
+          <AvatarImage
             src={imageUrl}
             alt={altText}
             loading={loading}
             referrerPolicy='no-referrer'
-            className='absolute inset-0 aspect-square h-full w-full rounded-lg object-cover'
+            className='aspect-square h-full w-full rounded-lg object-cover'
           />
         )}
-        <AvatarFallback className='rounded-lg'>
+        {/* With an image: wait briefly before showing initials so a fast load
+            never flashes them (and, server-side, render nothing until the
+            client knows the load state). Without an image: render initials
+            immediately, including in the SSR HTML. */}
+        <AvatarFallback className='rounded-lg' delayMs={imageUrl ? 150 : undefined}>
           <div
             className={cn(
               fallbackSizeClass,
