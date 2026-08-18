@@ -11,9 +11,9 @@ guidance. Also unifies the auth-cookie lifetimes (see §9).
 
 | Before | After |
 |---|---|
-| CookieFirst (paid subscription) configured **inside** the GTM container; nothing in this repo enforced or even knew about consent. | Consent handled 100% in our code with [`vanilla-cookieconsent`](https://cookieconsent.orestbida.com) v3 (MIT, zero deps, ~15 KB). |
+| CookieFirst (paid subscription) configured **inside** the GTM container; nothing in this repo enforced or even knew about consent. | Consent handled 100% in our code: [`vanilla-cookieconsent`](https://cookieconsent.orestbida.com) v3 (MIT, zero deps) as a **headless engine** (cookie, revision, auto-clear, callbacks) + our own React UI that is a **1:1 replica of the previous CookieFirst banner and settings dialog** (same wording, layout, colours, tabs and buttons). |
 | `gtm.js` was injected **unconditionally** — on first interaction *or after 5 s* — with no `gtag('consent','default')` beforehand. | Consent-Mode defaults (all denied) are set in `<head>`; `gtm.js` is loaded **only after the visitor opts in** to at least one non-necessary category. |
-| No cookie policy page, no "manage cookies" link, no cookie table. | `/cookies` page + footer «Ρυθμίσεις cookies» button + per-cookie tables in the banner. |
+| Cookie policy and cookie list existed only inside the CookieFirst dialog. | Same texts now live in the repo: dialog tabs «Cookies» / «Πολιτική cookies» + the `/cookies` page + footer «Ρυθμίσεις cookies» button. |
 
 **Do we need a Google-certified CMP?** No. Google only mandates a certified CMP
 for publishers serving **AdSense / Ad Manager / AdMob** ads to EEA/UK users.
@@ -28,11 +28,11 @@ added, revisit this (free certified CMPs exist, e.g. CookieYes free tier).
 
 | Requirement | How it is met |
 |---|---|
-| Accept-all and Reject-all with **equal prominence**, same click depth | Both on the first layer, `equalWeightButtons: true` (same size/colour/font). Verified in headless Chrome: identical background, font-size, height. |
-| No pre-ticked non-essential boxes; scrolling/continuing ≠ consent | Library `mode: 'opt-in'`; analytics/marketing default off; no close-"X" on the first layer. |
-| Granular per-category choice | Preferences modal with per-category toggles (necessary is read-only). |
-| Information per cookie (name, provider, purpose, expiry) | Cookie tables in the preferences modal **and** on `/cookies`, both generated from one inventory file. |
-| Withdrawal as easy as consent, at any time | Footer «Ρυθμίσεις cookies» button on every page + button on `/cookies`; withdrawn categories' cookies are erased (`autoClearCookies`). |
+| Accept-all and Reject-all with **equal prominence**, same click depth | ⚠️ **Replicated from the old banner as requested:** first layer shows «Αποδοχή Όλων» + «Προσαρμογή»; «Άρνηση» is one click deeper, in the dialog. To satisfy the guidance literally, add a third «Άρνηση» button to `cookie-banner.tsx` (calls `declineAllCookies()`). |
+| No pre-ticked non-essential boxes; scrolling/continuing ≠ consent | Scrolling never consents (opt-in engine). ⚠️ The dialog **pre-selects all categories** before any decision, exactly like the old CookieFirst panel — controlled by `PRESELECT_ALL_CATEGORIES` in `lib/analytics/consent.ts`; set it to `false` to open with only Απαραίτητα enabled (recommended by the guidance). |
+| Granular per-category choice | Dialog with per-category toggles (Απαραίτητα is read-only). |
+| Information per cookie (name, provider, purpose, expiry) | «Cookies» tab of the dialog **and** `/cookies`, both generated from one inventory file (Ονομα τομέα / Λήξη / Τύπος / Προμηθευτής + description). |
+| Withdrawal as easy as consent, at any time | Footer «Ρυθμίσεις cookies» button on every page + link on `/cookies`; withdrawn categories' cookies are erased (`autoClearCookies`). |
 | Nothing fires before consent | Zero requests to `googletagmanager.com` before a choice or after reject-all (verified). |
 | Re-obtain consent when the policy changes | `CONSENT_REVISION` — bump it, everyone is asked again with a revision message. |
 | Reasonable consent lifetime | 182 days (`CONSENT_EXPIRES_DAYS`). |
@@ -50,15 +50,17 @@ added, revisit this (free certified CMPs exist, e.g. CookieYes free tier).
 <head>  ConsentDefaultsScript ─────► gtag('consent','default', all denied)   (SSR, before hydration)
                                      gtag('set','ads_data_redaction',true)
 
-<body>  CookieConsentBanner ('use client') ──► CookieConsent.run(config)
-            │
-            ├─ no valid dl_consent cookie  → banner shown → visitor clicks
-            └─ valid dl_consent cookie      → banner hidden, stored choice re-applied
+<body>  CookieConsentRoot ('use client') ──► CookieConsent.run(config)   (headless engine)
+            │                                 ├─ no valid dl_consent → <CookieBanner/> (replica of old first layer)
+            │                                 └─ valid dl_consent    → nothing shown, stored choice re-applied
+            │   «Προσαρμογή» / footer «Ρυθμίσεις cookies» → <CookiePanel/> (replica of old dialog:
+            │   tabs Ρυθμίσεις | Cookies | Πολιτική cookies; Αποδοχή Όλων / Αποθήκευση ρυθμίσεων / Άρνηση)
+            │   → acceptAllCookies() / saveCookieChoices() / declineAllCookies()  (engine acceptCategory)
                           │
                           ▼  onFirstConsent / onConsent / onChange
              applyConsentToGtag()   ─► gtag('consent','update', {…})           ─┐  pushed to
                                     ─► dataLayer.push({event:'cookie_consent_update', …})  ─┘  window.dataLayer
-             loadGtmIfConsented()   ─► analytics OR marketing accepted?
+             loadGtmIfConsented()   ─► Απόδοση (performance) OR Marketing accepted?
                                          yes → inject gtm.js  (immediately after a click,
                                                                 deferred on page load: 1st interaction / 5 s idle)
                                          no  → nothing (GTM never loads)
@@ -80,14 +82,17 @@ Deliberately **no** `<noscript>` GTM iframe — it cannot honour opt-in.
 
 | File | Role |
 |---|---|
-| `frontend/src/constants/datasets/cookies.ts` | **Cookie inventory** — single source for the banner tables and `/cookies`. Add rows here. |
-| `frontend/src/lib/analytics/consent.ts` | Constants (`GTM_ID`, `CONSENT_EVENT`, `CONSENT_COOKIE_NAME`, `CONSENT_REVISION`, `CONSENT_EXPIRES_DAYS`), `applyConsentToGtag()`, gated GTM loader, `trackEvent()`, `openCookiePreferences()`. |
-| `frontend/src/lib/analytics/cookie-consent-config.ts` | Library config: categories, services, autoClear rules, **all Greek copy**, GUI options, callbacks. |
+| `frontend/src/constants/datasets/cookies.ts` | **Cookie declaration** — the 4 categories (Απαραίτητα / Απόδοση / Λειτουργικά / Marketing) with their exact old descriptions, and every cookie with Ονομα τομέα / Λήξη / Τύπος / Προμηθευτής / description. Single source for the dialog and `/cookies`. Add rows here. |
+| `frontend/src/lib/analytics/consent.ts` | Constants (`GTM_ID`, `CONSENT_EVENT`, `CONSENT_COOKIE_NAME`, `CONSENT_REVISION`, `CONSENT_EXPIRES_DAYS`, `PRESELECT_ALL_CATEGORIES`), `applyConsentToGtag()`, gated GTM loader, decisions (`acceptAllCookies` / `saveCookieChoices` / `declineAllCookies`), the tiny UI store (banner/dialog visibility, `openCookiePreferences()`), `trackEvent()`. |
+| `frontend/src/lib/analytics/cookie-consent-config.ts` | Headless engine config: `autoShow: false`, categories, autoClear rules, revision, callbacks. |
 | `frontend/src/components/consent/consent-defaults-script.tsx` | Inline `<head>` script with the Consent Mode defaults. |
-| `frontend/src/components/consent/cookie-consent.tsx` | Client component that runs the library (mounted in `app/layout.tsx`). |
-| `frontend/src/components/consent/cookie-settings-button.tsx` | «Ρυθμίσεις cookies» button (footer + `/cookies`). |
-| `frontend/src/styles/cookie-consent.css` | Theme overrides (site colours/radius/font). |
-| `frontend/src/app/(pages)/cookies/page.tsx` | Πολιτική Cookies page — same skeleton/section style as `/terms` and `/privacy`; reuses the existing cookies wording of Όροι Χρήσης XVII and Πολιτική Απορρήτου III verbatim, adds the per-cookie list and the consent-management section (+ `getCookiesMetadata` in `lib/seo/pages.ts`, sitemap entry). |
+| `frontend/src/components/consent/cookie-consent.tsx` | `CookieConsentRoot`: runs the engine, renders banner/dialog from the UI store (mounted in `app/layout.tsx`). |
+| `frontend/src/components/consent/cookie-banner.tsx` | First layer — replica of the old banner («Αποδοχή Cookies», text, «Αποδοχή Όλων» / «Προσαρμογή»). |
+| `frontend/src/components/consent/cookie-panel.tsx` | Settings dialog — replica of the old panel (header, 3 tabs, category cards + toggles, footer buttons). |
+| `frontend/src/components/consent/cookie-list.tsx` | «Cookies» tab / `/cookies` list, old field format. |
+| `frontend/src/components/consent/cookie-policy-content.tsx` | «Πολιτική cookies» text (verbatim from the old banner), used by the dialog tab and `/cookies`. |
+| `frontend/src/components/consent/cookie-settings-button.tsx` | «Ρυθμίσεις cookies» button (footer + `/cookies`) → opens the dialog. |
+| `frontend/src/app/(pages)/cookies/page.tsx` | Πολιτική Cookies page — same page chrome as `/terms` and `/privacy`; content = the old «Πολιτική cookies» text + the old-format cookie list + how to reopen the dialog (+ `getCookiesMetadata` in `lib/seo/pages.ts`, sitemap entry). |
 | `frontend/src/app/layout.tsx` | Old unconditional GTM loader **removed**; head script + banner mounted. |
 | `frontend/src/components/profile/contact-reveal.tsx` | `reveal_contact` now goes through `trackEvent()` (the old `window.gtag` call never worked — gtag was never defined). |
 | `frontend/src/types/global.d.ts` | `window.gtag` typed loosely (needs `'consent'` command). |
@@ -99,17 +104,20 @@ Deliberately **no** `<noscript>` GTM iframe — it cannot honour opt-in.
 
 Generated from `constants/datasets/cookies.ts` — keep both in sync (edit the TS file, this table is documentation).
 
-| Cookie | Category | Provider | Purpose | Expiry |
+| Cookie | Category (label) | Τύπος | Προμηθευτής | Λήξη |
 |---|---|---|---|---|
-| `dj_access` | necessary | doulitsa.gr | JWT access token (httpOnly) | 15 min |
-| `dj_refresh` | necessary | doulitsa.gr | JWT refresh token (httpOnly) | 3 days |
-| `g_oauth_state` | necessary | doulitsa.gr | CSRF protection for Google login | 10 min |
-| `g_oauth_next` | necessary | doulitsa.gr | Return path after Google login | 10 min |
-| `oauth_intent` | necessary | doulitsa.gr | Chosen account type before Google login | 10 min |
-| `sidebar_state` | necessary | doulitsa.gr | Dashboard sidebar open/closed | 7 days |
-| `dl_consent` | necessary | doulitsa.gr | Stores the visitor's cookie choices | 6 months |
-| `_ga`, `_ga_*` | analytics | Google Analytics 4 (Google Ireland Ltd.) | Visitor distinction / session state | 2 years |
-| `_fbp`, `fr` | marketing | Meta Pixel (Meta Platforms Ireland Ltd.) | Ad measurement / targeting | 3 months |
+| `dl_consent` | necessary (Απαραίτητα) | Cookie | Doulitsa | 6 μήνες |
+| `dj_access` | necessary | Cookie | Doulitsa | 15 λεπτά |
+| `dj_refresh` | necessary | Cookie | Doulitsa | 3 ημέρες |
+| `g_oauth_state` | necessary | Cookie | Doulitsa | 10 λεπτά |
+| `g_oauth_next` | necessary | Cookie | Doulitsa | 10 λεπτά |
+| `oauth_intent` | necessary | Cookie | Doulitsa | 10 λεπτά |
+| `sidebar_state` | necessary | Cookie | Doulitsa | 7 ημέρες |
+| `_ga`, `_ga_*` | performance (Απόδοση) | Cookie | Google Analytics | 2 χρόνια |
+| — | functional (Λειτουργικά) | — | — | (no functional cookies at the moment) |
+| `_fbp`, `fr` | marketing (Marketing) | Cookie | Meta Platforms | 3 μήνες |
+
+Consent Mode mapping: Απόδοση → `analytics_storage`; Λειτουργικά → `functionality_storage` + `personalization_storage`; Marketing → `ad_storage`, `ad_user_data`, `ad_personalization`. GTM is loaded only when Απόδοση or Marketing is accepted.
 
 > The third-party rows describe what the GA4 and Meta tags in the GTM container
 > set. **Confirm against the live container** whenever tags are added/removed.
@@ -133,12 +141,12 @@ GTM must stop relying on CookieFirst and gate its tags on Consent Mode.
 5. **GA4 event `reveal_contact`** (new — the site pushes `{event:'reveal_contact', contact_type:'phone'|'email'}`)
    - Data Layer Variable `DLV - contact_type` (name `contact_type`).
    - GA4 Event tag, event name `reveal_contact`, parameter `contact_type = {{DLV - contact_type}}`, trigger *Custom Event* `reveal_contact`, additional consent `analytics_storage`.
-6. Optional debug variables: `DLV - consent_analytics`, `DLV - consent_marketing` (booleans pushed with `cookie_consent_update`).
+6. Optional debug variables: `DLV - consent_performance`, `DLV - consent_functional`, `DLV - consent_marketing` (booleans pushed with `cookie_consent_update`).
 7. **Do not** add another Consent Mode default tag — defaults are set on-page before GTM can load.
 8. **Preview (Tag Assistant)** on a fresh browser profile:
    - Before any choice / after «Απόρριψη όλων»: no `gtm.js` request at all (Tag Assistant won't even connect — expected).
    - After «Αποδοχή όλων»: container loads; *Consent* tab shows `analytics_storage`/`ad_storage` **granted**; GA4 + Meta fire once; `cookie_consent_update` visible in the event list.
-   - Reject, then open footer «Ρυθμίσεις cookies» → enable only Στατιστικά → save: GA4 fires, Meta does not.
+   - «Άρνηση», then open footer «Ρυθμίσεις cookies» → enable only Απόδοση → «Αποθήκευση ρυθμίσεων»: GA4 fires, Meta does not.
 9. **Publish** the container.
 
 ---
@@ -155,12 +163,12 @@ GTM must stop relying on CookieFirst and gate its tags on Consent Mode.
 
 Local: `docker compose up -d frontend` → http://localhost:3000
 
-- [ ] Banner appears; «Αποδοχή όλων» / «Απόρριψη όλων» look identical; «Διαχείριση προτιμήσεων» opens the modal.
+- [ ] Banner appears bottom-right («Αποδοχή Cookies», «Αποδοχή Όλων» / «Προσαρμογή»); «Προσαρμογή» opens the dialog with the 3 tabs.
 - [ ] `view-source:` contains the `consent','default'` script and **no** `googletagmanager.com`.
 - [ ] DevTools → Application → Cookies: no `dl_consent` before a choice; after a choice `dl_consent` with `categories` and `revision`.
 - [ ] Console `dataLayer`: `['consent','default',…]`, then after a choice `['consent','update',…]` + `{event:'cookie_consent_update'}` **before** any `gtm.start`.
-- [ ] Reload → banner stays hidden; footer «Ρυθμίσεις cookies» reopens it; withdrawing analytics erases `_ga*`.
-- [ ] `/cookies` renders the table + button; `/sitemap_static.xml` lists `/cookies`.
+- [ ] Reload → banner stays hidden; footer «Ρυθμίσεις cookies» reopens the dialog with the stored toggles; turning Απόδοση off + «Αποθήκευση ρυθμίσεων» erases `_ga*`; «Άρνηση» → only Απαραίτητα.
+- [ ] `/cookies` renders the old policy text + cookie list + link; `/sitemap_static.xml` lists `/cookies`.
 - [ ] Reveal a profile phone → `dataLayer` gets `{event:'reveal_contact', contact_type:'phone'}`.
 - [ ] Bump `CONSENT_REVISION` to 2 → banner re-shown with the revision message.
 - [ ] `cd frontend && npx tsc --noEmit && yarn lint` clean.
@@ -188,8 +196,8 @@ Follow-up (not done): the browser branch of `setTokens()` and `signIn.email` in 
 
 ## 10. Maintenance
 
-- **Change texts** → `lib/analytics/cookie-consent-config.ts` (`language.translations.el`).
-- **Add a vendor/cookie** → add rows to `constants/datasets/cookies.ts`; if it's a new category add it to `categories` + a `preferencesModal.sections` entry with `linkedCategory`; gate the GTM tag with the matching consent type; **bump `CONSENT_REVISION`**.
+- **Change texts** → banner: `components/consent/cookie-banner.tsx`; dialog: `cookie-panel.tsx`; category names/descriptions: `constants/datasets/cookies.ts`; policy: `cookie-policy-content.tsx`.
+- **Add a vendor/cookie** → add rows to `constants/datasets/cookies.ts` (+ update `COOKIE_LIST_UPDATED_AT`); a new category also needs `categories` in `cookie-consent-config.ts` and the Consent Mode mapping in `applyConsentToGtag()`; gate the GTM tag with the matching consent type; **bump `CONSENT_REVISION`**.
 - **Change consent lifetime** → `CONSENT_EXPIRES_DAYS`.
 - **Disable tracking on an environment** → build with an empty `NEXT_PUBLIC_GTM_ID`.
 - **Lighthouse / bots** → `hideFromBots: true`: crawlers never see the banner nor load GTM.

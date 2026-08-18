@@ -16,7 +16,7 @@ import { SavedStateProvider } from '@/lib/providers/saved-state-provider';
 import NavigationSkeletonOverlay from '@/components/shared/navigation-skeleton-overlay';
 import { openSans } from '@/lib/fonts';
 import ConsentDefaultsScript from '@/components/consent/consent-defaults-script';
-import CookieConsentBanner from '@/components/consent/cookie-consent';
+import CookieConsentRoot from '@/components/consent/cookie-consent';
 
 export const metadata: Metadata = {
   title: {
@@ -66,12 +66,13 @@ export default async function RootLayout({ children }: RootLayoutProps) {
             <BottomToTop_D />
 
             {/*
-              Cookie consent banner (vanilla-cookieconsent). Google Tag Manager
-              (GA4 + Meta Pixel live inside the container) is loaded ONLY after
-              the visitor opts in to at least one non-necessary category — see
-              lib/analytics/consent.ts and docs/COOKIE-CONSENT.md.
+              Cookie consent (banner + settings dialog, replica of the previous
+              CookieFirst UI; vanilla-cookieconsent as headless engine). Google
+              Tag Manager (GA4 + Meta Pixel) is loaded ONLY after the visitor
+              accepts Απόδοση or Marketing — see lib/analytics/consent.ts and
+              docs/COOKIE-CONSENT.md.
             */}
-            <CookieConsentBanner />
+            <CookieConsentRoot />
             {/* Cloudinary Upload Widget */}
             {/* <Script
             src='https://upload-widget.cloudinary.com/global/all.js'
