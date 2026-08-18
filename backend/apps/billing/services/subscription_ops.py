@@ -139,6 +139,12 @@ def _attempt_row(a) -> dict[str, Any]:
         "sequence": a.sequence,
         "txId": a.tx_id,
         "orderId": a.order_id,
+        # Full history detail — the gateway's own message / error text and the
+        # payment reference. Without these, an ERROR/REFUSED row in the admin
+        # is a red badge with no explanation.
+        "paymentRef": a.payment_ref,
+        "message": a.message,
+        "errorMessage": a.error_message,
         "createdAt": a.created_at.isoformat() if a.created_at else None,
     }
 

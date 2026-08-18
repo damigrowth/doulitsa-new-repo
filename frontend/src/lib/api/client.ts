@@ -73,6 +73,8 @@ const API_PREFIX = '/api';
 // Cookie names. We mirror the JWT pair used by SimpleJWT.
 const ACCESS_COOKIE = 'dj_access';
 const REFRESH_COOKIE = 'dj_refresh';
+// Set by middlewares/withTokenRefresh.ts when it rotated tokens for this request.
+const FRESH_ACCESS_HEADER = 'x-dj-fresh-access';
 
 // Track in-flight refreshes so 100 parallel 401s share one refresh round-trip.
 let inFlightRefresh: Promise<string | null> | null = null;
@@ -87,12 +89,42 @@ async function readServerTokens(): Promise<{ access?: string; refresh?: string }
   if (!m) return {};
   try {
     const jar = await m.cookies();
+    // If the middleware just rotated the pair for this request, the new access
+    // token is on a request header (the cookie on this request is still the
+    // stale one — Set-Cookie only lands in the browser with the response).
+    let freshAccess: string | undefined;
+    try {
+      freshAccess = (await m.headers()).get(FRESH_ACCESS_HEADER) ?? undefined;
+    } catch {
+      /* outside a request scope */
+    }
     return {
-      access: jar.get(ACCESS_COOKIE)?.value,
+      access: freshAccess || jar.get(ACCESS_COOKIE)?.value,
       refresh: jar.get(REFRESH_COOKIE)?.value,
     };
   } catch {
     return {};
+  }
+}
+
+/**
+ * Can this server context persist cookies? True inside server actions and
+ * route handlers, false while rendering a server component. Rotating a
+ * single-use refresh token where we can't persist the result would strand the
+ * user with a blacklisted token (see middlewares/withTokenRefresh.ts).
+ */
+async function canPersistServerCookies(): Promise<boolean> {
+  const m = await loadServerHeaders();
+  if (!m) return false;
+  try {
+    const jar = await m.cookies();
+    // A no-op set: Next throws synchronously during render, succeeds otherwise.
+    const probe = jar.get(ACCESS_COOKIE);
+    if (probe) jar.set(ACCESS_COOKIE, probe.value, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 60 * 15 });
+    else jar.delete('__dj_probe__');
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -204,6 +236,11 @@ export async function clearTokens(): Promise<void> {
 async function refreshAccessToken(): Promise<string | null> {
   const refresh = await getRefreshToken();
   if (!refresh) return null;
+  // Server-side render (not an action/route handler): we can't write the
+  // rotated pair back to the browser, so DON'T burn the refresh token. The
+  // middleware already refreshes proactively before render; if we still got
+  // a 401 here the caller falls back to an anonymous retry.
+  if (!isBrowser && !(await canPersistServerCookies())) return null;
   if (inFlightRefresh) return inFlightRefresh;
 
   inFlightRefresh = (async () => {
@@ -338,12 +375,13 @@ export async function apiRequest<T = unknown>(
     if (refreshed) {
       return apiRequest<T>(path, { ...options, retried: true });
     }
-    // Refresh failed — the access/refresh tokens are dead. Drop them so
-    // subsequent requests go out anonymously, then retry once without
-    // Authorization. Public endpoints (home, archives, profile, service)
-    // can then satisfy the request; truly authenticated endpoints will
-    // come back with a clean 401 the caller can surface as "please log in".
-    await clearTokens();
+    // Refresh failed or was skipped (server render). Retry once anonymously:
+    // public endpoints (home, archives, profile, service) still succeed;
+    // truly authenticated endpoints come back with a clean 401 the caller
+    // can surface as "please log in". Only clear the pair where clearing can
+    // actually reach the browser (client / action) — during a render the
+    // middleware handles dead tokens on the next navigation.
+    if (isBrowser || (await canPersistServerCookies())) await clearTokens();
     return apiRequest<T>(path, { ...options, anonymous: true, retried: true });
   }
 

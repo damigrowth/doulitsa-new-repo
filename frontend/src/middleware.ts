@@ -2,13 +2,15 @@ import {
   stackMiddlewares,
   withLowercaseRedirect,
   withSimpleAuth,
+  withTokenRefresh,
   withHeaders,
 } from './middlewares';
 
 const middlewares = [
   withLowercaseRedirect, // 1. Normalize URLs first
-  withSimpleAuth, // 2. Simple auth (cookie check only - page level handles details)
-  withHeaders, // 3. Set headers including x-current-path (last)
+  withTokenRefresh, // 2. Rotate an expired access token HERE (the only place cookies can be written)
+  withSimpleAuth, // 3. Simple auth (cookie check only - page level handles details)
+  withHeaders, // 4. Set headers including x-current-path (last)
 ];
 
 export default stackMiddlewares(middlewares);

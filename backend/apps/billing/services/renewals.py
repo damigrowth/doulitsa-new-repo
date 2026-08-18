@@ -221,6 +221,11 @@ def _process_renewal(sub: Subscription, now: datetime, results: dict[str, Any], 
                 payment_ref=result.get("paymentRef") or None,
                 order_id=renewal_order_id,
                 message=result.get("message") or None,
+                # Failed rows must always explain themselves in the history.
+                error_message=(
+                    result.get("message")
+                    or f"Gateway returned {status_value or 'ERROR'} with no message"
+                ),
             )
             results["failed"] += 1
             results["errors"].append(f"{sub.profile_id}: {status_value} - {result.get('message')}")

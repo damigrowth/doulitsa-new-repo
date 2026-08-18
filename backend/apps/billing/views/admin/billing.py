@@ -60,7 +60,11 @@ class AdminSubscriptionPaymentsView(APIView):
             page = int(request.query_params.get("page", 1))
         except (TypeError, ValueError):
             page = 1
-        return Response(svc.list_payment_attempts(subscription_id=sub_id, page=page))
+        try:
+            page_size = int(request.query_params.get("pageSize", 25))
+        except (TypeError, ValueError):
+            page_size = 25
+        return Response(svc.list_payment_attempts(subscription_id=sub_id, page=page, page_size=page_size))
 
 
 class AdminSubscriptionStatusView(APIView):

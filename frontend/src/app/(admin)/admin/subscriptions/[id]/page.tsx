@@ -166,6 +166,9 @@ export default async function AdminSubscriptionDetailPage({
     sequence: (a.sequence as number | null) ?? null,
     txId: (a.txId as string | null) ?? null,
     orderId: (a.orderId as string | null) ?? null,
+    paymentRef: (a.paymentRef as string | null) ?? null,
+    message: (a.message as string | null) ?? null,
+    errorMessage: (a.errorMessage as string | null) ?? null,
     createdAt: new Date(String(a.createdAt)),
   }));
   const attemptsTotal = paymentsRaw?.total ?? 0;

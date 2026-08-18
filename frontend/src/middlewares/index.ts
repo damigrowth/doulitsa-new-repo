@@ -2,4 +2,5 @@
 export { stackMiddlewares } from './stackHandler';
 export { withLowercaseRedirect } from './withLowercaseRedirect';
 export { withSimpleAuth } from './withSimpleAuth';
+export { withTokenRefresh } from './withTokenRefresh';
 export { withHeaders } from './withHeaders';

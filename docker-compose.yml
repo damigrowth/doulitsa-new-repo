@@ -141,6 +141,11 @@ services:
     command: celery -A config worker -l INFO
 
   celery-beat:
+    # DISABLED BY DEFAULT — the renewal cron would fire real Worldline charges
+    # for the subscriptions in the copied server DB (see WORLDLINE_RECURRING_
+    # OVERRIDE_DAYS above). Opt in explicitly:
+    #   docker compose --profile scheduler up -d celery-beat
+    profiles: ["scheduler"]
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -198,6 +203,10 @@ services:
       # needs the cloud name + (public, non-secret) API key for signed uploads;
       # the API secret stays in backend/.env only.
       NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: "ddejhvzbf"
+      # Public (non-secret) half of the Google OAuth pair — the frontend route
+      # /api/auth/oauth/google/login builds the consent-screen redirect with it.
+      # The client SECRET lives only in backend/.env.
+      NEXT_PUBLIC_GOOGLE_CLIENT_ID: "191467868587-cmlf3458i14tqgehrkbgkqsd3tnsok94.apps.googleusercontent.com"
       NEXT_PUBLIC_CLOUDINARY_API_KEY: "552113138292579"
       NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: "doulitsa"
       # Must agree with the backend's PAYMENTS_TEST_MODE so the payments UI

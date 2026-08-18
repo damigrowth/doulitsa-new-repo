@@ -270,12 +270,30 @@ def _parse_sale_response(response_text: str) -> dict[str, Any]:
     fields: dict[str, str] = {}
     for el in root.iter():
         tag = _strip_ns(el.tag)
-        if tag in ("Status", "Message", "ErrorMessage", "TxId", "PaymentRef", "OrderAmount"):
-            fields[tag] = (el.text or "").strip()
+        # Cardlink puts the human-readable failure reason in <Message> on a
+        # refused sale, but in <Description> (+ <ErrorCode>) on an
+        # ErrorMessage-shaped reply. Capture all so a failed attempt always
+        # carries WHY it failed into the payment history.
+        if tag in ("Status", "Message", "ErrorMessage", "Description", "ErrorCode",
+                   "TxId", "PaymentRef", "OrderAmount"):
+            text = (el.text or "").strip()
+            # <Message> is ALSO the name of the outer envelope element (empty
+            # text) — only keep elements that carry a value so the inner
+            # <Message>Insufficient funds</Message> isn't shadowed by it.
+            if text and tag not in fields:
+                fields[tag] = text
+
+    message = fields.get("Message") or fields.get("ErrorMessage") or fields.get("Description")
+    if fields.get("ErrorCode"):
+        message = f"{fields['ErrorCode']}: {message}" if message else fields["ErrorCode"]
+    if not message and not fields.get("Status"):
+        # No status and no text at all — keep a trimmed raw excerpt so the row is
+        # never a bare "ERROR" with nothing to go on.
+        message = f"Unrecognised gateway reply: {response_text[:200]}"
 
     return {
         "status": fields.get("Status") or "ERROR",
-        "message": fields.get("Message") or fields.get("ErrorMessage"),
+        "message": message,
         "txId": fields.get("TxId"),
         "paymentRef": fields.get("PaymentRef"),
         "orderAmount": fields.get("OrderAmount"),

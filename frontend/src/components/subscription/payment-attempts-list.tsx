@@ -35,6 +35,12 @@ export interface PaymentAttemptRow {
   sequence: number | null;
   txId: string | null;
   orderId: string | null;
+  /** Gateway payment reference (Cardlink paymentRef). */
+  paymentRef?: string | null;
+  /** Gateway result text for the attempt (e.g. "OK, 00 - Approved"). */
+  message?: string | null;
+  /** Failure detail for ERROR/REFUSED rows (why it failed). */
+  errorMessage?: string | null;
   createdAt: Date;
 }
 
@@ -157,6 +163,7 @@ export function PaymentAttemptsList({ attempts, variant = 'full' }: Props) {
           <TableHead className='text-xs text-center'>Seq.</TableHead>
           <TableHead className='text-xs'>TX ID</TableHead>
           <TableHead className='text-xs'>Order ID</TableHead>
+          <TableHead className='text-xs'>Λεπτομέρειες</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -192,6 +199,24 @@ export function PaymentAttemptsList({ attempts, variant = 'full' }: Props) {
             </TableCell>
             <TableCell className='text-xs font-mono text-muted-foreground truncate max-w-[200px]' title={a.orderId || undefined}>
               {a.orderId || '—'}
+            </TableCell>
+            <TableCell className='text-xs max-w-[260px]'>
+              {a.errorMessage ? (
+                <span className='text-destructive break-words' title={a.errorMessage}>
+                  {a.errorMessage}
+                </span>
+              ) : a.message ? (
+                <span className='text-muted-foreground break-words' title={a.message}>
+                  {a.message}
+                </span>
+              ) : (
+                <span className='text-muted-foreground'>—</span>
+              )}
+              {a.paymentRef ? (
+                <div className='font-mono text-muted-foreground/70 truncate' title={a.paymentRef}>
+                  ref: {a.paymentRef}
+                </div>
+              ) : null}
             </TableCell>
           </TableRow>
         ))}
