@@ -14,6 +14,8 @@ export async function GET() {
     'articles',
     'privacy',
     'terms',
+    'cookies',
+    'politiki-akirosis',
     'login',
     'register',
     'for-pros',

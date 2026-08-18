@@ -77,6 +77,9 @@ browser bundle; the Dockerfile already defaults them to the values below):
 NEXT_PUBLIC_API_URL=https://api-doulitsa.ncmulti.com
 NEXT_PUBLIC_APP_URL=https://doulitsa.ncmulti.com
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=ddejhvzbf
+# Google Tag Manager (GA4 + Meta Pixel). Loaded only after cookie consent —
+# see docs/COOKIE-CONSENT.md. Leave empty to disable tracking entirely.
+NEXT_PUBLIC_GTM_ID=GTM-KR7N94L4
 ```
 
 **Runtime Environment Variables** (server-side rendering only):

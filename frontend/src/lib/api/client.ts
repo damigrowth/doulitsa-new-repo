@@ -20,6 +20,15 @@
  */
 
 import type { ActionResult } from '@/lib/types/api';
+// Cookie names / lifetimes / flags: single source of truth in lib/auth/cookies.ts.
+import {
+  ACCESS_COOKIE,
+  ACCESS_MAX_AGE,
+  FRESH_ACCESS_HEADER,
+  REFRESH_COOKIE,
+  REFRESH_MAX_AGE,
+  authCookieOptions,
+} from '@/lib/auth/cookies';
 
 /**
  * Lazy-load `next/headers` only when we're running server-side. Importing
@@ -70,12 +79,6 @@ function fetchBaseUrl(): string {
 
 const API_PREFIX = '/api';
 
-// Cookie names. We mirror the JWT pair used by SimpleJWT.
-const ACCESS_COOKIE = 'dj_access';
-const REFRESH_COOKIE = 'dj_refresh';
-// Set by middlewares/withTokenRefresh.ts when it rotated tokens for this request.
-const FRESH_ACCESS_HEADER = 'x-dj-fresh-access';
-
 // Track in-flight refreshes so 100 parallel 401s share one refresh round-trip.
 let inFlightRefresh: Promise<string | null> | null = null;
 
@@ -118,10 +121,11 @@ async function canPersistServerCookies(): Promise<boolean> {
   if (!m) return false;
   try {
     const jar = await m.cookies();
-    // A no-op set: Next throws synchronously during render, succeeds otherwise.
-    const probe = jar.get(ACCESS_COOKIE);
-    if (probe) jar.set(ACCESS_COOKIE, probe.value, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 60 * 15 });
-    else jar.delete('__dj_probe__');
+    // Probe with a delete of a cookie that never exists: Next throws
+    // synchronously during render, succeeds otherwise. Never touch the real
+    // auth cookies here — re-setting dj_access would silently extend its
+    // lifetime on every server action as a side effect.
+    jar.delete('__dj_probe__');
     return true;
   } catch {
     return false;
@@ -135,25 +139,12 @@ export async function writeServerTokens(access: string, refresh?: string): Promi
   try {
     const jar = await m.cookies();
     const secure = process.env.NODE_ENV === 'production';
-    jar.set(ACCESS_COOKIE, access, {
-      httpOnly: true,
-      secure,
-      sameSite: 'lax',
-      path: '/',
-      // 15 min — matches the SimpleJWT access lifetime. The client refreshes
-      // silently on the first 401 after expiry, so the user never sees it.
-      maxAge: 60 * 15,
-    });
+    // Lifetimes/flags come from lib/auth/cookies.ts (15 min access, 3 days
+    // refresh — the middleware refreshes proactively before render, so the
+    // user never notices the access expiry).
+    jar.set(ACCESS_COOKIE, access, authCookieOptions(secure, ACCESS_MAX_AGE));
     if (refresh) {
-      jar.set(REFRESH_COOKIE, refresh, {
-        httpOnly: true,
-        secure,
-        sameSite: 'lax',
-        path: '/',
-        // 3 days idle. Refresh rotates on every use so an active user stays
-        // logged in indefinitely; 3 quiet days = logout.
-        maxAge: 60 * 60 * 24 * 3,
-      });
+      jar.set(REFRESH_COOKIE, refresh, authCookieOptions(secure, REFRESH_MAX_AGE));
     }
   } catch {
     // No cookies API available (running outside a request) — silently skip
@@ -213,8 +204,12 @@ export async function getRefreshToken(): Promise<string | null> {
 
 export async function setTokens(access: string, refresh?: string): Promise<void> {
   if (isBrowser) {
-    writeClientToken(ACCESS_COOKIE, access, 60 * 60);
-    if (refresh) writeClientToken(REFRESH_COOKIE, refresh, 60 * 60 * 24 * 14);
+    // Browser path (legacy — effectively unused: login runs as a server
+    // action and the real cookies are httpOnly, so JS can't read them). Kept
+    // for safety with the SAME lifetimes as the server path so nothing can
+    // diverge. Follow-up: remove together with signIn.email in lib/auth/client.
+    writeClientToken(ACCESS_COOKIE, access, ACCESS_MAX_AGE);
+    if (refresh) writeClientToken(REFRESH_COOKIE, refresh, REFRESH_MAX_AGE);
   } else {
     await writeServerTokens(access, refresh);
   }

@@ -9,6 +9,7 @@ export const firstColumnLinks = [
 export const legalLinks = [
   { label: 'Πολιτική Απορρήτου', slug: 'privacy' },
   { label: 'Πολιτική Ακύρωσης', slug: 'politiki-akirosis' },
+  { label: 'Πολιτική Cookies', slug: 'cookies' },
   { label: 'Όροι Χρήσης', slug: 'terms' },
 ];
 

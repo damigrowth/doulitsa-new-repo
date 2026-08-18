@@ -1,4 +1,5 @@
 import React from 'react';
+import CookieSettingsButton from '@/components/consent/cookie-settings-button';
 import Image from 'next/image';
 import NextLink from '@/components/shared/next-link';
 
@@ -147,6 +148,8 @@ export default function Footer() {
                 {item.label}
               </NextLink>
             ))}
+            {/* Re-opens the cookie preferences modal (consent withdrawal). */}
+            <CookieSettingsButton />
           </div>
         </div>
       </div>

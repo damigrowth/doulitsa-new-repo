@@ -15,6 +15,13 @@
  * accounts.google.com.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  ACCESS_COOKIE,
+  ACCESS_MAX_AGE,
+  REFRESH_COOKIE,
+  REFRESH_MAX_AGE,
+  authCookieOptions,
+} from '@/lib/auth/cookies';
 
 function appOrigin(request: NextRequest): string {
   return process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || request.nextUrl.origin;
@@ -88,9 +95,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   const response = NextResponse.redirect(new URL(dest, origin));
   const secure = origin.startsWith('https');
-  response.cookies.set('dj_access', data.access, { httpOnly: true, sameSite: 'lax', secure, maxAge: 60 * 60, path: '/' });
+  // Same lifetimes as every other login path (15 min / 3 days) — see
+  // lib/auth/cookies.ts. Previously 1 h / 14 d here, which kept Google-login
+  // users signed in far longer than password users.
+  response.cookies.set(ACCESS_COOKIE, data.access, authCookieOptions(secure, ACCESS_MAX_AGE));
   if (data.refresh) {
-    response.cookies.set('dj_refresh', data.refresh, { httpOnly: true, sameSite: 'lax', secure, maxAge: 60 * 60 * 24 * 14, path: '/' });
+    response.cookies.set(REFRESH_COOKIE, data.refresh, authCookieOptions(secure, REFRESH_MAX_AGE));
   }
   response.cookies.delete('g_oauth_state');
   response.cookies.delete('g_oauth_next');

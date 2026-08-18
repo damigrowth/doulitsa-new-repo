@@ -4,6 +4,7 @@
  * this is the only safe way to hand it to browser JS.
  */
 import { NextResponse } from 'next/server';
+import { ACCESS_COOKIE } from '@/lib/auth/cookies';
 import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
@@ -11,7 +12,7 @@ export const revalidate = 0;
 
 export async function GET() {
   const jar = await cookies();
-  const access = jar.get('dj_access')?.value;
+  const access = jar.get(ACCESS_COOKIE)?.value;
   if (!access) {
     return NextResponse.json({ token: null }, { status: 401 });
   }

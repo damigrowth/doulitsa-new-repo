@@ -9,7 +9,6 @@
 // export { default as ServiceFeaturedFiles_D } fro../../oldcode/components/dynamic/dynamic-service-featured-filesles';
 
 // Layout Components
-// CookieFirst loads via Google Tag Manager - no React component needed
 export { default as BottomToTop_D } from './dynamic-bottom-to-top';
 // export { default as MegaMenu_D } fro../../oldcode/components/dynamic/dynamic-mega-menuenu';
 // export { default as NavMenuMobileWrapper_D } from './dynamic-nav-menu-mobile';

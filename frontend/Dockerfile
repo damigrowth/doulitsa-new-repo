@@ -40,9 +40,14 @@ COPY . .
 ARG NEXT_PUBLIC_API_URL=https://api-doulitsa.ncmulti.com
 ARG NEXT_PUBLIC_APP_URL=https://doulitsa.ncmulti.com
 ARG NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=ddejhvzbf
+# Google Tag Manager container. Empty => GTM is never loaded (the consent
+# banner still works). Only loaded after the visitor opts in — see
+# docs/COOKIE-CONSENT.md.
+ARG NEXT_PUBLIC_GTM_ID=GTM-KR7N94L4
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
     NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL \
     NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=$NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME \
+    NEXT_PUBLIC_GTM_ID=$NEXT_PUBLIC_GTM_ID \
     NODE_ENV=production
 
 # Runs build:taxonomies (tsx) -> prisma generate -> next build

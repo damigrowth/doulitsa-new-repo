@@ -21,12 +21,16 @@ import { NextResponse, NextRequest } from 'next/server';
  * cookies so the user is cleanly anonymous instead of stuck.
  */
 
-const ACCESS_COOKIE = 'dj_access';
-const REFRESH_COOKIE = 'dj_refresh';
-export const FRESH_ACCESS_HEADER = 'x-dj-fresh-access';
+import {
+  ACCESS_COOKIE,
+  ACCESS_MAX_AGE,
+  FRESH_ACCESS_HEADER,
+  REFRESH_COOKIE,
+  REFRESH_MAX_AGE,
+  authCookieOptions,
+} from '@/lib/auth/cookies';
 
-const ACCESS_MAX_AGE = 60 * 15;          // matches SimpleJWT access lifetime
-const REFRESH_MAX_AGE = 60 * 60 * 24 * 3; // matches SIMPLE_JWT_REFRESH_LIFETIME_DAYS
+export { FRESH_ACCESS_HEADER };
 
 function apiBase(): string {
   return (
@@ -81,13 +85,9 @@ export const withTokenRefresh = (next: (req: NextRequest, n: unknown) => Promise
       const patched = new NextRequest(request.url, { headers: fwd, method: request.method });
       const response = (await next(patched, _next)) ?? NextResponse.next({ request: { headers: fwd } });
       const secure = process.env.NODE_ENV === 'production';
-      response.cookies.set(ACCESS_COOKIE, access, {
-        httpOnly: true, secure, sameSite: 'lax', path: '/', maxAge: ACCESS_MAX_AGE,
-      });
+      response.cookies.set(ACCESS_COOKIE, access, authCookieOptions(secure, ACCESS_MAX_AGE));
       if (rotatedRefresh) {
-        response.cookies.set(REFRESH_COOKIE, rotatedRefresh, {
-          httpOnly: true, secure, sameSite: 'lax', path: '/', maxAge: REFRESH_MAX_AGE,
-        });
+        response.cookies.set(REFRESH_COOKIE, rotatedRefresh, authCookieOptions(secure, REFRESH_MAX_AGE));
       }
       return response;
     }

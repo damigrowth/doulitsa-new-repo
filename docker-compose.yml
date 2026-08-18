@@ -128,6 +128,7 @@ services:
       CELERY_RESULT_BACKEND: django-db
       CHANNELS_REDIS_URL: redis://redis:6379/3
       SIMPLE_JWT_SIGNING_KEY: docker-dev-jwt-signing-key-not-for-production-min-50-chars-yes
+      SIMPLE_JWT_REFRESH_LIFETIME_DAYS: "3"
       # Only the backend container runs migrations; celery must not race it.
       RUN_MIGRATIONS: "0"
     volumes:
@@ -160,6 +161,7 @@ services:
       CELERY_RESULT_BACKEND: django-db
       CHANNELS_REDIS_URL: redis://redis:6379/3
       SIMPLE_JWT_SIGNING_KEY: docker-dev-jwt-signing-key-not-for-production-min-50-chars-yes
+      SIMPLE_JWT_REFRESH_LIFETIME_DAYS: "3"
       # Only the backend container runs migrations; celery must not race it.
       RUN_MIGRATIONS: "0"
     volumes:
@@ -207,6 +209,11 @@ services:
       # /api/auth/oauth/google/login builds the consent-screen redirect with it.
       # The client SECRET lives only in backend/.env.
       NEXT_PUBLIC_GOOGLE_CLIENT_ID: "191467868587-cmlf3458i14tqgehrkbgkqsd3tnsok94.apps.googleusercontent.com"
+      # Google Tag Manager container id. Deliberately UNSET for local dev so no
+      # GA4/Meta traffic is generated from laptops; the cookie banner itself
+      # still renders and can be tested. Uncomment to test the GTM load path
+      # (it only ever loads after the visitor opts in).
+      # NEXT_PUBLIC_GTM_ID: "GTM-KR7N94L4"
       NEXT_PUBLIC_CLOUDINARY_API_KEY: "552113138292579"
       NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: "doulitsa"
       # Must agree with the backend's PAYMENTS_TEST_MODE so the payments UI

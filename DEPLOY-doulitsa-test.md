@@ -101,6 +101,10 @@ Override the start command:
 NEXT_PUBLIC_API_URL=https://api-doulitsa-test.ncmulti.dev
 NEXT_PUBLIC_APP_URL=https://doulitsa-test.ncmulti.dev
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=ddejhvzbf
+# Google Tag Manager — loaded only after cookie consent (docs/COOKIE-CONSENT.md).
+# Use the real container to test the GTM flow on the test env, or leave empty
+# to keep test traffic out of GA4/Meta.
+NEXT_PUBLIC_GTM_ID=GTM-KR7N94L4
 ```
 
 ## 5) Frontend — Runtime Environment Variables (server-side only)

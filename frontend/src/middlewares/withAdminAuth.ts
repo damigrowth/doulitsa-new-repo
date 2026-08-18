@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
  * `@/actions/auth/server`.
  */
 
-const ACCESS_COOKIE = 'dj_access';
+import { ACCESS_COOKIE } from '@/lib/auth/cookies';
 
 export async function withAdminAuth(request: NextRequest) {
   const hasAccess = request.cookies.get(ACCESS_COOKIE);

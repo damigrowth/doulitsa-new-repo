@@ -9,8 +9,7 @@ import { NextResponse, NextRequest } from 'next/server';
  * just provides a fast unauthenticated→login redirect for protected routes.
  */
 
-const ACCESS_COOKIE = 'dj_access';
-const REFRESH_COOKIE = 'dj_refresh';
+import { ACCESS_COOKIE, REFRESH_COOKIE } from '@/lib/auth/cookies';
 
 export const withSimpleAuth = (next: Function) => {
   return async (request: NextRequest, _next: Function) => {

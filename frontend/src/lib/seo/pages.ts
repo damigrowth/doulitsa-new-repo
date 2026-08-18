@@ -145,6 +145,21 @@ export async function getCancellationMetadata() {
 }
 
 /**
+ * Cookie policy page metadata generation
+ */
+export async function getCookiesMetadata() {
+  const { meta } = await Meta({
+    titleTemplate: 'Πολιτική Cookies',
+    descriptionTemplate:
+      'Ποια cookies χρησιμοποιεί το doulitsa.gr, για ποιον σκοπό, για πόσο διάστημα και πώς μπορείτε να αλλάξετε ή να ανακαλέσετε τις επιλογές σας.',
+    size: 160,
+    url: '/cookies',
+  });
+
+  return meta;
+}
+
+/**
  * Login page metadata generation
  */
 export async function getLoginMetadata() {

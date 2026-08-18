@@ -126,6 +126,7 @@
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
     "timeago.js": "4.0.0-beta.3",
+    "vanilla-cookieconsent": "^3.1.0",
     "vaul": "^1.1.2",
     "zod": "^4.0.5",
     "zustand": "^4.5.2"

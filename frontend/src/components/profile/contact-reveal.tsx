@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { trackEvent } from '@/lib/analytics/consent';
 
 interface ContactRevealProps {
   /** Contact type (phone or email) */
@@ -28,15 +29,11 @@ export default function ContactReveal({
 }: ContactRevealProps) {
   const [isVisible, setIsVisible] = useState(initialVisible);
 
-  // Track contact reveals with analytics
+  // Track contact reveals: pushed to the GTM dataLayer; the GA4 event tag in
+  // GTM only fires when analytics consent was granted (and GTM is only loaded
+  // after an opt-in), so no consent logic is needed here.
   const handleReveal = () => {
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', 'reveal_contact', {
-        event_category: 'Contact',
-        event_label: type,
-        value: 1,
-      });
-    }
+    trackEvent('reveal_contact', { contact_type: type });
     setIsVisible(true);
   };
 
