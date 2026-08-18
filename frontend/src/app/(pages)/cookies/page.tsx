@@ -1,137 +1,230 @@
 import React from 'react';
-
 import CookieSettingsButton from '@/components/consent/cookie-settings-button';
-import { buttonVariants } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  CATEGORY_LABELS,
-  COOKIE_INVENTORY,
-  type CookieCategory,
-} from '@/constants/datasets/cookies';
+import { COOKIE_INVENTORY, type CookieCategory } from '@/constants/datasets/cookies';
 import { getCookiesMetadata } from '@/lib/seo/pages';
 
 export async function generateMetadata() {
   return getCookiesMetadata();
 }
 
-const CATEGORY_ORDER: CookieCategory[] = ['necessary', 'analytics', 'marketing'];
-
-/**
- * Πολιτική Cookies — public information page required alongside the consent
- * banner (Greek DPA guidance: per-cookie name / provider / purpose / expiry,
- * plus an always-available way to change or withdraw consent).
- *
- * The table is generated from constants/datasets/cookies.ts, the same source
- * the banner uses, so the two can never disagree.
- *
- * NOTE: legal wording drafted by engineering — have it reviewed by whoever
- * owns the site's legal texts before/after publishing.
+/*
+ * Πολιτική Cookies — same skeleton, section style and register as the
+ * existing legal pages (terms/page.tsx, privacy/page.tsx). Sections II–IV
+ * reuse the wording of Όροι Χρήσης XVII and Πολιτική Απορρήτου III verbatim;
+ * only the per-cookie list (V) and the consent-management text (VI) are new,
+ * because the law requires them next to the consent banner.
  */
+const listByCategory = (category: CookieCategory) =>
+  COOKIE_INVENTORY.filter((c) => c.category === category);
+
 export default function CookiePolicyPage() {
   return (
     <div className='mt-16 lg:mt-20 flex flex-col w-full overflow-hidden'>
-      <section className='container mx-auto max-w-3xl py-12 px-5'>
+      <section className='container mx-auto max-w-2xl py-12 px-5'>
         <h1 className='text-2xl font-bold'>Πολιτική Cookies</h1>
         <div className='pb-10 space-y-4'>
-          <p className='pt-8 text-dark text-lg font-semibold'>Ι. Τι είναι τα cookies</p>
+          <p className='pt-8 text-dark text-lg font-semibold'>Ι. Εισαγωγή</p>
           <p>
-            Τα cookies είναι μικρά αρχεία κειμένου που αποθηκεύονται στη συσκευή σας
-            (υπολογιστή, κινητό, tablet) όταν επισκέπτεστε έναν ιστότοπο. Χρησιμοποιούνται
-            για να λειτουργεί σωστά ο ιστότοπος, να θυμάται τις επιλογές σας και, εφόσον το
-            επιτρέψετε, για τη συλλογή ανώνυμων στατιστικών ή για σκοπούς εμπορικής
-            προώθησης.
+            1. Ο ιστότοπος https://doulitsa.gr ανήκει στην εταιρεία με επωνυμία
+            «DAMI ΜΟΝΟΠΡΟΣΩΠΗ ΙΚΕ», με ΑΦΜ 801768860 και αριθμό Γ.Ε.ΜΗ.
+            162979503000, που εδρεύει στην Αθήνα, επί της Λεωφόρου Ανδρέα
+            Συγγρού 196 ΤΚ 17671 (εφεξής και χάριν συντομίας η «εταιρεία»). Η
+            παρούσα Πολιτική Cookies περιγράφει ποια cookies χρησιμοποιεί το
+            doulitsa.gr, για ποιον σκοπό, για πόσο χρονικό διάστημα και με ποιον
+            τρόπο ο επισκέπτης/χρήστης μπορεί να διαχειρίζεται τις σχετικές
+            επιλογές του, και συμπληρώνει τους{' '}
+            <a href='/terms' className='text-primary underline'>
+              Όρους Χρήσης
+            </a>{' '}
+            και την{' '}
+            <a href='/privacy' className='text-primary underline'>
+              Πολιτική Απορρήτου
+            </a>{' '}
+            του doulitsa.gr.
           </p>
-
-          <p className='pt-4 text-dark text-lg font-semibold'>ΙΙ. Ποια cookies χρησιμοποιούμε</p>
           <p>
-            Το doulitsa.gr χρησιμοποιεί τις παρακάτω κατηγορίες cookies. Τα{' '}
-            <strong>απολύτως απαραίτητα</strong> cookies είναι αναγκαία για τη λειτουργία της
-            πλατφόρμας (π.χ. σύνδεση στον λογαριασμό σας) και δεν απαιτούν συγκατάθεση. Τα
-            cookies <strong>στατιστικών</strong> και <strong>εμπορικής προώθησης</strong>{' '}
-            ενεργοποιούνται <strong>μόνο</strong> εφόσον τα αποδεχθείτε από το σχετικό
-            παράθυρο κατά την πρώτη σας επίσκεψη ή από τις «Ρυθμίσεις cookies».
+            2. Η εταιρεία μέσω της doulitsa.gr έχει τη δυνατότητα να χρησιμοποιεί
+            Cookies ως μέρος της διευκόλυνσης αλλά και λειτουργίας των υπηρεσιών
+            του doulitsa.gr.
           </p>
-
-          {CATEGORY_ORDER.map((category) => {
-            const rows = COOKIE_INVENTORY.filter((c) => c.category === category);
-            return (
-              <div key={category} className='space-y-2'>
-                <p className='pt-4 text-dark font-semibold'>{CATEGORY_LABELS[category]}</p>
-                <div className='overflow-x-auto rounded-md border'>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className='text-xs'>Cookie</TableHead>
-                        <TableHead className='text-xs'>Πάροχος</TableHead>
-                        <TableHead className='text-xs'>Σκοπός</TableHead>
-                        <TableHead className='text-xs whitespace-nowrap'>Διάρκεια</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {rows.map((c) => (
-                        <TableRow key={c.name}>
-                          <TableCell className='text-xs font-mono whitespace-nowrap'>{c.name}</TableCell>
-                          <TableCell className='text-xs'>{c.provider}</TableCell>
-                          <TableCell className='text-xs'>{c.purpose}</TableCell>
-                          <TableCell className='text-xs whitespace-nowrap'>{c.expiry}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-            );
-          })}
 
           <p className='pt-4 text-dark text-lg font-semibold'>
-            ΙΙΙ. Πώς αλλάζω ή ανακαλώ τις επιλογές μου
+            ΙΙ. Τι είναι τα cookies;
           </p>
           <p>
-            Μπορείτε οποιαδήποτε στιγμή να αλλάξετε τις προτιμήσεις σας ή να ανακαλέσετε τη
-            συγκατάθεσή σας πατώντας το κουμπί «Ρυθμίσεις cookies» παρακάτω ή τον αντίστοιχο
-            σύνδεσμο στο υποσέλιδο κάθε σελίδας. Η ανάκληση ισχύει από τη στιγμή που θα την
-            αποθηκεύσετε· τα cookies της κατηγορίας που απενεργοποιήσατε διαγράφονται από τη
-            συσκευή σας. Οι επιλογές σας διατηρούνται για 6 μήνες, μετά τους οποίους θα σας
-            ζητηθεί ξανά η συγκατάθεσή σας. Επιπλέον, μπορείτε να διαγράψετε ή να αποκλείσετε
-            cookies μέσω των ρυθμίσεων του προγράμματος περιήγησής σας.
+            Τα cookies είναι μικρά αρχεία κειμένου με πληροφορίες, τα οποία
+            αποθηκεύονται από τον διακομιστή (server) ενός ιστότοπου στην
+            τερματική συσκευή (υπολογιστής, κινητό τηλέφωνο κλπ.) ενός
+            επισκέπτη/χρήστη κατά την πλοήγηση σε αυτόν. Ο ιστότοπος ανακτά τις
+            εν λόγω πληροφορίες σε κάθε επίσκεψη προκειμένου να προσφέρει
+            σχετικές με αυτές υπηρεσίες.
           </p>
-          <div className='pt-2'>
-            <CookieSettingsButton className={buttonVariants({ variant: 'default' })}>
-              Ρυθμίσεις cookies
-            </CookieSettingsButton>
-          </div>
+          <p>
+            Πολλές ιστοσελίδες και διακομιστές χρησιμοποιούν cookies. Πολλά
+            cookies περιέχουν τη λεγόμενη ταυτότητα cookie (cookie ID). Η
+            ταυτότητα cookie είναι ένα μοναδικό αναγνωριστικό του cookie.
+            Αποτελείται από μια σειρά χαρακτήρων μέσω της οποίας ιστοσελίδες και
+            διακομιστές μπορούν να συσχετιστούν με ένα συγκεκριμένο πρόγραμμα
+            περιήγησης διαδικτύου στο οποίο το cookie έχει αποθηκευτεί.
+          </p>
+          <p>
+            Τα cookies μπορεί να εγκαθίστανται από τον ίδιο τον πάροχο της
+            ιστοσελίδας που επισκέπτεται ο χρήστης (first party cookies) ή από
+            άλλους μέσω του παρόχου της ιστοσελίδας (third party cookies) που
+            επισκέπτεται ο χρήστης.
+          </p>
 
-          <p className='pt-4 text-dark text-lg font-semibold'>ΙV. Νομικό πλαίσιο</p>
+          <p className='pt-4 text-dark text-lg font-semibold'>
+            ΙΙΙ. Νομικό Πλαίσιο
+          </p>
           <p>
-            Η χρήση cookies διέπεται από το άρθρο 4 παρ. 5 του ν. 3471/2006 (όπως ισχύει) και
-            τον Γενικό Κανονισμό Προστασίας Δεδομένων (ΕΕ) 2016/679 (GDPR), σύμφωνα με τις
-            κατευθυντήριες οδηγίες της Αρχής Προστασίας Δεδομένων Προσωπικού Χαρακτήρα.
-            Για τα μη απαραίτητα cookies απαιτείται η προηγούμενη ρητή συγκατάθεσή σας, την
-            οποία μπορείτε να ανακαλέσετε ελεύθερα. Περισσότερες πληροφορίες για την
-            επεξεργασία των προσωπικών σας δεδομένων θα βρείτε στην{' '}
+            Σύμφωνα με την ισχύουσα νομοθεσία (άρθρο 4 παρ. 5 νόμου 3471/2006) η
+            αποθήκευση ή η απόκτηση πρόσβασης σε αποθηκευμένες πληροφορίες στον
+            τερματικό εξοπλισμό χρήστη επιτρέπεται μόνο αν ο συγκεκριμένος
+            χρήστης έχει δώσει τη συγκατάθεσή του μετά από σαφή και εκτενή
+            ενημέρωση. Δεν απαιτείται η συγκατάθεση του χρήστη για τα cookies τα
+            οποία θεωρούνται τεχνικά απαραίτητα για την πραγματοποίηση της
+            σύνδεσης στον ιστοτόπο ή για την παροχή της υπηρεσίας διαδικτύου.
+          </p>
+          <p>
+            Η επεξεργασία των προσωπικών δεδομένων που τυχόν συλλέγονται μέσω
+            cookies διέπεται από τον Γενικό Κανονισμό Προστασίας Δεδομένων (ΕΕ)
+            2016/679 και τον ν. 4624/2019, σύμφωνα με τα αναφερόμενα στην{' '}
             <a href='/privacy' className='text-primary underline'>
               Πολιτική Απορρήτου
             </a>
             .
           </p>
 
-          <p className='pt-4 text-dark text-lg font-semibold'>V. Επικοινωνία</p>
+          <p className='pt-4 text-dark text-lg font-semibold'>
+            IV. Χρήση Cookies από το doulitsa.gr
+          </p>
           <p>
-            Για οποιαδήποτε απορία σχετικά με τα cookies και τις επιλογές σας μπορείτε να{' '}
-            <a href='/contact' className='text-primary underline'>
-              επικοινωνήσετε μαζί μας
-            </a>
-            .
+            Μέσω της χρήσης cookies, η doulitsa.gr παρέχει στους χρήστες της
+            ιστοσελίδας υπηρεσίες πιο φιλικές προς το χρήστη, κάτι που δεν θα
+            ήταν δυνατό χωρίς τις ρυθμίσεις του cookie. Ο χρήστης της
+            ιστοσελίδας που χρησιμοποιεί cookies, δεν χρειάζεται, για
+            παράδειγμα, να εισάγει τα στοιχεία πρόσβασης κάθε φορά που
+            εισέρχεται στην ιστοσελίδα, αφού αυτά ανακτούνται από την ιστοσελίδα
+            και, με τον τρόπο αυτό, το cookie αποθηκεύεται στον υπολογιστή του
+            χρήστη.
+          </p>
+          <p>
+            Η doulitsa.gr δύναται, επίσης, να αξιοποιήσει τα cookies από
+            προηγούμενη επίσκεψη σε ιστοσελίδες ή πλατφόρμες τρίτων για
+            επαναληπτικό μάρκετινγκ.
+          </p>
+          <p>Τα cookies που χρησιμοποιεί το doulitsa.gr διακρίνονται σε τρεις κατηγορίες:</p>
+          <p>
+            -Απολύτως απαραίτητα cookies: είναι τεχνικά απαραίτητα για τη
+            λειτουργία του ιστοτόπου (ενδεικτικά για τη σύνδεση στον λογαριασμό
+            του χρήστη, την ασφάλεια της σύνδεσης και την αποθήκευση των
+            επιλογών του χρήστη ως προς τα cookies) και δεν απαιτούν τη
+            συγκατάθεση του χρήστη.
+          </p>
+          <p>
+            -Cookies στατιστικών (analytics): επιτρέπουν τη συλλογή ανώνυμων
+            στατιστικών στοιχείων για τον τρόπο χρήσης του ιστοτόπου (Google
+            Analytics, της εταιρείας Google Ireland Ltd.). Εγκαθίστανται μόνο
+            κατόπιν συγκατάθεσης του χρήστη.
+          </p>
+          <p>
+            -Cookies εμπορικής προώθησης (marketing): επιτρέπουν τη μέτρηση της
+            αποτελεσματικότητας των ενεργειών προώθησης της εταιρείας και την
+            προβολή σχετικού περιεχομένου στις πλατφόρμες της Meta (Meta Pixel,
+            της εταιρείας Meta Platforms Ireland Ltd.). Εγκαθίστανται μόνο
+            κατόπιν συγκατάθεσης του χρήστη.
           </p>
 
-          <p className='pt-6 text-sm text-muted-foreground'>Τελευταία ενημέρωση: Αύγουστος 2026</p>
+          <p className='pt-4 text-dark text-lg font-semibold'>
+            V. Αναλυτικός Κατάλογος Cookies
+          </p>
+          <p>
+            Ακολουθεί ο κατάλογος των cookies που χρησιμοποιεί το doulitsa.gr,
+            με τον πάροχο, τον σκοπό και τη διάρκεια διατήρησης καθενός εξ
+            αυτών.
+          </p>
+          <p className='font-semibold'>1. Απολύτως απαραίτητα</p>
+          {listByCategory('necessary').map((c) => (
+            <p key={c.name}>
+              -{c.name} ({c.provider}): {c.purpose} Διάρκεια: {c.expiry}.
+            </p>
+          ))}
+          <p className='font-semibold'>2. Στατιστικών</p>
+          {listByCategory('analytics').map((c) => (
+            <p key={c.name}>
+              -{c.name} ({c.provider}): {c.purpose} Διάρκεια: {c.expiry}.
+            </p>
+          ))}
+          <p className='font-semibold'>3. Εμπορικής προώθησης</p>
+          {listByCategory('marketing').map((c) => (
+            <p key={c.name}>
+              -{c.name} ({c.provider}): {c.purpose} Διάρκεια: {c.expiry}.
+            </p>
+          ))}
+
+          <p className='pt-4 text-dark text-lg font-semibold'>
+            VI. Διαχείριση και Ανάκληση Συγκατάθεσης
+          </p>
+          <p>
+            1. Κατά την πρώτη επίσκεψη στο doulitsa.gr εμφανίζεται σχετικό
+            ενημερωτικό παράθυρο, μέσω του οποίου ο επισκέπτης/χρήστης μπορεί να
+            αποδεχθεί ή να απορρίψει τα μη απαραίτητα cookies, είτε στο σύνολό
+            τους είτε ανά κατηγορία. Τα μη απαραίτητα cookies εγκαθίστανται
+            αποκλειστικά μετά τη ρητή συγκατάθεση του χρήστη.
+          </p>
+          <p>
+            2. Ο επισκέπτης/χρήστης μπορεί οποιαδήποτε στιγμή να τροποποιήσει
+            τις επιλογές του ή να ανακαλέσει τη συγκατάθεσή του μέσω του
+            συνδέσμου «Ρυθμίσεις cookies» που βρίσκεται στο υποσέλιδο κάθε
+            σελίδας του doulitsa.gr, ή{' '}
+            <CookieSettingsButton className='text-primary underline'>
+              εδώ
+            </CookieSettingsButton>
+            . Η ανάκληση ισχύει από τη στιγμή της αποθήκευσης των νέων επιλογών,
+            οπότε και διαγράφονται τα cookies της κατηγορίας που
+            απενεργοποιήθηκε. Οι επιλογές του χρήστη διατηρούνται για έξι (6)
+            μήνες, μετά την πάροδο των οποίων ζητείται εκ νέου η συγκατάθεσή
+            του.
+          </p>
+          <p>
+            3. Το υποκείμενο των δεδομένων μπορεί, ανά πάσα στιγμή, να αποτρέπει
+            τη χρήση του cookie της ιστοσελίδας μας μέσω της σχετικής επιλογής
+            του προγράμματος περιήγησης διαδικτύου που χρησιμοποιεί, καθώς και
+            να αρνηθεί οριστικά τη χρήση cookies. Επιπροσθέτως, το ήδη
+            χρησιμοποιούμενο cookie μπορεί να διαγραφεί ανά πάσα στιγμή μέσω
+            ενός προγράμματος περιήγησης διαδικτύου ή άλλου προγράμματος. Αυτή η
+            δυνατότητα υπάρχει σε όλα τα γνωστά προγράμματα περιήγησης
+            διαδικτύου. Σε περίπτωση που το υποκείμενο των δεδομένων
+            απενεργοποιήσει την επιλογή του cookie στο πρόγραμμα περιήγησης που
+            χρησιμοποιεί, είναι πιθανό να μην είναι δυνατή η πλήρης χρήση όλων
+            των λειτουργιών της ιστοσελίδας μας.
+          </p>
+
+          <p className='pt-4 text-dark text-lg font-semibold'>
+            VII. Τροποποιήσεις
+          </p>
+          <p>
+            Η doulitsa.gr διατηρεί το δικαίωμα να τροποποιεί την παρούσα
+            Πολιτική Cookies σε οποιαδήποτε χρονική στιγμή. Τέτοιου είδους
+            τροποποιήσεις θα θεωρούνται άμεσα ισχύουσες, από τη στιγμή της
+            ανάρτησής τους στη doulitsa.gr. Σε περίπτωση ουσιώδους τροποποίησης
+            θα ζητείται εκ νέου η συγκατάθεση του επισκέπτη/χρήστη για τα μη
+            απαραίτητα cookies.
+          </p>
+
+          <p className='pt-4 text-dark text-lg font-semibold'>
+            VIII. Επικοινωνία
+          </p>
+          <p>
+            Για οποιαδήποτε απορία σχετικά με την παρούσα Πολιτική Cookies, ο
+            επισκέπτης/χρήστης μπορεί να επικοινωνεί με την εταιρεία μέσω της
+            σελίδας{' '}
+            <a href='/contact' className='text-primary underline'>
+              επικοινωνίας
+            </a>{' '}
+            του doulitsa.gr.
+          </p>
         </div>
       </section>
     </div>

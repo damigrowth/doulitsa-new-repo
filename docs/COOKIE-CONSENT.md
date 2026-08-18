@@ -38,8 +38,9 @@ added, revisit this (free certified CMPs exist, e.g. CookieYes free tier).
 | Reasonable consent lifetime | 182 days (`CONSENT_EXPIRES_DAYS`). |
 | Records | `dl_consent` cookie holds categories, revision, timestamp and a random consentId (library default). |
 
-> Legal texts (banner copy, `/cookies`, the paragraph added to `/privacy`) were
-> drafted by engineering. Have them reviewed by whoever owns the legal pages.
+> The existing legal pages (`/terms`, `/privacy`) are untouched. The banner copy and
+> the new sections of `/cookies` were drafted by engineering — have them reviewed by
+> whoever owns the legal texts.
 
 ---
 
@@ -86,7 +87,7 @@ Deliberately **no** `<noscript>` GTM iframe — it cannot honour opt-in.
 | `frontend/src/components/consent/cookie-consent.tsx` | Client component that runs the library (mounted in `app/layout.tsx`). |
 | `frontend/src/components/consent/cookie-settings-button.tsx` | «Ρυθμίσεις cookies» button (footer + `/cookies`). |
 | `frontend/src/styles/cookie-consent.css` | Theme overrides (site colours/radius/font). |
-| `frontend/src/app/(pages)/cookies/page.tsx` | Πολιτική Cookies page (+ `getCookiesMetadata` in `lib/seo/pages.ts`, sitemap entry). |
+| `frontend/src/app/(pages)/cookies/page.tsx` | Πολιτική Cookies page — same skeleton/section style as `/terms` and `/privacy`; reuses the existing cookies wording of Όροι Χρήσης XVII and Πολιτική Απορρήτου III verbatim, adds the per-cookie list and the consent-management section (+ `getCookiesMetadata` in `lib/seo/pages.ts`, sitemap entry). |
 | `frontend/src/app/layout.tsx` | Old unconditional GTM loader **removed**; head script + banner mounted. |
 | `frontend/src/components/profile/contact-reveal.tsx` | `reveal_contact` now goes through `trackEvent()` (the old `window.gtag` call never worked — gtag was never defined). |
 | `frontend/src/types/global.d.ts` | `window.gtag` typed loosely (needs `'consent'` command). |
