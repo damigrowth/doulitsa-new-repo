@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 interface AuthRequiredDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Contextual title, e.g. 'Για να επικοινωνήσεις πρέπει να έχεις λογαριασμό' */
+  /** Contextual title, e.g. 'Για να επικοινωνήσεις με Chat πρέπει να έχεις λογαριασμό' */
   title?: string;
 }
 

@@ -36,7 +36,7 @@ export function ServiceMediaCard({
   return (
     <Card
       className={cn(
-        'group rounded-2xl border-gray-100 shadow-sm hover:shadow-xl hover:shadow-dark/[0.07] hover:border-fourth/40 transition-all duration-300 overflow-hidden',
+        'group rounded-2xl border-gray-200 shadow-[0_1px_2px_rgba(16,31,60,0.04),0_2px_6px_rgba(16,31,60,0.05)] hover:shadow-xl hover:shadow-dark/[0.07] hover:border-fourth/50 hover:-translate-y-0.5 transition-all duration-300 overflow-hidden',
         className,
       )}
     >

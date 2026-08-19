@@ -44,7 +44,7 @@ export default function ServiceCard({
     : null;
 
   return (
-    <Card className='group overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-dark/[0.07] hover:border-fourth/40 hover:-translate-y-1 transition-all duration-300 rounded-2xl bg-white relative h-full flex flex-col'>
+    <Card className='group overflow-hidden border border-gray-200 shadow-[0_1px_2px_rgba(16,31,60,0.04),0_2px_6px_rgba(16,31,60,0.05)] hover:shadow-xl hover:shadow-dark/[0.07] hover:border-fourth/50 hover:-translate-y-1 transition-all duration-300 rounded-2xl bg-white relative h-full flex flex-col'>
       {/* Whole-card link to the service page */}
       <NextLink
         href={`/s/${service.slug}`}

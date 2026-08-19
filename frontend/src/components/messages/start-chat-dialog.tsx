@@ -125,7 +125,7 @@ export function StartChatDialog({
         <AuthRequiredDialog
           open={open}
           onOpenChange={setOpen}
-          title='Για να επικοινωνήσεις πρέπει να έχεις λογαριασμό'
+          title='Για να επικοινωνήσεις με Chat πρέπει να έχεις λογαριασμό'
         />
       </div>
     );

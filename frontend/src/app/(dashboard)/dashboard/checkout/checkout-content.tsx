@@ -36,6 +36,10 @@ interface CheckoutContentProps {
   defaultInterval: BillingInterval;
 }
 
+// Coupon input is temporarily hidden from checkout (kept fully functional in code
+// so it can be re-enabled later just by flipping this flag back to true).
+const COUPON_INPUT_VISIBLE = false;
+
 export default function CheckoutContent({
   user,
   profile,
@@ -1270,60 +1274,62 @@ export default function CheckoutContent({
               </div>
             </div>
 
-            {/* Coupon Input */}
-            <div className='space-y-2'>
-              {couponState.status === 'valid' ? (
-                <div className='flex items-center justify-between rounded-md border border-green-200 bg-green-50 px-3 py-2'>
-                  <div className='flex items-center gap-2 text-sm text-green-700'>
-                    <Tag className='size-4' />
-                    <span className='font-medium'>{couponState.code}</span>
-                    <span>(-{couponState.percentOff}%)</span>
+            {/* Coupon Input - hidden for now, see COUPON_INPUT_VISIBLE above */}
+            {COUPON_INPUT_VISIBLE && (
+              <div className='space-y-2'>
+                {couponState.status === 'valid' ? (
+                  <div className='flex items-center justify-between rounded-md border border-green-200 bg-green-50 px-3 py-2'>
+                    <div className='flex items-center gap-2 text-sm text-green-700'>
+                      <Tag className='size-4' />
+                      <span className='font-medium'>{couponState.code}</span>
+                      <span>(-{couponState.percentOff}%)</span>
+                    </div>
+                    <button
+                      type='button'
+                      onClick={handleRemoveCoupon}
+                      className='text-green-600 hover:text-green-800'
+                    >
+                      <X className='size-4' />
+                    </button>
                   </div>
-                  <button
-                    type='button'
-                    onClick={handleRemoveCoupon}
-                    className='text-green-600 hover:text-green-800'
-                  >
-                    <X className='size-4' />
-                  </button>
-                </div>
-              ) : (
-                <div className='flex gap-2'>
-                  <Input
-                    placeholder='Κωδικός κουπονιού'
-                    value={couponInput}
-                    onChange={(e) => {
-                      setCouponInput(e.target.value);
-                      if (couponState.status === 'error') {
-                        setCouponState({ status: 'idle' });
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleApplyCoupon();
-                      }
-                    }}
-                    className='flex-1'
-                  />
-                  <Button
-                    variant='outline'
-                    size='default'
-                    onClick={handleApplyCoupon}
-                    disabled={couponLoading || !couponInput.trim()}
-                  >
-                    {couponLoading ? (
-                      <Loader2 className='size-4 animate-spin' />
-                    ) : (
-                      'Εφαρμογή'
-                    )}
-                  </Button>
-                </div>
-              )}
-              {couponState.status === 'error' && couponState.message && (
-                <p className='text-xs text-red-600'>{couponState.message}</p>
-              )}
-            </div>
+                ) : (
+                  <div className='flex gap-2'>
+                    <Input
+                      placeholder='Κωδικός κουπονιού'
+                      value={couponInput}
+                      onChange={(e) => {
+                        setCouponInput(e.target.value);
+                        if (couponState.status === 'error') {
+                          setCouponState({ status: 'idle' });
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleApplyCoupon();
+                        }
+                      }}
+                      className='flex-1'
+                    />
+                    <Button
+                      variant='outline'
+                      size='default'
+                      onClick={handleApplyCoupon}
+                      disabled={couponLoading || !couponInput.trim()}
+                    >
+                      {couponLoading ? (
+                        <Loader2 className='size-4 animate-spin' />
+                      ) : (
+                        'Εφαρμογή'
+                      )}
+                    </Button>
+                  </div>
+                )}
+                {couponState.status === 'error' && couponState.message && (
+                  <p className='text-xs text-red-600'>{couponState.message}</p>
+                )}
+              </div>
+            )}
 
             {/* Checkout Button */}
             <Button
