@@ -88,18 +88,6 @@ const translations: { [key: string]: string } = {
   'Bad gateway': 'Κακή πύλη',
   'Network error': 'Σφάλμα δικτύου',
 
-  // Strapi-specific errors
-  'Content Manager error': 'Σφάλμα διαχείρισης περιεχομένου',
-  'Plugin error': 'Σφάλμα πρόσθετου',
-  'Configuration error': 'Σφάλμα διαμόρφωσης',
-  'Middleware error': 'Σφάλμα middleware',
-
-  // GraphQL errors
-  'GraphQL validation error': 'Σφάλμα επικύρωσης GraphQL',
-  'Field not found': 'Το πεδίο δεν βρέθηκε',
-  'Invalid query': 'Μη έγκυρο ερώτημα',
-  'Variable not defined': 'Η μεταβλητή δεν ορίζεται',
-
   // Custom business logic errors (common patterns)
   'Account not verified': 'Ο λογαριασμός δεν έχει επιβεβαιωθεί',
   'Account suspended': 'Ο λογαριασμός έχει ανασταλεί',

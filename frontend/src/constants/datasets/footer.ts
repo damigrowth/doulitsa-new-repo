@@ -1,9 +1,9 @@
 export const firstColumnLinks = [
-  { attributes: { title: 'Πλατφόρμα', slug: 'about' } },
-  { attributes: { title: 'Για Επαγγελματίες', slug: 'for-pros' } },
-  { attributes: { title: 'Συχνές Ερωτήσεις', slug: 'faq' } },
-  { attributes: { title: 'Άρθρα', slug: 'articles' } },
-  { attributes: { title: 'Επικοινωνία', slug: 'contact' } },
+  { title: 'Πλατφόρμα', slug: 'about' },
+  { title: 'Για Επαγγελματίες', slug: 'for-pros' },
+  { title: 'Συχνές Ερωτήσεις', slug: 'faq' },
+  { title: 'Άρθρα', slug: 'articles' },
+  { title: 'Επικοινωνία', slug: 'contact' },
 ];
 
 export const legalLinks = [
@@ -14,21 +14,14 @@ export const legalLinks = [
 ];
 
 export const secondColumnLinks = [
-  {
-    attributes: {
-      label: 'Δημιουργία Περιεχομένου',
-      slug: 'dimiourgia-periexomenou',
-    },
-  },
-  { attributes: { label: 'Εκδηλώσεις', slug: 'ekdiloseis' } },
-  {
-    attributes: { label: 'Ευεξία & Φροντίδα', slug: 'eveksia-frontida' },
-  },
-  { attributes: { label: 'Μαθήματα', slug: 'mathimata' } },
-  { attributes: { label: 'Μάρκετινγκ', slug: 'marketing' } },
-  { attributes: { label: 'Πληροφορική', slug: 'pliroforiki' } },
-  { attributes: { label: 'Τεχνικά', slug: 'texnika' } },
-  { attributes: { label: 'Υποστήριξη', slug: 'ypostiriksi' } },
+  { label: 'Δημιουργία Περιεχομένου', slug: 'dimiourgia-periexomenou' },
+  { label: 'Εκδηλώσεις', slug: 'ekdiloseis' },
+  { label: 'Ευεξία & Φροντίδα', slug: 'eveksia-frontida' },
+  { label: 'Μαθήματα', slug: 'mathimata' },
+  { label: 'Μάρκετινγκ', slug: 'marketing' },
+  { label: 'Πληροφορική', slug: 'pliroforiki' },
+  { label: 'Τεχνικά', slug: 'texnika' },
+  { label: 'Υποστήριξη', slug: 'ypostiriksi' },
 ];
 
 export const accountLinks = [

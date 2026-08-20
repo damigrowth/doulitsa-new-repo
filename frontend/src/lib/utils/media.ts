@@ -4,7 +4,6 @@
  * Universal media utilities for handling all media types across the application:
  * - File validation and type detection
  * - Cloudinary resource handling
- * - Legacy Strapi media support
  * - Cross-browser compatibility
  * - Modern TypeScript implementation
  *
@@ -558,52 +557,6 @@ export const getUserProfileImageUrl = (
 };
 
 // =============================================
-// LEGACY SUPPORT (STRAPI)
-// =============================================
-
-/**
- * Legacy Strapi media type detection
- * @deprecated Use CloudinaryResource instead
- */
-export const getStrapiMediaType = (mediaItem: any): MediaType => {
-  if (!mediaItem?.attributes) return 'unknown';
-
-  const { mime, url } = mediaItem.attributes;
-
-  if (mime) {
-    const type = getMediaType(mime);
-    if (type !== 'unknown') return type;
-  }
-
-  if (url) {
-    return getMediaTypeFromUrl(url);
-  }
-
-  return 'unknown';
-};
-
-/**
- * Legacy Strapi image utility
- * @deprecated Use CloudinaryResource instead
- */
-export const getStrapiImageUrl = (
-  imageData: any,
-  size = 'thumbnail',
-): string | null => {
-  if (!imageData?.data?.attributes) return null;
-
-  const attributes = imageData.data.attributes;
-
-  // Try to get specific format
-  if (attributes.formats?.[size]) {
-    return attributes.formats[size].url;
-  }
-
-  // Fallback to original
-  return attributes.url || null;
-};
-
-// =============================================
 // MEDIA UPLOAD HELPER UTILITIES
 // =============================================
 
@@ -992,10 +945,6 @@ export default {
   filterPendingResources,
   generateUploadFormData,
   uploadFileToCloudinary,
-
-  // Legacy support
-  getStrapiMediaType,
-  getStrapiImageUrl,
 
   // Service display
   getServiceDisplayMedia,

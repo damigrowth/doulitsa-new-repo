@@ -39,9 +39,6 @@ next-env.d.ts
 todos.js
 src/lib/models/entries.js
 
-# Strapi directory
-strapi-node/
-strapi/
 yarn
 .yarn
 .env

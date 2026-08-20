@@ -35,10 +35,10 @@ export default function Footer() {
                       {firstColumnLinks.map((item, i) => (
                         <NextLink
                           key={i}
-                          href={`/${item.attributes.slug}`}
+                          href={`/${item.slug}`}
                           className='block text-gray-300 hover:text-white transition-colors'
                         >
-                          {item.attributes.title}
+                          {item.title}
                         </NextLink>
                       ))}
                     </div>
@@ -58,10 +58,10 @@ export default function Footer() {
                       {secondColumnLinks.map((item, i) => (
                         <li key={i}>
                           <NextLink
-                            href={`/categories/${item.attributes.slug}`}
+                            href={`/categories/${item.slug}`}
                             className='text-gray-300 hover:text-white transition-colors'
                           >
-                            {item.attributes.label}
+                            {item.label}
                           </NextLink>
                         </li>
                       ))}
