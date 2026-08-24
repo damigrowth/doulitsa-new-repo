@@ -14,7 +14,5 @@ export { default as ContactReveal } from './contact-reveal';
 export { ReportProfileDialog } from './report-profile-dialog';
 
 // User Components
-// Note: UserImage has been deprecated in favor of UserAvatar from @/components/shared
-// export { default as UserImage } from './user-image';
 export { default as MenuUserLink } from './menu-user-link';
 export { default as MenuUser } from './menu-user';

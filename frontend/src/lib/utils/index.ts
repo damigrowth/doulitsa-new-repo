@@ -8,7 +8,6 @@ export * from './cn';
 export * from './format';
 export * from './form';
 export * from './zod';
-export * from './better-auth-error';
 export * from './date';
 export * from './api';
 export * from './cloudinary';
