@@ -36,32 +36,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-todos.js
-src/lib/models/entries.js
 
 yarn
 .yarn
 .env
-src/app/sentry-example-page/page.jsx
-src/app/api/sentry-example-api/route.js
-src/testing/sockets.js
-src/testing/message.js
-src/testing/direct-chat.js
-src/testing/chat.js
-new-registration.md
-authentication_flow.md
-src/testing
-src/testing/schema-chat.json
-src/testing/schema-freelancer.json
-src/testing/schema-message.json
-src/testing/schema-notification.json
-src/testing/custom-auth.js
-src/testing/lifecycles.js
-sentry.server.config.js
-sentry.edge.config.js
-sentry.client.config.js
-README.md
-public/css/animate.css
-docs
-legacy
 *.md

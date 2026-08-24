@@ -24,9 +24,9 @@ WORKDIR /app
 ############################
 FROM base AS build
 
-# node-gyp toolchain for native deps (bcrypt) + openssl for the Prisma engine
+# openssl + CA bundle for TLS during install/build
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential python3 openssl ca-certificates \
+    openssl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Dependencies first so this layer caches across source-only edits
@@ -50,7 +50,7 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
     NEXT_PUBLIC_GTM_ID=$NEXT_PUBLIC_GTM_ID \
     NODE_ENV=production
 
-# Runs build:taxonomies (tsx) -> prisma generate -> next build
+# Runs build:taxonomies (tsx) -> next build
 RUN yarn build
 
 ############################
@@ -61,7 +61,7 @@ ENV NODE_ENV=production \
     PORT=3000 \
     HOSTNAME=0.0.0.0
 
-# libssl for the Prisma query engine at runtime; curl for the healthcheck
+# CA bundle for outbound TLS; curl for the healthcheck
 RUN apt-get update && apt-get install -y --no-install-recommends \
     openssl ca-certificates curl \
     && rm -rf /var/lib/apt/lists/*

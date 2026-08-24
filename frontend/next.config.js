@@ -24,16 +24,10 @@ const nextConfig = {
     optimizeCss: true,
     webVitalsAttribution: ['CLS', 'LCP', 'FID', 'TTFB', 'INP'],
     optimizePackageImports: [
-      '@apollo/client',
-      'react-loading-skeleton',
       'zustand',
-      'swiper',
-      'react-countup',
       'date-fns',
-      'lodash.debounce',
       'lucide-react',
       // Granular Radix UI splitting for better tree-shaking
-      '@radix-ui/react-icons',
       '@radix-ui/react-dialog',
       '@radix-ui/react-dropdown-menu',
       '@radix-ui/react-select',
@@ -43,11 +37,6 @@ const nextConfig = {
       '@radix-ui/react-avatar',
       '@radix-ui/react-label',
       '@radix-ui/react-separator',
-      // Admin-only dependencies removed from optimizePackageImports to force code splitting:
-      // '@tanstack/react-table' - only used in admin data tables (will be in separate chunk)
-      // 'recharts' - only used in admin charts (will be in separate chunk)
-      // 'react-select' - primarily admin forms (will be in separate chunk)
-      // '@supabase/supabase-js' - only used in dashboard/messages (will be in separate chunk)
       'react-hook-form',
       'react-day-picker',
       'cmdk',
@@ -56,17 +45,6 @@ const nextConfig = {
       // Still available for below-fold carousels (services, profiles, testimonials)
       'embla-carousel-react',
     ],
-  },
-
-  // Server-only packages (moved out of experimental per Next.js 15.5)
-  serverExternalPackages: ['bcrypt', '@prisma/client', 'cloudinary'],
-
-  // Modularize imports for better tree-shaking
-  modularizeImports: {
-    '@radix-ui/react-icons': {
-      transform: '@radix-ui/react-icons/dist/{{member}}',
-    },
-    // Note: lucide-react already optimized via optimizePackageImports
   },
 
   // Compiler options for better optimization

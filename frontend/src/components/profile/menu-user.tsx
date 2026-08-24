@@ -88,7 +88,6 @@ export default function UserMenu({ isMobile }: UserMenuProps) {
   // Use Better Auth session data
   const user = session?.user;
   // TODO: Check if user authentication correctly sets and update the image when onboarding and signing up and that the image is synced correctly (cache synced) -
-  // TODO: Also check my scripts, when i update the profile it also need to update the duplicate fields of user, so if i update the profile    with image then it needs to update the user image as well, find the fields that are in both models in   @src\lib\prisma\schema\user.prisma and update the @scripts\profile-migration.ts
 
   // console.log('MENU USER - BETTER AUTH SESSION', session);
   // console.log('MENU USER - BETTER AUTH USER', user);

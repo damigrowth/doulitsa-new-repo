@@ -27,7 +27,7 @@ export function ChatListItem({ chat }: ChatListItemProps) {
   const handleClick = () => {
     if (isSelected) return; // Prevent redundant navigation
     router.push(`/dashboard/messages/${chatPath}`);
-    // No router.refresh() - Next.js handles navigation, Supabase handles updates
+    // No router.refresh() - Next.js handles navigation, the realtime channel handles updates
   };
 
   return (

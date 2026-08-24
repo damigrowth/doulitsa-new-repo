@@ -41,5 +41,5 @@
     "**/*.js",
     "**/*.jsx"
   ],
-  "exclude": ["node_modules", "oldcode", "scripts"]
+  "exclude": ["node_modules", "scripts"]
 }
