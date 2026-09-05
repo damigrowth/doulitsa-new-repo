@@ -35,7 +35,8 @@ export const reportService = (
 export const getCategoriesPage = (params: { categorySlug?: string; subcategorySlug?: string; limit?: number } = {}) =>
   api.get('/services/categories', { query: params });
 
-export const getNavigationMenu = () => api.get('/services/navigation');
+export const getNavigationMenu = () =>
+  api.get('/services/navigation', { anonymous: true, revalidate: 300 });
 
 export const getRecentServices = () => api.get('/services/recent');
 

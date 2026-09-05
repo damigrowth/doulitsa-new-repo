@@ -299,6 +299,14 @@ interface RequestOptions {
   headers?: Record<string, string>;
   /** Disable the once-on-401 retry. */
   retried?: boolean;
+  /**
+   * Cache this response in Next's data cache for N seconds (server-side GETs
+   * only). A cached response is shared across visitors, so setting this
+   * forces the request to be fully anonymous: no JWT attach, no cookie
+   * forwarding, no header enrichment — nothing from next/headers is read,
+   * which also keeps ISR pages statically renderable.
+   */
+  revalidate?: number;
 }
 
 /**
@@ -317,7 +325,10 @@ export async function apiRequest<T = unknown>(
     ...(options.headers ?? {}),
   };
 
-  if (!options.anonymous) {
+  // Shared-cache requests must be user-independent (see RequestOptions.revalidate).
+  const cacheable = !isBrowser && options.revalidate !== undefined;
+
+  if (!options.anonymous && !cacheable) {
     const token = await getAccessToken();
     if (token) requestHeaders.Authorization = `Bearer ${token}`;
   }
@@ -326,7 +337,7 @@ export async function apiRequest<T = unknown>(
   // and the REAL visitor IP (+ shared secret) so Django rate-limits per actual
   // client instead of per frontend-container IP on SSR calls.
   const internalSecret = process.env.INTERNAL_PROXY_SECRET;
-  if (!isBrowser && (options.forwardCookies || internalSecret)) {
+  if (!isBrowser && !cacheable && (options.forwardCookies || internalSecret)) {
     const m = await loadServerHeaders();
     if (m) {
       try {
@@ -353,8 +364,10 @@ export async function apiRequest<T = unknown>(
   const init: RequestInit = {
     method: options.method ?? 'GET',
     headers: requestHeaders,
-    cache: 'no-store',
     credentials: isBrowser ? 'include' : undefined,
+    ...(cacheable
+      ? { next: { revalidate: options.revalidate } }
+      : { cache: 'no-store' as const }),
   };
 
   if (options.body !== undefined) {
@@ -365,7 +378,7 @@ export async function apiRequest<T = unknown>(
 
   const res = await fetch(url, init);
 
-  if (res.status === 401 && !options.anonymous && !options.retried) {
+  if (res.status === 401 && !options.anonymous && !cacheable && !options.retried) {
     const refreshed = await refreshAccessToken();
     if (refreshed) {
       return apiRequest<T>(path, { ...options, retried: true });

@@ -12,11 +12,14 @@ import { ProfilesHomeLazy } from '@/components/home/profiles-home-lazy';
 import { getServiceTaxonomies } from '@/lib/taxonomies';
 import { HomeSchema } from '@/lib/seo/schema';
 
-// Render dynamically so the home action picks up DB changes (seeded data,
-// new pros, fresh featured services). The previous force-static config
-// captured the action result into the build output, so a stale snapshot
-// kept getting served even after the cache was cleared.
-export const dynamic = 'force-dynamic';
+// ISR: serve the prerendered page and re-render at most every 5 minutes —
+// same cadence as Django's own home-payload cache, and how the OLD app on
+// Vercel serves this page (x-nextjs-stale-time: 300). Unlike the earlier
+// force-static attempt, revalidation keeps picking up DB changes; unlike
+// force-dynamic, the page is fully prefetchable so client navigation is
+// instant. The data fetches underneath pass `revalidate` (anonymous, no
+// cookie reads), which is what keeps this route statically renderable.
+export const revalidate = 300;
 
 export async function generateMetadata() {
   return await getHomeMetadata();

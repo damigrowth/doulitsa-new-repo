@@ -969,9 +969,9 @@ export function clearTaxonomyCache() {
 /**
  * Inject a newly approved taxonomy item into the runtime cache.
  *
- * After admin approval, the new item is committed to Git but maps.generated.json
- * hasn't been rebuilt yet. This injects the item into the in-memory cache so
- * lookups return it immediately without requiring a rebuild.
+ * After admin approval the item is already live in the Django DB (the maps
+ * refresh picks it up within 60s); this injects it into the in-memory cache so
+ * lookups return it immediately without waiting for the next refresh.
  *
  * @param type - 'skills' or 'tags'
  * @param item - The new DatasetItem to inject

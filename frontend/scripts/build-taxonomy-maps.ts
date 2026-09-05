@@ -393,8 +393,54 @@ async function buildTaxonomyMaps() {
   console.log('   - Cost savings: $20-25/month at 10K requests/day');
 }
 
-// Execute build
-buildTaxonomyMaps().catch((error) => {
+/**
+ * Preferred path: pull the CURRENT taxonomy straight from Django
+ * (`/api/taxonomy/maps` serves the exact same shape as maps.generated.json).
+ * Django's DB is the single source of truth — admins edit taxonomies there and
+ * they go live without a redeploy — so at build time we refresh the bundled
+ * snapshot from it. The dataset-based generation below remains ONLY as the
+ * fallback for builds that cannot reach the API (e.g. an isolated CI box).
+ */
+async function pullMapsFromDjango(): Promise<boolean> {
+  const base = (
+    process.env.DJANGO_INTERNAL_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    'http://localhost:8000'
+  ).replace(/\/$/, '');
+  const url = `${base}/api/taxonomy/maps`;
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15_000);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const maps = await res.json();
+    // Sanity check: refuse a payload that doesn't look like the maps shape,
+    // so a misconfigured URL can never wipe the snapshot.
+    for (const key of ['service', 'pro', 'location', 'skills', 'tags']) {
+      if (!maps?.[key]?.byId || Object.keys(maps[key].byId).length === 0) {
+        throw new Error(`payload missing/empty "${key}.byId"`);
+      }
+    }
+    const outputPath = path.join(__dirname, '../src/lib/taxonomies/maps.generated.json');
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+    fs.writeFileSync(outputPath, JSON.stringify(maps, null, 2));
+    fs.writeFileSync(outputPath.replace('.json', '.json.gz'), await gzipAsync(JSON.stringify(maps)));
+    console.log(`✅ Taxonomy snapshot refreshed from Django (${url})`);
+    console.log(`   - service: ${Object.keys(maps.service.byId).length}, pro: ${Object.keys(maps.pro.byId).length}, locations: ${Object.keys(maps.location.byId).length}, skills: ${Object.keys(maps.skills.byId).length}, tags: ${Object.keys(maps.tags.byId).length}`);
+    return true;
+  } catch (err) {
+    console.warn(`⚠️  Could not pull taxonomy maps from Django (${url}): ${err instanceof Error ? err.message : err}`);
+    console.warn('   Falling back to generating the snapshot from the static datasets.');
+    return false;
+  }
+}
+
+// Execute build: Django first, dataset generation as offline fallback.
+(async () => {
+  if (await pullMapsFromDjango()) return;
+  await buildTaxonomyMaps();
+})().catch((error) => {
   console.error('❌ Error building taxonomy maps:', error);
   process.exit(1);
 });
