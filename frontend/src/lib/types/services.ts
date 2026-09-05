@@ -84,6 +84,8 @@ export interface UserServicesResponse {
   totalPages: number;
   canFeatureMore: boolean;
   canCreateMore: boolean;
+  hasPromotedPlan: boolean;
+  maxFeaturedServices: number;
 }
 
 // Service status types

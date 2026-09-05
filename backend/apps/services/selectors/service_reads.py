@@ -775,6 +775,9 @@ def get_user_services_dashboard(user: User, *, query: dict[str, Any]) -> dict[st
         "totalPages": -(-total // limit),
         "canFeatureMore": _can_feature_more(user),
         "canCreateMore": _can_create_more(user),
+        # PR #488: distinguishes "reached limit" from "no subscription" in the UI.
+        "hasPromotedPlan": _PLAN_LIMITS[_active_plan(user)]["maxFeaturedServices"] > 0,
+        "maxFeaturedServices": _PLAN_LIMITS[_active_plan(user)]["maxFeaturedServices"],
     }
 
 

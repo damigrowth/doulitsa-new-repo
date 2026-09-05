@@ -165,6 +165,8 @@ export default async function ServicesPage({
             }}
             canFeatureMore={services.canFeatureMore}
             canCreateMore={services.canCreateMore}
+            hasPromotedPlan={services.hasPromotedPlan}
+            maxFeaturedServices={services.maxFeaturedServices}
           />
 
           {/* Pagination */}

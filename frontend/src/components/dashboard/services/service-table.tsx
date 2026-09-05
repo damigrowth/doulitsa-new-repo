@@ -34,6 +34,8 @@ interface ServiceTableProps {
   };
   canFeatureMore: boolean;
   canCreateMore: boolean;
+  hasPromotedPlan: boolean;
+  maxFeaturedServices: number;
   className?: string;
 }
 
@@ -42,6 +44,8 @@ export default function ServiceTable({
   currentSort,
   canFeatureMore,
   canCreateMore,
+  hasPromotedPlan,
+  maxFeaturedServices,
   className,
 }: ServiceTableProps) {
   // Empty state
@@ -178,6 +182,8 @@ export default function ServiceTable({
                     serviceId={service.id}
                     featured={service.featured}
                     canFeatureMore={canFeatureMore}
+                    hasPromotedPlan={hasPromotedPlan}
+                    maxFeaturedServices={maxFeaturedServices}
                     isPublished={service.status === Status.published}
                   />
                   {service.status === Status.published && service.slug && (

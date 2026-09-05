@@ -14,6 +14,8 @@ interface FeaturedStarButtonProps {
   serviceId: number;
   featured: boolean;
   canFeatureMore: boolean;
+  hasPromotedPlan: boolean;
+  maxFeaturedServices: number;
   isPublished: boolean;
 }
 
@@ -27,6 +29,8 @@ export default function FeaturedStarButton({
   serviceId,
   featured,
   canFeatureMore,
+  hasPromotedPlan,
+  maxFeaturedServices,
   isPublished,
 }: FeaturedStarButtonProps) {
   const [isFeatured, setIsFeatured] = useState(featured);
@@ -46,11 +50,19 @@ export default function FeaturedStarButton({
   }
 
   const handleToggle = () => {
-    // If trying to feature but can't feature more, show upgrade sheet
+    // If trying to feature but can't feature more, decide the feedback:
+    // - Has the promoted plan but reached the limit -> just warn (no upsell)
+    // - No promoted plan -> show the upgrade sheet
     if (!isFeatured && !canFeatureMore) {
-      openUpgradeSheet(
-        'Για να προωθήσεις υπηρεσίες, χρειάζεσαι το Προωθημένο πακέτο.',
-      );
+      if (hasPromotedPlan) {
+        toast.warning(
+          `Επιτρέπονται μέχρι ${maxFeaturedServices} προωθημένες υπηρεσίες!`,
+        );
+      } else {
+        openUpgradeSheet(
+          'Για να προωθήσεις υπηρεσίες, χρειάζεσαι το Προωθημένο πακέτο.',
+        );
+      }
       return;
     }
 
@@ -67,8 +79,19 @@ export default function FeaturedStarButton({
         router.refresh();
       } else {
         // Check if error is about subscription limit
-        if (result.error?.includes('μέγιστο αριθμό')) {
-          openUpgradeSheet(result.error);
+        // Django returns "Max N featured services per profile"; the old
+        // Next.js API returned a Greek "μέγιστο αριθμό" message.
+        if (
+          result.error?.includes('μέγιστο αριθμό') ||
+          result.error?.toLowerCase().includes('featured services')
+        ) {
+          if (hasPromotedPlan) {
+            toast.warning(
+              `Επιτρέπονται μέχρι ${maxFeaturedServices} προωθημένες υπηρεσίες!`,
+            );
+          } else {
+            openUpgradeSheet(result.error);
+          }
         } else {
           toast.error(result.error || 'Αποτυχία ενημέρωσης');
         }

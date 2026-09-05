@@ -17,7 +17,8 @@ export async function updateProfileAdditionalInfo(
 ): Promise<ActionResponse> {
   const body: Record<string, unknown> = {};
   const rate = getFormString(formData, 'rate');
-  if (rate) body.rate = Number(rate);
+  // Empty/zero clears the rate (PR #488: `rate: data.rate || null`)
+  body.rate = rate ? Number(rate) : null;
   if (formData.get('commencement') !== null) body.commencement = getFormString(formData, 'commencement') || null;
   if (formData.get('contactMethods') !== null) body.contactMethods = parseJSON<string[]>(formData, 'contactMethods', []);
   if (formData.get('paymentMethods') !== null) body.paymentMethods = parseJSON<string[]>(formData, 'paymentMethods', []);
