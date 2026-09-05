@@ -2,6 +2,7 @@
 
 import * as profilesApi from '@/lib/api/profiles';
 import { ApiError } from '@/lib/api/client';
+import { revalidateMyPublicProfile } from '@/lib/cache/revalidation';
 import type { ActionResponse } from '@/lib/types/api';
 import { getFormString } from '@/lib/utils/form';
 
@@ -26,6 +27,7 @@ export async function updateProfileBasicInfo(
       skills: parseJSON<string[]>(formData, 'skills', []),
       coverage: parseJSON(formData, 'coverage', {}),
     });
+    await revalidateMyPublicProfile();
     return { success: true, message: 'Τα βασικά στοιχεία ενημερώθηκαν επιτυχώς!' };
   } catch (err) {
     return { success: false, message: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };

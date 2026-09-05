@@ -2,6 +2,7 @@
 
 import * as profilesApi from '@/lib/api/profiles';
 import { ApiError } from '@/lib/api/client';
+import { revalidateMyPublicProfile } from '@/lib/cache/revalidation';
 import type { ActionResponse } from '@/lib/types/api';
 
 export async function updateProfilePortfolio(
@@ -15,6 +16,7 @@ export async function updateProfilePortfolio(
   }
   try {
     await profilesApi.updatePortfolio(portfolio);
+    await revalidateMyPublicProfile();
     return { success: true, message: 'Το portfolio ενημερώθηκε' };
   } catch (err) {
     return { success: false, message: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };

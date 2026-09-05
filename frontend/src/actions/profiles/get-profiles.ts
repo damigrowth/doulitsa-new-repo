@@ -1,5 +1,7 @@
 'use server';
 
+import { unstable_cache } from 'next/cache';
+
 import * as profilesApi from '@/lib/api/profiles';
 import { ApiError } from '@/lib/api/client';
 import { enrichProfileCard } from '@/lib/taxonomies/enrich';
@@ -61,7 +63,7 @@ export async function getProfilesCount(filters: Partial<ProfileFilters>): Promis
   }
 }
 
-export async function getProfileArchivePageData(params: {
+async function _getProfileArchivePageDataUncached(params: {
   archiveType?: 'pros' | 'companies' | 'directory';
   categorySlug?: string;
   subcategorySlug?: string;
@@ -158,5 +160,30 @@ export async function getProTaxonomyPaths(
     return { success: true, data };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
+  }
+}
+
+
+// Cached wrapper for the archive bundle: the data is public and identical for
+// every visitor with the same filters, so cache the FINAL enriched result for
+// 5 minutes, keyed by the filter combination. Failures are thrown inside so
+// an error response is never cached; profile writes purge via the tags below.
+const _cachedProfileArchive = unstable_cache(
+  async (key: string) => {
+    const res = await _getProfileArchivePageDataUncached(JSON.parse(key));
+    if (!res.success) throw new Error(res.error || 'archive fetch failed');
+    return res;
+  },
+  ['profile-archive-bundle'],
+  { revalidate: 300, tags: ['archive:profiles', 'profiles:all'] },
+);
+
+export async function getProfileArchivePageData(
+  params: Parameters<typeof _getProfileArchivePageDataUncached>[0],
+): ReturnType<typeof _getProfileArchivePageDataUncached> {
+  try {
+    return await _cachedProfileArchive(JSON.stringify(params));
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Σφάλμα δικτύου' };
   }
 }

@@ -2,6 +2,7 @@
 
 import { adminReviews } from '@/lib/api/admin';
 import { ApiError } from '@/lib/api/client';
+import { revalidatePublicProfile, revalidatePublicService } from '@/lib/cache/revalidation';
 import type { ActionResult } from '@/lib/types/api';
 
 export async function moderateReview(input: {
@@ -14,6 +15,10 @@ export async function moderateReview(input: {
       status: input.status,
       notes: input.reason,
     });
+    // Ratings/labels on the public pages changed; the review carries no
+    // service/profile ids here, so purge broadly (rare admin event).
+    await revalidatePublicService();
+    await revalidatePublicProfile();
     return {
       success: true,
       data: { message: input.status === 'approved' ? 'Η αξιολόγηση εγκρίθηκε' : 'Η αξιολόγηση απορρίφθηκε' },

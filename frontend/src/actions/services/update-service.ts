@@ -2,6 +2,7 @@
 
 import * as servicesApi from '@/lib/api/services';
 import { ApiError } from '@/lib/api/client';
+import { revalidatePublicService } from '@/lib/cache/revalidation';
 import type { ActionResult } from '@/lib/types/api';
 
 export async function updateServiceMedia(
@@ -15,6 +16,7 @@ export async function updateServiceMedia(
   }
   try {
     await servicesApi.updateServiceMedia(serviceId, media);
+    await revalidatePublicService(serviceId);
     return { success: true, data: { message: 'Τα media ενημερώθηκαν' } };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };

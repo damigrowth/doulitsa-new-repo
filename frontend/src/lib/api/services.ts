@@ -33,18 +33,31 @@ export const reportService = (
 // ---- reads ----------------------------------------------------------------
 
 export const getCategoriesPage = (params: { categorySlug?: string; subcategorySlug?: string; limit?: number } = {}) =>
-  api.get('/services/categories', { query: params });
+  api.get('/services/categories', {
+    query: params,
+    anonymous: true,
+    revalidate: 300,
+    tags: ['categories-page', 'services:all'],
+  });
 
 export const getNavigationMenu = () =>
-  api.get('/services/navigation', { anonymous: true, revalidate: 300 });
+  api.get('/services/navigation', { anonymous: true, revalidate: 300, tags: ['nav:menu'] });
 
 export const getRecentServices = () => api.get('/services/recent');
 
 export const getServiceBySlug = (slug: string) =>
-  api.get(`/services/by-slug/${encodeURIComponent(slug)}`);
+  api.get(`/services/by-slug/${encodeURIComponent(slug)}`, {
+    anonymous: true,
+    revalidate: 300,
+    tags: [`service:slug:${slug}`, 'services:all'],
+  });
 
 export const getServicePage = (id: number) =>
-  api.get(`/services/${id}/page`);
+  api.get(`/services/${id}/page`, {
+    anonymous: true,
+    revalidate: 300,
+    tags: [`service:id:${id}`, 'services:all'],
+  });
 
 export const getServiceForEdit = (id: number) =>
   api.get(`/services/${id}/edit`);
@@ -67,7 +80,7 @@ export const countServices = (filters: unknown) =>
 export const getServiceTaxonomyPaths = () => api.get('/services/taxonomy-paths');
 
 export const getServiceArchiveBundle = (body: unknown) =>
-  api.post('/services/archive', body);
+  api.post('/services/archive', body, { anonymous: true, noRequestContext: true });
 
 // ---- dashboard -----------------------------------------------------------
 

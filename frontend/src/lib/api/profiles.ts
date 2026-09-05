@@ -29,13 +29,26 @@ export const getMyPresentation = () =>
 export const getMyProfile = () => api.get('/profiles/me');
 
 export const getProfileByUsername = (username: string) =>
-  api.get(`/profiles/by-username/${encodeURIComponent(username)}`);
+  api.get(`/profiles/by-username/${encodeURIComponent(username)}`, {
+    anonymous: true,
+    revalidate: 300,
+    tags: [`page:profile:${username}`, 'profiles:all'],
+  });
 
 export const getProfilePageData = (username: string) =>
-  api.get(`/profiles/page/${encodeURIComponent(username)}`);
+  api.get(`/profiles/page/${encodeURIComponent(username)}`, {
+    anonymous: true,
+    revalidate: 300,
+    tags: [`page:profile:${username}`, 'profiles:all'],
+  });
 
 export const getDirectoryData = (params: { limit?: number; categorySlug?: string; subcategorySlug?: string } = {}) =>
-  api.get('/profiles/directory', { query: params });
+  api.get('/profiles/directory', {
+    query: params,
+    anonymous: true,
+    revalidate: 300,
+    tags: ['archive:profiles', 'profiles:all'],
+  });
 
 export const getProfileTaxonomyPaths = (role?: 'freelancer' | 'company') =>
   api.get('/profiles/taxonomy-paths', { query: { role } });
@@ -49,7 +62,7 @@ export const countProfiles = (filters: unknown) =>
   api.post('/profiles/count', filters);
 
 export const getArchiveBundle = (body: unknown) =>
-  api.post('/profiles/archive', body);
+  api.post('/profiles/archive', body, { anonymous: true, noRequestContext: true });
 
 // ---- AFM / verification / report -----------------------------------------
 

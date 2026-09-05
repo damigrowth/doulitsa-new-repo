@@ -307,6 +307,14 @@ interface RequestOptions {
    * which also keeps ISR pages statically renderable.
    */
   revalidate?: number;
+  /** Data-cache tags for the cached response — invalidate with revalidateTag(). */
+  tags?: string[];
+  /**
+   * Skip everything that reads next/headers (token attach, cookie forwarding,
+   * IP enrichment). Required when the call runs inside unstable_cache(), where
+   * request APIs are forbidden. Combine with `anonymous: true`.
+   */
+  noRequestContext?: boolean;
 }
 
 /**
@@ -328,7 +336,7 @@ export async function apiRequest<T = unknown>(
   // Shared-cache requests must be user-independent (see RequestOptions.revalidate).
   const cacheable = !isBrowser && options.revalidate !== undefined;
 
-  if (!options.anonymous && !cacheable) {
+  if (!options.anonymous && !cacheable && !options.noRequestContext) {
     const token = await getAccessToken();
     if (token) requestHeaders.Authorization = `Bearer ${token}`;
   }
@@ -337,7 +345,7 @@ export async function apiRequest<T = unknown>(
   // and the REAL visitor IP (+ shared secret) so Django rate-limits per actual
   // client instead of per frontend-container IP on SSR calls.
   const internalSecret = process.env.INTERNAL_PROXY_SECRET;
-  if (!isBrowser && !cacheable && (options.forwardCookies || internalSecret)) {
+  if (!isBrowser && !cacheable && !options.noRequestContext && (options.forwardCookies || internalSecret)) {
     const m = await loadServerHeaders();
     if (m) {
       try {
@@ -366,7 +374,7 @@ export async function apiRequest<T = unknown>(
     headers: requestHeaders,
     credentials: isBrowser ? 'include' : undefined,
     ...(cacheable
-      ? { next: { revalidate: options.revalidate } }
+      ? { next: { revalidate: options.revalidate, ...(options.tags ? { tags: options.tags } : {}) } }
       : { cache: 'no-store' as const }),
   };
 

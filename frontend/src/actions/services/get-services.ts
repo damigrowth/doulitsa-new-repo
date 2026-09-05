@@ -1,5 +1,7 @@
 'use server';
 
+import { unstable_cache } from 'next/cache';
+
 import * as servicesApi from '@/lib/api/services';
 import { ApiError } from '@/lib/api/client';
 import type { ActionResult } from '@/lib/types/api';
@@ -151,7 +153,7 @@ interface RawServiceArchiveBundle {
   availableSubdivisions?: TaxonomyStub[];
 }
 
-export async function getServiceArchivePageData(params: {
+async function _getServiceArchivePageDataUncached(params: {
   categorySlug?: string;
   subcategorySlug?: string;
   subdivisionSlug?: string;
@@ -297,5 +299,28 @@ export async function getServiceArchivePageData(params: {
     return { success: true, data };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
+  }
+}
+
+
+// Cached wrapper — see getProfileArchivePageData in get-profiles.ts for the
+// rationale (public data, 5-min TTL, failures never cached, tag-purged on writes).
+const _cachedServiceArchive = unstable_cache(
+  async (key: string) => {
+    const res = await _getServiceArchivePageDataUncached(JSON.parse(key));
+    if (!res.success) throw new Error(res.error || 'archive fetch failed');
+    return res;
+  },
+  ['service-archive-bundle'],
+  { revalidate: 300, tags: ['archive:services', 'services:all'] },
+);
+
+export async function getServiceArchivePageData(
+  params: Parameters<typeof _getServiceArchivePageDataUncached>[0],
+): ReturnType<typeof _getServiceArchivePageDataUncached> {
+  try {
+    return await _cachedServiceArchive(JSON.stringify(params));
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Σφάλμα δικτύου' };
   }
 }

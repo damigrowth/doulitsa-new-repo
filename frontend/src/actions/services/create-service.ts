@@ -2,6 +2,7 @@
 
 import * as servicesApi from '@/lib/api/services';
 import { ApiError } from '@/lib/api/client';
+import { revalidatePublicService } from '@/lib/cache/revalidation';
 import type { ActionResponse } from '@/lib/types/api';
 
 function formToService(formData: FormData): Record<string, unknown> {
@@ -38,6 +39,7 @@ export async function createServiceAction(
     const res = (await servicesApi.createService(formToService(formData))) as {
       serviceId: number; serviceTitle: string;
     };
+    await revalidatePublicService(res.serviceId, { countsChanged: true });
     return {
       success: true,
       message: 'Η υπηρεσία υποβλήθηκε προς έλεγχο',

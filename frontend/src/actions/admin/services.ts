@@ -2,6 +2,7 @@
 
 import { adminServices } from '@/lib/api/admin';
 import { ApiError } from '@/lib/api/client';
+import { revalidatePublicService } from '@/lib/cache/revalidation';
 import type { ActionResult } from '@/lib/types/api';
 import { getFormString } from '@/lib/utils/form';
 
@@ -34,7 +35,9 @@ export async function getService(serviceId: number) {
 
 export async function updateService(params: AdminUpdateServiceInput) {
   const { serviceId, ...rest } = params;
-  return wrap(() => adminServices.update(serviceId, rest));
+  const res = await wrap(() => adminServices.update(serviceId, rest));
+  if (res.success) await revalidatePublicService(serviceId);
+  return res;
 }
 
 export async function updateServiceTaxonomyAction(
@@ -100,18 +103,24 @@ export async function togglePublished(params: AdminToggleServiceInput) {
 }
 
 export async function toggleFeatured(params: AdminToggleServiceInput) {
-  return wrap(() => adminServices.toggleFeatured(params.serviceId));
+  const res = await wrap(() => adminServices.toggleFeatured(params.serviceId));
+  if (res.success) await revalidatePublicService(params.serviceId);
+  return res;
 }
 
 export async function updateServiceStatus(input: {
   serviceId: number; status: string; rejectionReason?: string;
 }) {
   const { serviceId, ...rest } = input;
-  return wrap(() => adminServices.status(serviceId, rest));
+  const res = await wrap(() => adminServices.status(serviceId, rest));
+  if (res.success) await revalidatePublicService(serviceId, { countsChanged: true });
+  return res;
 }
 
 export async function deleteService(params: AdminDeleteServiceInput) {
-  return wrap(() => adminServices.delete(params.serviceId));
+  const res = await wrap(() => adminServices.delete(params.serviceId));
+  if (res.success) await revalidatePublicService(params.serviceId, { countsChanged: true });
+  return res;
 }
 
 export async function getServiceStats() {

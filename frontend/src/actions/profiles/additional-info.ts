@@ -2,6 +2,7 @@
 
 import * as profilesApi from '@/lib/api/profiles';
 import { ApiError } from '@/lib/api/client';
+import { revalidateMyPublicProfile } from '@/lib/cache/revalidation';
 import type { ActionResponse } from '@/lib/types/api';
 import { getFormString } from '@/lib/utils/form';
 
@@ -27,6 +28,7 @@ export async function updateProfileAdditionalInfo(
   if (formData.get('terms') !== null) body.terms = getFormString(formData, 'terms') || null;
   try {
     await profilesApi.updateAdditionalInfo(body);
+    await revalidateMyPublicProfile();
     return { success: true, message: 'Τα στοιχεία ενημερώθηκαν' };
   } catch (err) {
     return { success: false, message: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
