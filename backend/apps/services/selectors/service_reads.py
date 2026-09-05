@@ -316,10 +316,8 @@ def get_service_page_bundle(service_id: int) -> dict[str, Any] | None:
 
     coverage = profile.coverage  # RAW — the FE resolves it (single resolver, like OLD app)
 
-    breadcrumb_segments = [
-        {"label": "Αρχική", "href": "/"},
-        {"label": "Υπηρεσίες", "href": "/ipiresies"},
-    ]
+    # No "Αρχική"/"Υπηρεσίες" base — OLD prod service breadcrumb starts at the category.
+    breadcrumb_segments = []
     if cat:
         breadcrumb_segments.append({"label": cat, "href": f"/categories/{cat}"})
     if sub:

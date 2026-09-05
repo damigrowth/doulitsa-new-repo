@@ -595,7 +595,7 @@ def profile_page_bundle(username: str) -> dict[str, Any] | None:
             }
         ],
         "breadcrumbSegments": [
-            {"label": "Αρχική", "href": "/"},
+            # No "Αρχική" — OLD prod profile breadcrumb starts at the directory.
             {"label": "Επαγγελματικός Κατάλογος", "href": "/directory"},
             *([{"label": profile.category, "href": f"/dir/{profile.category}"}] if profile.category else []),
             *([{"label": profile.subcategory, "href": None}] if profile.subcategory else []),

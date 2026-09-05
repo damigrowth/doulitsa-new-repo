@@ -66,7 +66,7 @@ export async function getHomePageData(): Promise<ActionResult<HomePageData>> {
       return { ...item, ...(full ?? {}), id: full?.id ?? item.slug, slug: leafSlug, href };
     };
 
-    const TOP_SUBS_PER_CARD = 3;
+    const TOP_SUBS_PER_CARD = 5; // production home cards list 5 subcategories
     const enrichCategoryTree = (
       item: ThinSlug & { subcategories?: ThinSlug[] },
     ): DatasetItem & { subcategories: DatasetItem[] } => {

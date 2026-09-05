@@ -93,7 +93,7 @@ export default async function ServiceSuccessPage({ searchParams }: PageProps) {
                 className='bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 px-6 h-10'
               >
                 <Plus className='w-4 h-4' />
-                Δημιουργία Νέας Υπηρεσίας
+                Προσθήκη Νέας Υπηρεσίας
               </CreateServiceButton>
 
               <Button
