@@ -25,7 +25,7 @@ export async function getDirectoryPageData(options?: {
     // The backend ships raw taxonomy ids (label === slug === cuid). Resolve to
     // pro-taxonomy labels + slug-based hrefs so the directory grid/carousel
     // shows names like "Ευεξία & Φροντίδα", not "YQqkAO".
-    const { findProBySlug, findProById, findServiceBySlug, findServiceById } =
+    const { findProBySlug, findProById, findServiceBySlug, findServiceById, getProTaxonomies } =
       await import('@/lib/taxonomies');
     const resolve = (k: string | null | undefined) =>
       (findProBySlug(k) ?? findProById(k) ?? findServiceBySlug(k) ?? findServiceById(k)) as
@@ -52,13 +52,28 @@ export async function getDirectoryPageData(options?: {
           return {
             ...sub,
             id: rs?.id ?? sub.id,
-            label: rs?.label ?? sub.label,
+            // OLD get-directory.ts:166 used the PLURAL form for directory
+            // subcategory labels ("Κηπουροί", not "Κηπουρός").
+            label: (rs as (DatasetItem & { plural?: string }) | null)?.plural ?? rs?.label ?? sub.label,
             slug: subSlug,
             href: `/dir/${catSlug}/${subSlug}`,
           };
-        }),
+        })
+          // OLD get-directory.ts:180-181 — subcategories by profile count
+          // desc, top 10 per category card.
+          .sort((a, b) => ((b as { count?: number }).count ?? 0) - ((a as { count?: number }).count ?? 0))
+          .slice(0, 10),
       };
     });
+    // OLD get-directory.ts:156 mapped getProTaxonomies() in order, so the
+    // category cards follow the canonical pro-taxonomy order. The backend's
+    // grouping loses it; restore it (unknown slugs sink to the end).
+    const orderIndex = new Map(getProTaxonomies().map((c, i) => [c.slug, i]));
+    categories.sort(
+      (a, b) =>
+        (orderIndex.get(a.slug) ?? Number.MAX_SAFE_INTEGER) -
+        (orderIndex.get(b.slug) ?? Number.MAX_SAFE_INTEGER),
+    );
 
     const popularSubcategories: SubdivisionItem[] = (data.popularSubcategories ?? []).map((sub) => {
       const rs = resolve(sub.subcategorySlug || sub.slug);
@@ -68,15 +83,20 @@ export async function getDirectoryPageData(options?: {
       return {
         ...sub,
         id: rs?.id ?? sub.id,
-        label: rs?.label ?? sub.label,
         slug: subSlug,
         image: (rs as DatasetItem | null)?.image ?? sub.image,
         description: (rs as DatasetItem | null)?.description ?? sub.description,
         categorySlug: catSlug,
         subcategorySlug: subSlug,
+        // OLD get-directory.ts:135 — plural label in the popular carousel too.
+        label: (rs as (DatasetItem & { plural?: string }) | null)?.plural ?? rs?.label ?? sub.label,
         href: `/dir/${catSlug}/${subSlug}`,
       };
     });
+    // OLD get-directory.ts:152 — popular subcategories ranked by count desc.
+    popularSubcategories.sort(
+      (a, b) => ((b as { count?: number }).count ?? 0) - ((a as { count?: number }).count ?? 0),
+    );
 
     return { success: true, data: { categories, popularSubcategories } };
   } catch (err) {
