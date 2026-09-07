@@ -226,7 +226,7 @@ interface NavMenuRawCategory {
 export async function getNavigationMenuData(): Promise<ActionResult<NavigationMenuCategory[]>> {
   try {
     const raw = (await servicesApi.getNavigationMenu()) as NavMenuRawCategory[];
-    const { findServiceBySlug, findServiceById } = await import('@/lib/taxonomies');
+    const { findServiceBySlug, findServiceById, getServiceTaxonomies } = await import('@/lib/taxonomies');
 
     // The backend groups by the *stored* category/subcategory/subdivision value,
     // which is a slug in some datasets but a cuid id in the live/restored data.
@@ -282,11 +282,22 @@ export async function getNavigationMenuData(): Promise<ActionResult<NavigationMe
         slug: catSlug,
         icon: typeof fullCat?.icon === 'string' ? fullCat.icon : undefined,
         href: `/categories/${catSlug}`,
-        subcategories,
+        // OLD get-categories.ts:452 showed the top 6 (by count) in the menu.
+        subcategories: subcategories.slice(0, 6),
         totalSubcategories: subcategories.length,
         hasMoreSubcategories: subcategories.length > 6,
       };
     });
+    // OLD get-categories.ts:386 built the menu by mapping getServiceTaxonomies()
+    // in order, so categories followed the canonical taxonomy order
+    // (Δημιουργία, Εκδηλώσεις, Ευεξία, …). The backend's grouping loses that
+    // order; restore it here. Unknown slugs sink to the end.
+    const orderIndex = new Map(getServiceTaxonomies().map((c, i) => [c.slug, i]));
+    enriched.sort(
+      (a, b) =>
+        (orderIndex.get(a.slug) ?? Number.MAX_SAFE_INTEGER) -
+        (orderIndex.get(b.slug) ?? Number.MAX_SAFE_INTEGER),
+    );
     return { success: true, data: enriched };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };

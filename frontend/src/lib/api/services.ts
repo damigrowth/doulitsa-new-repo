@@ -92,4 +92,9 @@ export const getMyServiceStats = () => api.get('/services/me/stats');
 // ---- search suggestions --------------------------------------------------
 
 export const searchSuggestions = (q: string) =>
-  api.get('/services/search/suggestions', { query: { q } });
+  api.get('/services/search/suggestions', {
+    query: { q },
+    anonymous: true,
+    revalidate: 300,
+    tags: ['search:suggestions', 'services:all'],
+  });

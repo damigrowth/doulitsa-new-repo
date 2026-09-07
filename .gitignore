@@ -84,3 +84,6 @@ desktop.ini
 *.pid
 *.seed
 .tmp/
+
+# Old Next.js repo checkout kept locally for reference (parity checks)
+/oldnext
