@@ -89,7 +89,7 @@ services:
       PAYMENTS_ENABLED: "true"
       PAYMENTS_TEST_MODE: "true"
       # TEST: charge recurring every 1 day so daily renewals show in the dashboard.
-      WORLDLINE_RECURRING_OVERRIDE_DAYS: "1"
+      WORLDLINE_RECURRING_OVERRIDE_DAYS: "0"  # 0 = real cadence (30d monthly / 365d yearly); 1 = daily for renewal QA
       # Cloudinary cloud name (public, non-secret). The API key/secret + upload
       # preset and every other external-service credential (Google OAuth, Brevo,
       # Worldline, reCAPTCHA) are read from backend/.env (gitignored) via

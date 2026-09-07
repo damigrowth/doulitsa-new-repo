@@ -644,6 +644,36 @@ _ADMIN_SORT_COLUMNS = {
 }
 
 
+def _latest(a, b):
+    if a is None: return b
+    if b is None: return a
+    return max(a, b)
+
+
+def _earliest(a, b):
+    if a is None: return b
+    if b is None: return a
+    return min(a, b)
+
+
+def _attempt_fallbacks(sub_ids: list[str]) -> dict[str, dict[str, Any]]:
+    """CAPTURED-attempt aggregates per subscription, used to fill in the
+    denormalized payment columns when a (migrated) row lacks them."""
+    if not sub_ids:
+        return {}
+    from django.db.models import Count, Max, Min, Sum
+
+    from apps.billing.models import SubscriptionPaymentAttempt
+
+    rows = (
+        SubscriptionPaymentAttempt.objects
+        .filter(subscription_id__in=sub_ids, status__iexact="captured")
+        .values("subscription_id")
+        .annotate(last=Max("created_at"), first=Min("created_at"), n=Count("id"), total=Sum("amount"))
+    )
+    return {r["subscription_id"]: r for r in rows}
+
+
 def admin_list(filters: dict[str, Any]) -> dict[str, Any]:
     from django.db.models import Q
     qs = Subscription.objects.select_related("profile", "profile__user").all()
@@ -671,8 +701,9 @@ def admin_list(filters: dict[str, Any]) -> dict[str, Any]:
     offset = max(0, int(filters.get("offset", 0)))
     total = qs.count()
     rows = list(qs[offset:offset + limit])
+    fallbacks = _attempt_fallbacks([s.id for s in rows])
     return {
-        "subscriptions": [_row(s) for s in rows],
+        "subscriptions": [_row(s, fallbacks.get(s.id)) for s in rows],
         "total": total,
         "limit": limit,
         "offset": offset,
@@ -681,7 +712,9 @@ def admin_list(filters: dict[str, Any]) -> dict[str, Any]:
 
 def admin_get(sub_id: str) -> dict[str, Any] | None:
     sub = Subscription.objects.select_related("profile", "profile__user").filter(id=sub_id).first()
-    return _row(sub) if sub else None
+    if sub is None:
+        return None
+    return _row(sub, _attempt_fallbacks([sub.id]).get(sub.id))
 
 
 def admin_update_status(*, sub_id: str, status: str) -> Subscription:
@@ -798,7 +831,7 @@ def _iso(dt) -> str | None:
     return dt.isoformat() if dt else None
 
 
-def _row(s: Subscription) -> dict[str, Any]:
+def _row(s: Subscription, _fb: dict | None = None) -> dict[str, Any]:
     """Serialize a Subscription to the OLD full-Prisma shape the FE reads.
 
     OLD get-subscription.ts returned the entire Prisma Subscription object, so the FE
@@ -837,10 +870,15 @@ def _row(s: Subscription) -> dict[str, Any]:
         "paymentMethodType": s.payment_method_type,
         "paymentMethodLast4": s.payment_method_last4,
         "paymentMethodBrand": s.payment_method_brand,
-        "totalPaidLifetime": s.total_paid_lifetime,
-        "paymentCount": s.payment_count,
-        "firstPaymentAt": _iso(s.first_payment_at),
-        "lastPaymentAt": _iso(s.last_payment_at),
+        # The denormalized payment columns can be missing OR STALE relative to
+        # the payment_attempts (migrated rows, or a payment path that recorded
+        # the attempt without updating the subscription). The user dashboard
+        # lists the attempts, so the admin must agree with them: report the
+        # freshest/most complete of column vs CAPTURED-attempt aggregates.
+        "totalPaidLifetime": max(s.total_paid_lifetime or 0, (_fb or {}).get("total") or 0),
+        "paymentCount": max(s.payment_count or 0, (_fb or {}).get("n") or 0),
+        "firstPaymentAt": _iso(_earliest(s.first_payment_at, (_fb or {}).get("first"))),
+        "lastPaymentAt": _iso(_latest(s.last_payment_at, (_fb or {}).get("last"))),
         "discountCode": s.discount_code,
         "discountPercentOff": s.discount_percent_off,
         "discountAmountOff": s.discount_amount_off,
