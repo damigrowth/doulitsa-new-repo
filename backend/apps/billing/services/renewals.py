@@ -92,15 +92,31 @@ def run_worldline_renewals() -> dict[str, Any]:
         last_payment_at__lte=retry_date,
     ).exclude(worldline_token=""))
 
+    # 3. Canceling subscriptions whose paid period has lapsed. NEITHER stack
+    # ever flipped these (OLD bug faithfully ported): they stayed status=active
+    # with promoted benefits forever, while the dashboard promised "Μετά τη
+    # λήξη, θα επιστρέψετε στο Βασικό πακέτο". Fulfil that promise here.
+    lapsed_canceling = list(Subscription.objects.filter(
+        status=SubscriptionStatus.ACTIVE,
+        plan=SubscriptionPlan.PROMOTED,
+        cancel_at_period_end=True,
+        current_period_end__lte=now,
+    ))
+
     results: dict[str, Any] = {
         "total": len(due_subs) + len(retry_subs),
         "renewed": 0,
         "retried": 0,
         "failed": 0,
+        "expired_at_period_end": 0,
         "expired_tokens": 0,
         "canceled_after_retries": 0,
         "errors": [],
     }
+
+    for sub in lapsed_canceling:
+        _expire_canceled_subscription(sub, now)
+        results["expired_at_period_end"] += 1
 
     for sub in due_subs:
         _process_renewal(sub, now, results, is_retry=False)
@@ -241,6 +257,19 @@ def _process_renewal(sub: Subscription, now: datetime, results: dict[str, Any], 
         )
         results["failed"] += 1
         results["errors"].append(f"{sub.profile_id}: {err_msg}")
+
+
+def _expire_canceled_subscription(sub: Subscription, now: datetime) -> None:
+    """cancel_at_period_end sub whose paid period ended: downgrade to free."""
+    sub.status = SubscriptionStatus.CANCELED
+    sub.canceled_at = sub.canceled_at or now
+    sub.plan = SubscriptionPlan.FREE
+    sub.save(update_fields=["status", "canceled_at", "plan", "updated_at"])
+    _set_featured(sub.profile_id, False)
+    logger.info(
+        "[Worldline Renewals] Expired canceling subscription %s at period end",
+        sub.id,
+    )
 
 
 def _cancel_expired_subscription(sub: Subscription, now: datetime) -> None:
