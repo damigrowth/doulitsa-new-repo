@@ -135,6 +135,11 @@ export async function getCategoriesPageData(options?: {
             // a "no results" page.
             subcategories: divs
               .filter((d: Record<string, any>) => (subdivisionCounts.get(d.slug) ?? 0) > 0)
+              // OLD get-categories.ts:259 — subdivisions by service count desc.
+              .sort(
+                (a: Record<string, any>, b: Record<string, any>) =>
+                  (subdivisionCounts.get(b.slug) ?? 0) - (subdivisionCounts.get(a.slug) ?? 0),
+              )
               .map((d: Record<string, any>) => ({
                 id: d.id,
                 slug: d.slug,
@@ -159,6 +164,11 @@ export async function getCategoriesPageData(options?: {
           count: catTotal,
           subcategories: subs
             .filter((s: Record<string, any>) => (subcategoryCounts.get(s.slug) ?? 0) > 0)
+            // OLD get-categories.ts:303 — subcategories by service count desc.
+            .sort(
+              (a: Record<string, any>, b: Record<string, any>) =>
+                (subcategoryCounts.get(b.slug) ?? 0) - (subcategoryCounts.get(a.slug) ?? 0),
+            )
             .map((s: Record<string, any>) => ({
               id: s.id,
               slug: s.slug,
@@ -170,23 +180,42 @@ export async function getCategoriesPageData(options?: {
 
     }
 
-    // "Πιο δημοφιλείς εργασίες" carousel = subdivisions that contain FEATURED
-    // services (admin-curated, or promoted by a subscriber starring their own
-    // service) — built from the backend's popularSubdivisions list, NOT a raw
-    // service-count ranking. The stored cuid ids are resolved to canonical
-    // labels/slugs/hrefs via the taxonomy tree.
+    // OLD get-categories.ts:275 (drill-down) and :324 (top-level) — cards
+    // ranked by their total service count desc, most popular first.
+    categories.sort((a, b) => (b.count ?? 0) - (a.count ?? 0));
+
+    // "Πιο δημοφιλείς εργασίες" carousel — OLD get-categories.ts:209-215: ALL
+    // subdivisions with services ranked by service count desc, top `limit`
+    // (default 15). NOT the backend's featured-based popularSubdivisions list
+    // (that was a mis-port). Counts use the aggregated canonical-slug map so
+    // cuid/slug duplicate keys merge; the category/subcategory context for each
+    // subdivision's href comes from the backend rows (first row wins, like
+    // OLD's subdivisionContextMap).
+    const carouselLimit = options?.limit ?? 15;
+    const divContext = new Map<string, { cat: string; sub: string }>();
+    if (Array.isArray(raw.subdivisions)) {
+      for (const s of raw.subdivisions as Array<Record<string, any>>) {
+        if (typeof s.slug !== 'string') continue;
+        const key = canonical(s.slug);
+        if (
+          !divContext.has(key) &&
+          typeof s.categorySlug === 'string' &&
+          typeof s.subcategorySlug === 'string'
+        ) {
+          divContext.set(key, { cat: s.categorySlug, sub: s.subcategorySlug });
+        }
+      }
+    }
     const popular: SubdivisionItem[] = [];
-    const seenDiv = new Set<string>();
-    const rawPopular = Array.isArray(raw.popularSubdivisions)
-      ? (raw.popularSubdivisions as Array<Record<string, any>>)
-      : [];
-    for (const s of rawPopular) {
-      const div = tax.findServiceById(s.slug) ?? tax.findServiceBySlug(s.slug);
-      const sub =
-        tax.findServiceById(s.subcategorySlug) ?? tax.findServiceBySlug(s.subcategorySlug);
-      const cat = tax.findServiceById(s.categorySlug) ?? tax.findServiceBySlug(s.categorySlug);
-      if (!div || !sub || !cat || seenDiv.has(div.id)) continue;
-      seenDiv.add(div.id);
+    const rankedDivs = [...subdivisionCounts.entries()].sort((a, b) => b[1] - a[1]);
+    for (const [divSlug, count] of rankedDivs) {
+      if (popular.length >= carouselLimit) break;
+      const ctx = divContext.get(divSlug);
+      if (!ctx) continue;
+      const div = tax.findServiceBySlug(divSlug) ?? tax.findServiceById(divSlug);
+      const sub = tax.findServiceById(ctx.sub) ?? tax.findServiceBySlug(ctx.sub);
+      const cat = tax.findServiceById(ctx.cat) ?? tax.findServiceBySlug(ctx.cat);
+      if (!div || !sub || !cat) continue;
       const d = div as Record<string, any>;
       popular.push({
         id: div.id,
@@ -195,7 +224,7 @@ export async function getCategoriesPageData(options?: {
         description: d.description,
         image: d.image,
         href: subdivisionHref(cat.slug, sub.slug, div.slug),
-        count: typeof s.count === 'number' ? s.count : undefined,
+        count,
         categorySlug: cat.slug,
         subcategorySlug: sub.slug,
       });
