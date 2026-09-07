@@ -103,9 +103,37 @@ export async function getCategoriesPageData(options?: {
       }
     }
 
+    // OLD ranked cards and subcategory chips by PATH count — the number of
+    // DISTINCT (subcategory, subdivision) combinations with published services
+    // (getServiceTaxonomyPaths rows; get-categories.ts:229/:283 used
+    // `.filter(...).length` over those rows) — i.e. taxonomy BREADTH, not raw
+    // service volume. Rebuild that metric from the backend's subdivision rows,
+    // plus one extra path per subcategory whose services aren't fully
+    // attributed to subdivisions (old groupBy emitted a null-subdivision row).
+    const subPathCounts = new Map<string, number>();
+    const subDivServiceTotals = new Map<string, number>();
+    const seenPair = new Set<string>();
+    if (Array.isArray(raw.subdivisions)) {
+      for (const s of raw.subdivisions as Array<Record<string, any>>) {
+        if (typeof s.slug !== 'string' || typeof s.subcategorySlug !== 'string') continue;
+        const subKey = canonical(s.subcategorySlug);
+        const pair = `${subKey}::${canonical(s.slug)}`;
+        if (!seenPair.has(pair)) {
+          seenPair.add(pair);
+          bump(subPathCounts, subKey, 1);
+        }
+        if (typeof s.count === 'number') bump(subDivServiceTotals, subKey, s.count);
+      }
+    }
+    for (const [subKey, total] of subcategoryCounts) {
+      if (total > (subDivServiceTotals.get(subKey) ?? 0)) bump(subPathCounts, subKey, 1);
+    }
+
     // Build the tree from the frontend taxonomy.
     const filterCategorySlug = options?.categorySlug;
     const categories: CategoryWithSubcategories[] = [];
+    // Per-card rank = summed path counts (OLD's totalCount at :271/:320).
+    const cardRank = new Map<string, number>();
 
     for (const cat of taxonomies as Array<Record<string, any>>) {
       if (filterCategorySlug && cat.slug !== filterCategorySlug) continue;
@@ -122,6 +150,7 @@ export async function getCategoriesPageData(options?: {
           const subCount = subcategoryCounts.get(sub.slug) ?? 0;
           if (subCount <= 0) continue;
           const divs = Array.isArray(sub.children) ? sub.children : [];
+          cardRank.set(sub.slug, subPathCounts.get(sub.slug) ?? 0);
           categories.push({
             id: sub.id,
             slug: sub.slug,
@@ -135,11 +164,8 @@ export async function getCategoriesPageData(options?: {
             // a "no results" page.
             subcategories: divs
               .filter((d: Record<string, any>) => (subdivisionCounts.get(d.slug) ?? 0) > 0)
-              // OLD get-categories.ts:259 — subdivisions by service count desc.
-              .sort(
-                (a: Record<string, any>, b: Record<string, any>) =>
-                  (subdivisionCounts.get(b.slug) ?? 0) - (subdivisionCounts.get(a.slug) ?? 0),
-              )
+              // OLD :259 sorted by path count, which is 1 for every active
+              // subdivision — a stable sort of equal keys, i.e. dataset order.
               .map((d: Record<string, any>) => ({
                 id: d.id,
                 slug: d.slug,
@@ -153,6 +179,13 @@ export async function getCategoriesPageData(options?: {
         // subcategories listed. Skip categories that have no services at all.
         const catTotal = categoryTotals.get(cat.slug) ?? 0;
         if (catTotal <= 0) continue;
+        cardRank.set(
+          cat.slug,
+          (subs as Array<Record<string, any>>).reduce(
+            (n, s) => n + (subPathCounts.get(s.slug) ?? 0),
+            0,
+          ),
+        );
         categories.push({
           id: cat.id,
           slug: cat.slug,
@@ -164,10 +197,11 @@ export async function getCategoriesPageData(options?: {
           count: catTotal,
           subcategories: subs
             .filter((s: Record<string, any>) => (subcategoryCounts.get(s.slug) ?? 0) > 0)
-            // OLD get-categories.ts:303 — subcategories by service count desc.
+            // OLD :303 — chips ranked by PATH count (distinct active
+            // subdivisions), dataset order as the stable tiebreak.
             .sort(
               (a: Record<string, any>, b: Record<string, any>) =>
-                (subcategoryCounts.get(b.slug) ?? 0) - (subcategoryCounts.get(a.slug) ?? 0),
+                (subPathCounts.get(b.slug) ?? 0) - (subPathCounts.get(a.slug) ?? 0),
             )
             .map((s: Record<string, any>) => ({
               id: s.id,
@@ -180,9 +214,11 @@ export async function getCategoriesPageData(options?: {
 
     }
 
-    // OLD get-categories.ts:275 (drill-down) and :324 (top-level) — cards
-    // ranked by their total service count desc, most popular first.
-    categories.sort((a, b) => (b.count ?? 0) - (a.count ?? 0));
+    // OLD :275 (drill-down) and :324 (top-level) — cards ranked by their
+    // summed PATH count desc (taxonomy breadth, not raw service volume).
+    categories.sort(
+      (a, b) => (cardRank.get(b.slug) ?? 0) - (cardRank.get(a.slug) ?? 0),
+    );
 
     // "Πιο δημοφιλείς εργασίες" carousel — OLD get-categories.ts:209-215: ALL
     // subdivisions with services ranked by service count desc, top `limit`
