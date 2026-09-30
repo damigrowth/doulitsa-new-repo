@@ -451,6 +451,9 @@ def _verification_row(v: ProfileVerification) -> dict[str, Any]:
     user = getattr(profile, "user", None) if profile else None
     return {
         "id": v.id,
+        # Prisma-shaped FK ids — the admin detail page links with these.
+        "pid": v.profile_id,
+        "uid": v.uid,
         "status": v.status,
         "afm": v.afm,
         "name": v.name,
@@ -463,6 +466,12 @@ def _verification_row(v: ProfileVerification) -> dict[str, Any]:
             "username": profile.username if profile else None,
             "displayName": profile.display_name if profile else None,
             "email": profile.email if profile else None,
+            # OLD include: { profile: { include: { user: ... } } } — the detail
+            # page reads verification.profile.user.email.
+            "user": {
+                "id": user.id if user else None,
+                "email": user.email if user else None,
+            } if user else None,
         },
         "user": {
             "id": user.id if user else None,

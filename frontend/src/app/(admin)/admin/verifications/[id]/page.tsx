@@ -175,7 +175,7 @@ export default async function AdminVerificationDetailPage({
                       <p className='text-sm font-medium mt-1'>
                         {verification.profile.displayName || 'Unnamed Profile'}{' '}
                         <span className='text-muted-foreground'>
-                          ({verification.profile.user.email})
+                          ({verification.profile?.user?.email ?? verification.profile?.email ?? '—'})
                         </span>
                       </p>
                     </div>
