@@ -60,7 +60,11 @@ backend/dumps/
 # -- Build / coverage / logs -----------------------------------------------
 *.log
 logs/
-coverage/
+# Anchored: a bare `coverage/` also matched the Next.js route
+# frontend/src/app/(dashboard)/dashboard/profile/coverage/ and kept it out of git.
+/coverage/
+/frontend/coverage/
+/backend/coverage/
 .nyc_output/
 
 # -- IDE / editor -----------------------------------------------------------
