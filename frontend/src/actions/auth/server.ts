@@ -167,10 +167,30 @@ export async function requireOnboardingComplete(onboardingUrl = '/onboarding'): 
   if (!result.success || !result.data.user) {
     redirect('/login');
   }
-  if (result.data.user.step === 'ONBOARDING') {
-    redirect(onboardingUrl);
+  const setupUrl = getSetupRedirect(result.data.user, onboardingUrl);
+  if (setupUrl) {
+    redirect(setupUrl);
   }
   return result.data.session as AuthSession;
+}
+
+/**
+ * Where a user who hasn't finished signing up must go before the dashboard.
+ * A pro without step=DASHBOARD has no profile — every pro-only dashboard page
+ * would bounce them back to /dashboard — so they're locked to onboarding.
+ * Google users still picking a type/username go through /oauth-setup first.
+ */
+function getSetupRedirect(user: AuthUser, onboardingUrl: string): string | null {
+  const { step } = user;
+  if (step === 'DASHBOARD' || isAdminRole(user.role)) return null;
+  if (
+    user.provider === 'google' &&
+    (step === 'TYPE_SELECTION' || step === 'OAUTH_SETUP')
+  ) {
+    return '/oauth-setup';
+  }
+  if (user.type === 'pro' || step === 'ONBOARDING') return onboardingUrl;
+  return null;
 }
 
 export async function requireRoleRedirect(

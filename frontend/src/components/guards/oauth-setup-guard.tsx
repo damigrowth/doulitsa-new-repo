@@ -32,7 +32,7 @@ export function OAuthSetupGuard({ user, children }: OAuthSetupGuardProps) {
     if (!needsSetup) {
       setIsRedirecting(true);
       // User doesn't need setup, redirect to appropriate page based on type and step
-      if (user.type === 'pro' && user.step === 'ONBOARDING') {
+      if (user.type === 'pro' && user.step !== 'DASHBOARD') {
         router.push('/onboarding');
       } else if (user.step === 'DASHBOARD') {
         router.push('/dashboard');

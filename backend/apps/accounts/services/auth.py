@@ -26,7 +26,7 @@ from django.contrib.auth.hashers import check_password
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.accounts.models import User
-from apps.accounts.models.user import JourneyStep, UserRole
+from apps.accounts.models.user import JourneyStep, UserRole, UserType
 from apps.accounts.selectors.users import (
     get_password_account,
     get_user_by_email,
@@ -148,6 +148,10 @@ def _derive_redirect_path(user: User) -> str:
         if user.role in {UserRole.ADMIN, UserRole.SUPPORT, UserRole.EDITOR}:
             return "/admin"
         return "/dashboard"
+    # A verified pro who never finished onboarding (e.g. stranded at
+    # TYPE_SELECTION) must complete their profile before the dashboard.
+    if user.type == UserType.PRO:
+        return "/onboarding"
     return f"/register/success?email={quote(user.email)}"
 
 

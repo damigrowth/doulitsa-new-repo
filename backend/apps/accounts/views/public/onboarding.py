@@ -46,8 +46,13 @@ class CompleteOnboardingView(APIView):
         data = s.validated_data
 
         # OLD complete-onboarding.ts:36-41: only accounts mid-onboarding may
-        # complete it.
-        if request.user.step != JourneyStep.ONBOARDING:
+        # complete it. Also accept pros stranded at TYPE_SELECTION (email
+        # signups verified by hand before the User.save() hook was fixed) —
+        # they already have a username, and the frontend sends them here.
+        stranded_pro = (
+            request.user.step == JourneyStep.TYPE_SELECTION and bool(request.user.username)
+        )
+        if request.user.step != JourneyStep.ONBOARDING and not stranded_pro:
             raise ApiError(
                 "Ο λογαριασμός δεν είναι στη φάση ολοκλήρωσης εγγραφής",
                 code="not_in_onboarding",

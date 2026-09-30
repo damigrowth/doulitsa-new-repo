@@ -187,17 +187,26 @@ class User(AbstractBaseUser):
     def save(self, *args, **kwargs):
         """Auto-advance the journey step when an admin flips email_verified.
 
-        Why: the verification *endpoint* advances `step` from EMAIL_VERIFICATION
-        → TYPE_SELECTION on its own, but a manual flip in Django admin doesn't
-        run that path. Without this hook, support staff who tick the box leave
-        the user stuck on the "check your email" page.
+        Why: the verification *endpoint* (services.registration.verify_email_token)
+        advances `step` from EMAIL_VERIFICATION on its own, but a manual flip in
+        Django admin doesn't run that path. Without this hook, support staff who
+        tick the box leave the user stuck on the "check your email" page.
+
+        Mirrors the endpoint: pros → ONBOARDING, simple users → DASHBOARD. The
+        type was already chosen at registration, so TYPE_SELECTION would leave a
+        pro in the dashboard with no profile.
         """
         if (
             self.pk
             and self.email_verified
             and self.step == JourneyStep.EMAIL_VERIFICATION
         ):
-            self.step = JourneyStep.TYPE_SELECTION
+            self.step = (
+                JourneyStep.ONBOARDING if self.type == UserType.PRO else JourneyStep.DASHBOARD
+            )
             if not self.confirmed:
                 self.confirmed = True
+            update_fields = kwargs.get("update_fields")
+            if update_fields is not None:
+                kwargs["update_fields"] = {*update_fields, "step", "confirmed"}
         super().save(*args, **kwargs)
