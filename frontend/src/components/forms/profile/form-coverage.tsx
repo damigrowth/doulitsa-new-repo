@@ -207,6 +207,12 @@ export default function CoverageForm({
     });
   };
 
+  // Dependent fields cleared when a mode is unchecked, so re-checking it
+  // restores them instead of showing an empty address / area selection.
+  const stashedDependencies = React.useRef<
+    Partial<Record<'onbase' | 'onsite', Partial<CoverageInput['coverage']>>>
+  >({});
+
   // Coverage handlers
   const handleCoverageSwitch = (type: 'online' | 'onbase' | 'onsite') => {
     const currentCoverage = getValues('coverage');
@@ -215,9 +221,26 @@ export default function CoverageForm({
       [type]: !currentCoverage[type],
     };
 
-    // Reset dependent fields when disabling modes
-    if (!newCoverage[type]) {
-      Object.assign(newCoverage, resetCoverageDependencies(newCoverage, type));
+    if (type !== 'online') {
+      if (!newCoverage[type]) {
+        // Reset dependent fields when disabling modes (stash them first)
+        stashedDependencies.current[type] =
+          type === 'onbase'
+            ? {
+                address: currentCoverage.address,
+                zipcode: currentCoverage.zipcode,
+                area: currentCoverage.area,
+                county: currentCoverage.county,
+              }
+            : {
+                counties: currentCoverage.counties,
+                areas: currentCoverage.areas,
+              };
+        Object.assign(newCoverage, resetCoverageDependencies(newCoverage, type));
+      } else if (stashedDependencies.current[type]) {
+        Object.assign(newCoverage, stashedDependencies.current[type]);
+        delete stashedDependencies.current[type];
+      }
     }
 
     setValue('coverage', newCoverage, {
