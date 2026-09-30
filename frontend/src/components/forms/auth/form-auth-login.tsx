@@ -34,6 +34,7 @@ type LoginState = {
     redirectPath: string;
   };
   errors?: Record<string, string[]>;
+  verifyPath?: string;
 };
 
 const initialState: LoginState = {
@@ -211,7 +212,17 @@ const LoginForm: React.FC = () => {
           {state.message && !state.success && (
             <Alert variant='destructive'>
               <AlertCircle className='h-4 w-4' />
-              <AlertDescription>{state.message}</AlertDescription>
+              <AlertDescription>
+                {state.message}
+                {state.verifyPath && (
+                  <NextLink
+                    href={state.verifyPath}
+                    className='block mt-1 font-medium underline'
+                  >
+                    Επανάληψη αποστολής email επιβεβαίωσης
+                  </NextLink>
+                )}
+              </AlertDescription>
             </Alert>
           )}
 
