@@ -42,6 +42,9 @@ const initialState = {
 
 export function SupportFeedbackDialog() {
   const [open, setOpen] = useState(false);
+  // Validation feedback only AFTER a submit attempt: until then the length
+  // rule shows as a neutral black hint and the submit button stays active.
+  const [attempted, setAttempted] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();
 
@@ -63,7 +66,7 @@ export function SupportFeedbackDialog() {
   });
 
   const {
-    formState: { errors, isValid, isDirty },
+    formState: { errors, isValid },
     getValues,
     reset,
   } = form;
@@ -81,6 +84,7 @@ export function SupportFeedbackDialog() {
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
     if (!newOpen) {
+      setAttempted(false);
       reset();
       startTransition(() => {
         resetActionState();
@@ -90,6 +94,13 @@ export function SupportFeedbackDialog() {
 
   // Form submission handler
   const handleFormSubmit = (formData: FormData) => {
+    // The button is always active; validation feedback appears on ATTEMPT.
+    setAttempted(true);
+    if (!isValid) {
+      void form.trigger(); // populate field errors so they render (in red)
+      return;
+    }
+
     // Get all form values and populate FormData
     const allValues = getValues();
 
@@ -223,7 +234,7 @@ export function SupportFeedbackDialog() {
                           </FormItem>
                         </RadioGroup>
                       </FormControl>
-                      <FormMessage />
+                      {attempted && <FormMessage />}
                     </FormItem>
                   )}
                 />
@@ -242,7 +253,13 @@ export function SupportFeedbackDialog() {
                           disabled={isPending}
                         />
                       </FormControl>
-                      <FormMessage />
+                      {attempted && errors.description ? (
+                        <FormMessage />
+                      ) : (
+                        <p className='text-sm text-gray-900'>
+                          Η περιγραφή πρέπει να έχει τουλάχιστον 10 χαρακτήρες
+                        </p>
+                      )}
                     </FormItem>
                   )}
                 />
@@ -252,7 +269,7 @@ export function SupportFeedbackDialog() {
                   text='Αποστολή Αναφοράς'
                   loading={isPending}
                   loadingText='Υποβολή...'
-                  disabled={!isValid || !isDirty || isPending}
+                  disabled={isPending}
                   fullWidth
                   icon='send'
                   iconPosition='right'
