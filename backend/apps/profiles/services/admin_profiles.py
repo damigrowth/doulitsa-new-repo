@@ -199,6 +199,8 @@ def admin_update_basic_info(
     p.subcategory = subcategory
     p.speciality = speciality
     p.skills = skills or []
+    from apps.profiles.services.profile_updates import apply_profile_node_fks
+    apply_profile_node_fks(p)
     p.save()
     return p
 

@@ -12,6 +12,7 @@ from typing import Any
 from django.db import transaction
 
 from apps.accounts.models import User
+from apps.core import taxonomy
 from apps.profiles.models import Profile
 from common.exceptions import ApiError, FieldErrors
 from common.utils.cloudinary import sanitize_resources
@@ -97,6 +98,23 @@ def sync_username_to_profile(user: User, username: str) -> None:
         )
 
 
+# READ side filters /dir, the directory and the archive on the *_node FK
+# columns (profile_aggregations `_pro_node_ids`), so the WRITE side must
+# populate them or new/re-categorized profiles never appear in any listing
+# (QA 2026-10: fresh pro invisible in /dir — only the one-time
+# backfill_taxonomy_fks had ever set these). Mirrors
+# service_writes._apply_node_fks for the pro taxonomy space.
+def apply_profile_node_fks(profile: Profile) -> None:
+    def _resolve(level: str, value: str | None) -> str | None:
+        if not value:
+            return None
+        ids = taxonomy.taxonomy_node_ids("pro", level, value)
+        return ids[0] if ids else None
+
+    profile.category_node_id = _resolve("category", profile.category)
+    profile.subcategory_node_id = _resolve("subcategory", profile.subcategory)
+
+
 # ----- basic-info ----------------------------------------------------------
 
 
@@ -140,6 +158,7 @@ def update_basic_info(
             user.image = img_url
             user.save(update_fields=["image", "updated_at"])
     profile.skills = skills or []
+    apply_profile_node_fks(profile)
     profile.save()
     return profile
 
