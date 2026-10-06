@@ -75,7 +75,12 @@ export default async function MessagesPage({ params }: MessagesPageProps) {
           username: otherMember.username ?? null,
           online: otherMember.online,
           phone: null,
-          type: null,
+          // Django ships `username` only from a Profile row, and only pros
+          // have profiles — so username ⇒ pro. With type:null the header's
+          // `type === 'pro'` gate never passed, and clicking the name/avatar
+          // in the chat no longer opened the profile page (QA 2026-10;
+          // OLD-app behavior restored here).
+          type: otherMember.username ? ('pro' as const) : null,
         };
       }
     }
