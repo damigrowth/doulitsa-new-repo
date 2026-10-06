@@ -1,4 +1,6 @@
-import { ReactNode } from 'react';
+'use client';
+
+import { ReactNode, useEffect } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -7,6 +9,11 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { ArchiveSidebarFilters } from './archive-sidebar-filters';
+import {
+  cancelArchiveFiltersSheetClose,
+  scheduleArchiveFiltersSheetClose,
+  useArchiveFiltersSheetStore,
+} from '@/lib/stores/use-archive-filters-sheet-store';
 import type { DatasetItem } from '@/lib/types/datasets';
 
 interface FilterState {
@@ -40,8 +47,24 @@ export function ArchiveSidebar({
   subcategories,
   subdivisions,
 }: ArchiveSidebarProps) {
+  // Open state lives in a global store so the sheet survives the remount
+  // caused by taxonomy navigation (e.g. /dir -> /dir/[category]) and stays
+  // open while the user keeps refining filters.
+  const isOpen = useArchiveFiltersSheetStore((state) => state.isOpen);
+  const setOpen = useArchiveFiltersSheetStore((state) => state.setOpen);
+
+  // Close the sheet only when the archive section is left entirely: on an
+  // archive -> archive navigation the next sidebar mounts in the same commit
+  // and cancels the scheduled close.
+  useEffect(() => {
+    cancelArchiveFiltersSheetClose();
+    return () => {
+      scheduleArchiveFiltersSheetClose();
+    };
+  }, []);
+
   return (
-    <Sheet>
+    <Sheet open={isOpen} onOpenChange={setOpen}>
       {children}
       <SheetContent side="left" className="w-80 sm:w-96">
         <SheetHeader className="pb-4">

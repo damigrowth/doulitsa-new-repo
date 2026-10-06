@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -48,6 +48,22 @@ export function ArchiveSidebarFilters({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  // Optimistic taxonomy selection: picking a taxonomy navigates to a new
+  // route, so the URL-derived value only updates once the new page renders.
+  // Mirror the user's pick locally so the dropdowns update immediately
+  // (null = explicitly cleared back to "all", undefined = no override).
+  const [optimisticTaxonomy, setOptimisticTaxonomy] = useState<{
+    category?: string | null;
+    subcategory?: string | null;
+    subdivision?: string | null;
+  }>({});
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    // The URL caught up with the user's pick - drop the optimistic override.
+    setPrevPathname(pathname);
+    setOptimisticTaxonomy({});
+  }
 
   // Parse current path to get taxonomy from route
   const pathSegments = pathname.split('/').filter(Boolean);
@@ -98,6 +114,23 @@ export function ArchiveSidebarFilters({
   const currentSubdivision = currentSubdivisionSlug
     ? subdivisions?.find((div) => div.slug === currentSubdivisionSlug)
     : null;
+
+  // Values shown in the dropdowns: the user's in-flight pick wins over the
+  // URL-derived value until the navigation completes.
+  const displayedCategoryId =
+    optimisticTaxonomy.category !== undefined
+      ? (optimisticTaxonomy.category ?? undefined)
+      : currentCategory?.id;
+
+  const displayedSubcategoryId =
+    optimisticTaxonomy.subcategory !== undefined
+      ? (optimisticTaxonomy.subcategory ?? undefined)
+      : currentSubcategory?.id;
+
+  const displayedSubdivisionId =
+    optimisticTaxonomy.subdivision !== undefined
+      ? (optimisticTaxonomy.subdivision ?? undefined)
+      : currentSubdivision?.id;
 
   // Use only filtered subcategories and subdivisions from server action
   // For directory archives, filter subcategories by type if a type filter is active
@@ -182,12 +215,14 @@ export function ArchiveSidebarFilters({
   // Handle category change - navigate to category route for profiles
   const handleCategoryChange = (categoryId: string) => {
     if (!categoryId) {
+      setOptimisticTaxonomy({ category: null, subcategory: null });
       router.push(buildUrl(baseArchivePath));
       return;
     }
 
     // For services, we removed categories from URLs, so redirect to main page
     if (archiveType === 'services') {
+      setOptimisticTaxonomy({ category: null, subcategory: null });
       router.push(buildUrl(baseArchivePath));
       return;
     }
@@ -196,6 +231,7 @@ export function ArchiveSidebarFilters({
     const category = categories.find((cat) => cat.id === categoryId);
     if (!category) return;
 
+    setOptimisticTaxonomy({ category: categoryId, subcategory: null });
     const path = `${baseArchivePath}/${category.slug}`;
     router.push(buildUrl(path));
   };
@@ -203,6 +239,7 @@ export function ArchiveSidebarFilters({
   // Handle subcategory change
   const handleSubcategoryChange = (subcategoryId: string) => {
     if (!subcategoryId) {
+      setOptimisticTaxonomy({ subcategory: null, subdivision: null });
       // For pros/companies, go back to category page if we have a current category
       if (archiveType === 'profiles' && currentCategory) {
         router.push(buildUrl(`${baseArchivePath}/${currentCategory.slug}`));
@@ -216,6 +253,8 @@ export function ArchiveSidebarFilters({
       (sub) => sub.id === subcategoryId,
     );
     if (!subcategory) return;
+
+    setOptimisticTaxonomy({ subcategory: subcategoryId, subdivision: null });
 
     let path;
     if (archiveType === 'services') {
@@ -235,6 +274,7 @@ export function ArchiveSidebarFilters({
     if (!currentSubcategory) return;
 
     if (!subdivisionId) {
+      setOptimisticTaxonomy({ subdivision: null });
       const path = `${baseArchivePath}/${currentSubcategory.slug}`;
       router.push(buildUrl(path));
       return;
@@ -245,6 +285,7 @@ export function ArchiveSidebarFilters({
     );
     if (!subdivision) return;
 
+    setOptimisticTaxonomy({ subdivision: subdivisionId });
     const path = `${baseArchivePath}/${currentSubcategory.slug}/${subdivision.slug}`;
     router.push(buildUrl(path));
   };
@@ -322,7 +363,7 @@ export function ArchiveSidebarFilters({
           <div className='space-y-3'>
             <Label className='text-sm font-medium'>Κατηγορία</Label>
             <CategoryDropdown
-              value={currentCategory?.id}
+              value={displayedCategoryId}
               onValueChange={handleCategoryChange}
               categories={categories}
               placeholder='Όλες οι κατηγορίες'
@@ -337,7 +378,7 @@ export function ArchiveSidebarFilters({
             {archiveType === 'services' ? 'Κατηγορία' : 'Υποκατηγορία'}
           </Label>
           <SubcategoryDropdown
-            value={currentSubcategory?.id}
+            value={displayedSubcategoryId}
             onValueChange={handleSubcategoryChange}
             subcategories={availableSubcategories}
             disabled={archiveType === 'profiles' ? !currentCategory : false}
@@ -359,7 +400,7 @@ export function ArchiveSidebarFilters({
           <div className='space-y-3'>
             <Label className='text-sm font-medium'>Υποκατηγορία</Label>
             <SubdivisionDropdown
-              value={currentSubdivision?.id}
+              value={displayedSubdivisionId}
               onValueChange={handleSubdivisionChange}
               subdivisions={availableSubdivisions}
               disabled={!currentSubcategory}
