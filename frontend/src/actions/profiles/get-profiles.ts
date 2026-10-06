@@ -182,7 +182,43 @@ export async function getProfileArchivePageData(
   params: Parameters<typeof _getProfileArchivePageDataUncached>[0],
 ): ReturnType<typeof _getProfileArchivePageDataUncached> {
   try {
-    return await _cachedProfileArchive(JSON.stringify(params));
+    const res = await _cachedProfileArchive(JSON.stringify(params));
+    // OLD get-profiles.ts:770-815 filled the filter dropdowns with pro
+    // categories/subcategories THAT HAVE PROFILES; the backend ships
+    // taxonomyData.categories empty, which left the archive filters blank
+    // (QA). The directory payload is exactly that data. Merged HERE, outside
+    // unstable_cache — inside it Next rejects the tagged fetch — using the
+    // 5-min tagged directory cache shared with /directory, purged on
+    // profile writes. Degrades to empty lists on failure.
+    if (res.success && !(res.data.taxonomyData?.categories ?? []).length) {
+      try {
+        const dir = (await profilesApi.getDirectoryData({ limit: 1 })) as {
+          categories?: Array<{ slug: string; subcategories?: Array<{ slug: string; count?: number; type?: string }> }>;
+        };
+        const { findProBySlug, findProById } = await import('@/lib/taxonomies');
+        const look = (k: string | null | undefined) => findProBySlug(k) ?? findProById(k);
+        const dirCats = dir.categories ?? [];
+        const td = res.data.taxonomyData;
+        td.categories = dirCats
+          .map((c) => look(c.slug))
+          .filter((x): x is DatasetItem => x != null) as typeof td.categories;
+        if (params.categorySlug && !(td.subcategories ?? []).length) {
+          const catSlug = look(params.categorySlug)?.slug ?? params.categorySlug;
+          const cur = dirCats.find((c) => (look(c.slug)?.slug ?? c.slug) === catSlug);
+          td.subcategories = (cur?.subcategories ?? [])
+            .map((sub) => {
+              const r = look(sub.slug);
+              return r
+                ? ({ ...r, count: sub.count, type: sub.type ?? (r as { type?: string }).type } as DatasetItem)
+                : null;
+            })
+            .filter((x): x is DatasetItem => x != null) as typeof td.subcategories;
+        }
+      } catch {
+        /* filters degrade to empty, page still renders */
+      }
+    }
+    return res;
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : 'Σφάλμα δικτύου' };
   }

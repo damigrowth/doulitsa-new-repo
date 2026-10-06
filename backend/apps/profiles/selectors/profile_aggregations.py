@@ -455,7 +455,13 @@ def archive_data(
     # Breadcrumbs (raw slugs — taxonomy app will enrich labels later).
     breadcrumbs = [{"label": "Αρχική", "href": "/"}, {"label": _archive_label(archive_type), "href": "/dir" if archive_type == "directory" else f"/dir?type={archive_type}"}]
     if category_slug:
-        breadcrumbs.append({"label": category_slug, "href": f"/{archive_type}/{category_slug}"})
+        # OLD datasets.ts getTaxonomyBreadcrumbs: the category crumb links to
+        # basePath (/dir) + slug, and ONLY when a deeper level is active — the
+        # current page's own crumb is unlinked. The previous f"/{archive_type}/…"
+        # produced a dead /directory/<cat> link (QA: breadcrumb error). Keep the
+        # pros/companies type as a query param.
+        cat_href = f"/dir/{category_slug}" if archive_type == "directory" else f"/dir/{category_slug}?type={archive_type}"
+        breadcrumbs.append({"label": category_slug, "href": cat_href if subcategory_slug else None})
     if subcategory_slug:
         breadcrumbs.append({"label": subcategory_slug, "href": None})
 
@@ -598,7 +604,14 @@ def profile_page_bundle(username: str) -> dict[str, Any] | None:
             # No "Αρχική" — OLD prod profile breadcrumb starts at the directory.
             {"label": "Επαγγελματικός Κατάλογος", "href": "/directory"},
             *([{"label": profile.category, "href": f"/dir/{profile.category}"}] if profile.category else []),
-            *([{"label": profile.subcategory, "href": None}] if profile.subcategory else []),
+            # OLD get-profile.ts:326-331 links the subcategory crumb to
+            # /dir/<cat>/<sub> (QA: "AI Specialists" wasn't clickable). The
+            # stored values may be cuids — the frontend resolves every href
+            # part to slugs. No category -> no link (avoids /dir/None/...).
+            *([{
+                "label": profile.subcategory,
+                "href": f"/dir/{profile.category}/{profile.subcategory}" if profile.category else None,
+            }] if profile.subcategory else []),
         ],
         "breadcrumbButtons": {
             "subjectTitle": profile.display_name or profile.username,
