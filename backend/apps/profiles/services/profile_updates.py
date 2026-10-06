@@ -89,8 +89,14 @@ def sync_username_to_profile(user: User, username: str) -> None:
         profile = Profile.objects.filter(user_id=user.id).first()
         if profile is None:
             return
+        old_username = profile.username
         profile.username = username
         profile.save(update_fields=["username", "updated_at"])
+        # The post_save signal purges the NEW username's cached page; the old
+        # one would otherwise keep serving the stale payload for up to 30 min.
+        if old_username and old_username != username:
+            from django.core.cache import cache
+            cache.delete(f"profile:page:{old_username}")
     except Exception:  # pragma: no cover - defensive
         import logging
         logging.getLogger(__name__).exception(
