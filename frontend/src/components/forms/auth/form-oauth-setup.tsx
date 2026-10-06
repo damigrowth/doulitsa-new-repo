@@ -190,22 +190,17 @@ export default function OAuthSetupForm({
     if (state.success && state.message) {
       setIsRedirecting(true);
 
-      const handleRedirect = async () => {
-        await refetch();
-        await new Promise((resolve) => setTimeout(resolve, 300));
-
-        // Navigate based on user type
-        if (userType === 'pro') {
-          router.push('/onboarding');
-        } else {
-          router.push('/dashboard');
-        }
-        router.refresh();
-      };
-
-      handleRedirect();
+      // HARD navigation (full page load) instead of router.push +
+      // router.refresh: those two RSC operations race (the refresh can drop
+      // the pending push), and the client router/segment cache + in-memory
+      // session may still reflect the pre-setup journey step — which left
+      // this spinner stuck until the user pressed F5 (QA report 2026-10:
+      // pro Google-signup froze on the redirect to onboarding). A full load
+      // re-runs the middleware and server guards with the FINAL cookies set
+      // by completeOAuth — i.e. exactly what the F5 did, but automatic.
+      window.location.assign(userType === 'pro' ? '/onboarding' : '/dashboard');
     }
-  }, [state, refetch, router, userType]);
+  }, [state, userType]);
 
   const handleSimpleUserSubmit = (data: { username: string }) => {
     const formData = new FormData();
