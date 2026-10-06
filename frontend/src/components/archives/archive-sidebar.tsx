@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -63,10 +63,22 @@ export function ArchiveSidebar({
     };
   }, []);
 
+  // The sheet is already open on this component's very first render only
+  // when the page tree remounted mid-navigation with the drawer open. Skip
+  // the entry animation for that mount so the drawer appears in place
+  // instead of visibly closing and sliding back in; a fresh user-initiated
+  // open (isOpen flips after mount) still animates normally.
+  const [instantOpen, setInstantOpen] = useState(isOpen);
+  useEffect(() => {
+    if (!isOpen && instantOpen) {
+      setInstantOpen(false);
+    }
+  }, [isOpen, instantOpen]);
+
   return (
     <Sheet open={isOpen} onOpenChange={setOpen}>
       {children}
-      <SheetContent side="left" className="w-80 sm:w-96">
+      <SheetContent side="left" className="w-80 sm:w-96" instantOpen={instantOpen}>
         <SheetHeader className="pb-4">
           <SheetTitle className="text-lg font-semibold">Φίλτρα</SheetTitle>
           <SheetDescription>
