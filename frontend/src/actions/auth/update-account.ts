@@ -2,6 +2,7 @@
 
 import * as authApi from '@/lib/api/auth';
 import { ApiError } from '@/lib/api/client';
+import { revalidateMyPublicProfile } from '@/lib/cache/revalidation';
 import type { ActionResponse } from '@/lib/types/api';
 import { getFormString } from '@/lib/utils/form';
 
@@ -24,6 +25,7 @@ export async function updateAccount(
   }
   try {
     await authApi.updateAccount({ displayName, image });
+    await revalidateMyPublicProfile();
     return { success: true, message: 'Ο λογαριασμός ενημερώθηκε' };
   } catch (err) {
     return { success: false, message: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };

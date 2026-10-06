@@ -43,32 +43,38 @@ export async function updateService(params: AdminUpdateServiceInput) {
 export async function updateServiceTaxonomyAction(
   prevState: ActionResult<unknown> | null, formData: FormData,
 ) {
-  return wrap(() => adminServices.taxonomy(fdId(formData), {
+  const res = await wrap(() => adminServices.taxonomy(fdId(formData), {
     category: getFormString(formData, 'category'),
     subcategory: getFormString(formData, 'subcategory'),
     subdivision: getFormString(formData, 'subdivision'),
     tags: fdJSON<string[]>(formData, 'tags', []),
   }));
+  if (res.success) await revalidatePublicService(fdId(formData));
+  return res;
 }
 
 export async function updateServiceBasicAction(
   prevState: ActionResult<unknown> | null, formData: FormData,
 ) {
-  return wrap(() => adminServices.basic(fdId(formData), {
+  const res = await wrap(() => adminServices.basic(fdId(formData), {
     title: getFormString(formData, 'title'),
     description: getFormString(formData, 'description'),
   }));
+  if (res.success) await revalidatePublicService(fdId(formData));
+  return res;
 }
 
 export async function updateServicePricingAction(
   prevState: ActionResult<unknown> | null, formData: FormData,
 ) {
-  return wrap(() => adminServices.pricing(fdId(formData), {
+  const res = await wrap(() => adminServices.pricing(fdId(formData), {
     price: Number(getFormString(formData, 'price') || 0),
     fixed: getFormString(formData, 'fixed') === 'true',
     duration: Number(getFormString(formData, 'duration') || 0),
     subscriptionType: getFormString(formData, 'subscriptionType') || undefined,
   }));
+  if (res.success) await revalidatePublicService(fdId(formData));
+  return res;
 }
 
 export async function updateServiceSettingsAction(
@@ -77,29 +83,39 @@ export async function updateServiceSettingsAction(
   const body: Record<string, unknown> = {};
   if (formData.get('status')) body.status = getFormString(formData, 'status');
   if (formData.get('featured') !== null) body.featured = getFormString(formData, 'featured') === 'true';
-  return wrap(() => adminServices.settings(fdId(formData), body));
+  const res = await wrap(() => adminServices.settings(fdId(formData), body));
+  if (res.success) await revalidatePublicService(fdId(formData));
+  return res;
 }
 
 export async function updateServiceAddonsAction(
   prevState: ActionResult<unknown> | null, formData: FormData,
 ) {
-  return wrap(() => adminServices.addons(fdId(formData), fdJSON<unknown[]>(formData, 'addons', [])));
+  const res = await wrap(() => adminServices.addons(fdId(formData), fdJSON<unknown[]>(formData, 'addons', [])));
+  if (res.success) await revalidatePublicService(fdId(formData));
+  return res;
 }
 
 export async function updateServiceFaqAction(
   prevState: ActionResult<unknown> | null, formData: FormData,
 ) {
-  return wrap(() => adminServices.faq(fdId(formData), fdJSON<unknown[]>(formData, 'faq', [])));
+  const res = await wrap(() => adminServices.faq(fdId(formData), fdJSON<unknown[]>(formData, 'faq', [])));
+  if (res.success) await revalidatePublicService(fdId(formData));
+  return res;
 }
 
 export async function updateServiceMedia(
   serviceId: number, formData: FormData,
 ) {
-  return wrap(() => adminServices.media(serviceId, fdJSON<unknown[]>(formData, 'media', [])));
+  const res = await wrap(() => adminServices.media(serviceId, fdJSON<unknown[]>(formData, 'media', [])));
+  if (res.success) await revalidatePublicService(serviceId);
+  return res;
 }
 
 export async function togglePublished(params: AdminToggleServiceInput) {
-  return wrap(() => adminServices.togglePublished(params.serviceId));
+  const res = await wrap(() => adminServices.togglePublished(params.serviceId));
+  if (res.success) await revalidatePublicService(params.serviceId, { countsChanged: true });
+  return res;
 }
 
 export async function toggleFeatured(params: AdminToggleServiceInput) {
@@ -147,5 +163,7 @@ export async function createServiceForProfile(
     faq: fdJSON<unknown[]>(formData, 'faq', []),
     media: fdJSON(formData, 'media', null),
   };
-  return wrap(() => adminServices.createForProfile(body));
+  const res = await wrap(() => adminServices.createForProfile(body));
+  if (res.success) await revalidatePublicService(undefined, { countsChanged: true });
+  return res;
 }

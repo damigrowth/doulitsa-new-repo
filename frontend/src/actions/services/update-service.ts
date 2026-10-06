@@ -57,6 +57,7 @@ export async function updateServiceInfo(
 
   try {
     await servicesApi.updateService(serviceId, body);
+    await revalidatePublicService(serviceId);
     return { success: true, data: { message: 'Η υπηρεσία ενημερώθηκε' } };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };

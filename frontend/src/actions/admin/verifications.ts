@@ -4,6 +4,7 @@ import { adminVerifications } from '@/lib/api/admin';
 import { ApiError } from '@/lib/api/client';
 import type { ActionResult } from '@/lib/types/api';
 import { getFormString } from '@/lib/utils/form';
+import { revalidatePublicProfile } from '@/lib/cache/revalidation';
 
 const wrap = async <T>(fn: () => Promise<T>): Promise<ActionResult<T>> => {
   try { return { success: true, data: await fn() }; }
@@ -24,11 +25,15 @@ export async function updateVerificationStatus(input: {
   notes?: string;
 }) {
   const { verificationId, ...rest } = input;
-  return wrap(() => adminVerifications.updateStatus(verificationId, rest));
+  const res = await wrap(() => adminVerifications.updateStatus(verificationId, rest));
+  if (res.success) await revalidatePublicProfile();
+  return res;
 }
 
 export async function deleteVerification(input: { verificationId: string }) {
-  return wrap(() => adminVerifications.delete(input.verificationId));
+  const res = await wrap(() => adminVerifications.delete(input.verificationId));
+  if (res.success) await revalidatePublicProfile();
+  return res;
 }
 
 export async function getVerificationStats() {

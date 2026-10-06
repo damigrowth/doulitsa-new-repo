@@ -4,6 +4,7 @@ import { adminProfiles } from '@/lib/api/admin';
 import { ApiError } from '@/lib/api/client';
 import type { ActionResult } from '@/lib/types/api';
 import { getFormString } from '@/lib/utils/form';
+import { revalidatePublicProfile } from '@/lib/cache/revalidation';
 
 export interface AdminUpdateProfileInput {
   profileId: string;
@@ -35,19 +36,27 @@ export async function getProfile(profileId: string) {
 
 export async function updateProfile(params: AdminUpdateProfileInput) {
   const { profileId, ...rest } = params;
-  return wrap(() => adminProfiles.update(profileId, rest));
+  const res = await wrap(() => adminProfiles.update(profileId, rest));
+  if (res.success) await revalidatePublicProfile();
+  return res;
 }
 
 export async function togglePublished(params: AdminToggleProfileInput) {
-  return wrap(() => adminProfiles.togglePublished(params.profileId));
+  const res = await wrap(() => adminProfiles.togglePublished(params.profileId));
+  if (res.success) await revalidatePublicProfile();
+  return res;
 }
 
 export async function toggleFeatured(params: AdminToggleProfileInput) {
-  return wrap(() => adminProfiles.toggleFeatured(params.profileId));
+  const res = await wrap(() => adminProfiles.toggleFeatured(params.profileId));
+  if (res.success) await revalidatePublicProfile();
+  return res;
 }
 
 export async function toggleVerified(params: AdminToggleProfileInput) {
-  return wrap(() => adminProfiles.toggleVerified(params.profileId));
+  const res = await wrap(() => adminProfiles.toggleVerified(params.profileId));
+  if (res.success) await revalidatePublicProfile();
+  return res;
 }
 
 export async function updateVerificationStatus(params: {
@@ -60,13 +69,17 @@ export async function updateVerificationStatus(params: {
   // /admin/profiles/{id}/verification-status endpoint now does this directly,
   // so we no longer need the brittle detail-lookup workaround that failed when
   // no verification existed yet.
-  return wrap(() => adminProfiles.updateVerificationStatus(params.profileId, {
+  const res = await wrap(() => adminProfiles.updateVerificationStatus(params.profileId, {
     status: params.status, notes: params.notes,
   }));
+  if (res.success) await revalidatePublicProfile();
+  return res;
 }
 
 export async function deleteProfile(params: AdminDeleteProfileInput) {
-  return wrap(() => adminProfiles.delete(params.profileId));
+  const res = await wrap(() => adminProfiles.delete(params.profileId));
+  if (res.success) await revalidatePublicProfile();
+  return res;
 }
 
 export async function searchProfilesForSelection(searchQuery: string) {
@@ -95,5 +108,7 @@ export async function updateProfileSettingsAction(
     const v = formData.get(k);
     if (v !== null) body[k] = String(v) === 'true';
   }
-  return wrap(() => adminProfiles.updateSettings(profileId, body));
+  const res = await wrap(() => adminProfiles.updateSettings(profileId, body));
+  if (res.success) await revalidatePublicProfile();
+  return res;
 }

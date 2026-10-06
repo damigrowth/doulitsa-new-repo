@@ -4,6 +4,7 @@ import { adminReviews } from '@/lib/api/admin';
 import { ApiError } from '@/lib/api/client';
 import type { ActionResult } from '@/lib/types/api';
 import { getFormString } from '@/lib/utils/form';
+import { revalidatePublicProfile, revalidatePublicService } from '@/lib/cache/revalidation';
 
 export interface AdminDeleteReviewInput { reviewId: string; }
 
@@ -25,11 +26,15 @@ export async function updateReviewStatus(input: {
   reviewId: string; status: 'pending' | 'approved' | 'rejected'; notes?: string;
 }) {
   const { reviewId, ...rest } = input;
-  return wrap(() => adminReviews.updateStatus(reviewId, rest));
+  const res = await wrap(() => adminReviews.updateStatus(reviewId, rest));
+  if (res.success) { await revalidatePublicProfile(); await revalidatePublicService(); }
+  return res;
 }
 
 export async function deleteReview(params: AdminDeleteReviewInput) {
-  return wrap(() => adminReviews.delete(params.reviewId));
+  const res = await wrap(() => adminReviews.delete(params.reviewId));
+  if (res.success) { await revalidatePublicProfile(); await revalidatePublicService(); }
+  return res;
 }
 
 export async function getReviewStats() {
@@ -37,7 +42,9 @@ export async function getReviewStats() {
 }
 
 export async function toggleAdminReviewVisibility(reviewId: string) {
-  return wrap(() => adminReviews.toggleVisibility(reviewId));
+  const res = await wrap(() => adminReviews.toggleVisibility(reviewId));
+  if (res.success) { await revalidatePublicProfile(); await revalidatePublicService(); }
+  return res;
 }
 
 export async function updateReviewStatusAction(

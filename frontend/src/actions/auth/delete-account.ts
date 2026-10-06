@@ -4,6 +4,7 @@ import * as authApi from '@/lib/api/auth';
 import { ApiError, apiRequest } from '@/lib/api/client';
 import type { ActionResult } from '@/lib/types/api';
 import { getFormString } from '@/lib/utils/form';
+import { revalidatePublicProfile, revalidatePublicService } from '@/lib/cache/revalidation';
 
 export async function deleteAccount(
   prevState: ActionResult<undefined> | null,
@@ -22,6 +23,7 @@ export async function deleteAccount(
       body: { username, confirmUsername },
     });
     await import('@/lib/api/client').then((m) => m.clearTokens());
+    { await revalidatePublicProfile(username); await revalidatePublicService(); }
     return { success: true, data: undefined };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };

@@ -2,6 +2,7 @@
 
 import * as authApi from '@/lib/api/auth';
 import { ApiError } from '@/lib/api/client';
+import { revalidateMyPublicProfile } from '@/lib/cache/revalidation';
 import type { ActionResponse } from '@/lib/types/api';
 import { getFormString } from '@/lib/utils/form';
 
@@ -34,6 +35,8 @@ export async function completeOnboarding(
       portfolio: parseJSON<unknown[]>(formData, 'portfolio', []),
       image: parseJSON(formData, 'image', null),
     });
+    // The new pro profile just became published — purge profile/archive/home caches.
+    await revalidateMyPublicProfile();
     return { success: true, message: res.message };
   } catch (err) {
     return { success: false, message: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };

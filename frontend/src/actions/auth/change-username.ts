@@ -4,6 +4,7 @@ import * as authApi from '@/lib/api/auth';
 import { ApiError } from '@/lib/api/client';
 import type { ActionResponse } from '@/lib/types/api';
 import { getFormString } from '@/lib/utils/form';
+import { revalidatePublicProfile } from '@/lib/cache/revalidation';
 
 export async function changeUsername(
   prevState: ActionResponse | null,
@@ -14,6 +15,7 @@ export async function changeUsername(
       newUsername: getFormString(formData, 'newUsername'),
       confirmUsername: getFormString(formData, 'confirmUsername'),
     });
+    await revalidatePublicProfile();
     return {
       success: true,
       message: res.message ?? 'Το username άλλαξε επιτυχώς!',

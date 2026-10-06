@@ -4,6 +4,7 @@ import { adminSubscriptions } from '@/lib/api/admin';
 import { ApiError } from '@/lib/api/client';
 import type { ActionResult } from '@/lib/types/api';
 import { getFormString } from '@/lib/utils/form';
+import { revalidatePublicProfile } from '@/lib/cache/revalidation';
 
 export interface AdminDeleteSubscriptionInput { subscriptionId: string; }
 
@@ -21,11 +22,15 @@ export async function getSubscription(subscriptionId: string) {
 }
 
 export async function updateSubscriptionStatus(input: { subscriptionId: string; status: string }) {
-  return wrap(() => adminSubscriptions.status(input.subscriptionId, input.status));
+  const res = await wrap(() => adminSubscriptions.status(input.subscriptionId, input.status));
+  if (res.success) await revalidatePublicProfile();
+  return res;
 }
 
 export async function deleteSubscription(params: AdminDeleteSubscriptionInput) {
-  return wrap(() => adminSubscriptions.delete(params.subscriptionId));
+  const res = await wrap(() => adminSubscriptions.delete(params.subscriptionId));
+  if (res.success) await revalidatePublicProfile();
+  return res;
 }
 
 export async function getSubscriptionStats() {
@@ -43,10 +48,12 @@ export async function updateSubscriptionStatusAction(
 }
 
 export async function createManualSubscription(input: { profileId: string; endDate: Date | string }) {
-  return wrap(() => adminSubscriptions.manual({
+  const res = await wrap(() => adminSubscriptions.manual({
     profileId: input.profileId,
     endDate: input.endDate instanceof Date ? input.endDate.toISOString() : input.endDate,
   }));
+  if (res.success) await revalidatePublicProfile();
+  return res;
 }
 
 

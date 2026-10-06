@@ -12,6 +12,7 @@ import { ApiError } from '@/lib/api/client';
 import type { ActionResult } from '@/lib/types/api';
 import type { AdminUserRow } from '@/lib/types/admin';
 import { getFormString } from '@/lib/utils/form';
+import { revalidatePublicProfile } from '@/lib/cache/revalidation';
 
 // ---------------------------------------------------------------------------
 // Reads
@@ -55,6 +56,7 @@ export async function createUser(data: Record<string, unknown>) {
 
 export async function setUserRole(data: { userId: string; role: string }) {
   try {
+    await revalidatePublicProfile();
     return { success: true, data: await adminUsers.setRole(data.userId, data.role) };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
@@ -63,6 +65,7 @@ export async function setUserRole(data: { userId: string; role: string }) {
 
 export async function banUser(data: { userId: string; banReason?: string; banExpiresIn?: number }) {
   try {
+    await revalidatePublicProfile();
     return {
       success: true,
       data: await adminUsers.ban(data.userId, {
@@ -77,6 +80,7 @@ export async function banUser(data: { userId: string; banReason?: string; banExp
 
 export async function unbanUser(data: { userId: string }) {
   try {
+    await revalidatePublicProfile();
     return { success: true, data: await adminUsers.unban(data.userId) };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
@@ -86,6 +90,7 @@ export async function unbanUser(data: { userId: string }) {
 export async function removeUser(data: { userId: string }) {
   try {
     await adminUsers.delete(data.userId);
+    await revalidatePublicProfile();
     return { success: true, data: { id: data.userId } };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
@@ -94,6 +99,7 @@ export async function removeUser(data: { userId: string }) {
 
 export async function updateUser(data: { userId: string; role?: string }) {
   try {
+    await revalidatePublicProfile();
     return { success: true, data: await adminUsers.update(data.userId, { role: data.role }) };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
@@ -117,6 +123,7 @@ export async function updateUserBasicInfo(data: {
 }) {
   try {
     const { userId, ...rest } = data;
+    await revalidatePublicProfile();
     return { success: true, data: await adminUsers.updateBasicInfo(userId, rest) };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
@@ -133,6 +140,7 @@ export async function updateUserStatus(data: {
 }) {
   try {
     const { userId, ...rest } = data;
+    await revalidatePublicProfile();
     return { success: true, data: await adminUsers.updateStatus(userId, rest) };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
@@ -147,6 +155,7 @@ export async function updateUserBanStatus(data: {
 }) {
   try {
     const { userId, ...rest } = data;
+    await revalidatePublicProfile();
     return { success: true, data: await adminUsers.updateBanStatus(userId, rest) };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
@@ -157,6 +166,7 @@ export async function updateUserImage(
   data: { userId: string; image: string | null },
 ): Promise<ActionResult<AdminUserRow>> {
   try {
+    await revalidatePublicProfile();
     return { success: true, data: await adminUsers.updateImage(data.userId, data.image) };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
@@ -165,6 +175,7 @@ export async function updateUserImage(
 
 export async function toggleUserBlock(data: { userId: string; blocked: boolean }) {
   try {
+    await revalidatePublicProfile();
     return { success: true, data: await adminUsers.toggleBlocked(data.userId, data.blocked) };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
@@ -173,6 +184,7 @@ export async function toggleUserBlock(data: { userId: string; blocked: boolean }
 
 export async function toggleUserConfirmation(data: { userId: string; confirmed: boolean }) {
   try {
+    await revalidatePublicProfile();
     return { success: true, data: await adminUsers.toggleConfirmed(data.userId, data.confirmed) };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
@@ -291,6 +303,7 @@ export async function updateAccountAdmin(prevState: ActionResult<unknown> | null
     try { image = JSON.parse(raw); } catch { image = raw; }
   }
   try {
+    await revalidatePublicProfile();
     return { success: true, data: await adminUsers.updateAccount(userId, { displayName, image }) };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
