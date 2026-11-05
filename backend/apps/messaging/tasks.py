@@ -21,11 +21,6 @@ def _sender_name(author) -> str:
     return getattr(author, "display_name", None) or getattr(author, "username", None) or "Χρήστης"
 
 
-def _preview(content: str, max_len: int = 120) -> str:
-    """OLD truncateMessage (templates/unread-messages.ts:41-44)."""
-    return content if len(content) <= max_len else content[:max_len] + "..."
-
-
 def _athens_time(dt) -> str:
     """24h HH:MM in Europe/Athens (templates/unread-messages.ts formatEmailMessageTime)."""
     try:
@@ -35,11 +30,30 @@ def _athens_time(dt) -> str:
         return dt.strftime("%H:%M")
 
 
+# Run lock: beat (every 15 min), a redelivered message (acks_late) and the HTTP
+# cron endpoint can otherwise overlap and double-send every digest
+# (pass5-backend-runtime D3). The TTL is the task hard limit, so a killed run
+# can never wedge the lock.
+EMAIL_BATCHES_LOCK_KEY = "lock:messaging:process_email_batches"
+EMAIL_BATCHES_LOCK_TTL = 300  # = CELERY_TASK_TIME_LIMIT
+
+
 @shared_task(name="apps.messaging.tasks.process_email_batches")
 def process_email_batches() -> dict[str, int]:
-    """Send unread-message email digests.
+    """Send unread-message email digests (single-flight; see run lock above)."""
+    from django.core.cache import cache
 
-    Faithful port of OLD api/cron/process-email-batches/route.ts:32-129:
+    if not cache.add(EMAIL_BATCHES_LOCK_KEY, "1", timeout=EMAIL_BATCHES_LOCK_TTL):
+        logger.warning("email_batches.skipped_locked")
+        return {"processed": 0, "skipped": 0, "errors": 0, "locked": 1}
+    try:
+        return _process_email_batches()
+    finally:
+        cache.delete(EMAIL_BATCHES_LOCK_KEY)
+
+
+def _process_email_batches() -> dict[str, int]:
+    """Faithful port of OLD api/cron/process-email-batches/route.ts:32-129:
     per-message dedupe via EmailBatch.messageIds (a user can receive several
     digests per day but never the same message twice), NO cooldown and NO age
     window, and the email is sent BEFORE the batch row is recorded so a
@@ -84,20 +98,23 @@ def process_email_batches() -> dict[str, int]:
             if not new_messages:
                 skipped += 1
                 continue
+            # NEWEST-FIRST, like OLD (`orderBy: { createdAt: 'desc' }`); the
+            # builder takes the 15 newest and shows them oldest-first (OLD
+            # template `slice(0, 15).reverse()`) and truncates per part.
             previews = [
                 {
                     "sender": _sender_name(m.author),
-                    "content": _preview(getattr(m, "content", "") or "", 120),
+                    "content": getattr(m, "content", "") or "",
                     "time": _athens_time(m.created_at),
                 }
-                for m in reversed(new_messages)
+                for m in new_messages
             ]
             # Send first (synchronous builder call — mirrors OLD ordering); only
             # record the batch when the send actually went out, so failed sends
             # are retried on the next run instead of silently lost.
             ok = send_unread_digest_email(
                 email=user.email,
-                user_name=user.display_name or user.username,
+                user_name=user.display_name or user.username or "φίλε",
                 unread_count=len(new_messages),
                 previews=previews,
             )
@@ -109,8 +126,12 @@ def process_email_batches() -> dict[str, int]:
                 message_ids=[str(m.id) for m in new_messages],
                 message_count=len(new_messages),
             )
-            user.last_unread_email_sent_at = datetime.now(timezone.utc)
-            user.save(update_fields=["last_unread_email_sent_at", "updated_at"])
+            # Bookkeeping only (shown in admin). OLD never touched the users row
+            # here; a queryset .update() skips the User.save hook and the
+            # updated_at bump (p3blog N4).
+            User.objects.filter(id=user.id).update(
+                last_unread_email_sent_at=datetime.now(timezone.utc),
+            )
             sent += 1
         except Exception:  # noqa: BLE001 — one bad user must not stop the run
             logger.exception("email_batches: user %s failed", user_id)
@@ -135,9 +156,18 @@ def send_verification_email(email, token, display_name=None, username=None):
 
 
 @shared_task(name="apps.messaging.tasks.send_password_reset_email")
-def send_password_reset_email(email, token, display_name=None):
+def send_password_reset_email(email, token, display_name=None, username=None):
     from apps.messaging import emails
-    return emails.send_password_reset_email(email=email, token=token, display_name=display_name)
+    if display_name is None and username is None:
+        # OLD greeted `displayName || username || 'φίλε'`; callers that only
+        # pass the address get the name looked up here.
+        from apps.accounts.models import User
+        u = User.objects.filter(email__iexact=email).only("display_name", "username").first()
+        if u is not None:
+            display_name, username = u.display_name, u.username
+    return emails.send_password_reset_email(
+        email=email, token=token, display_name=display_name, username=username,
+    )
 
 
 @shared_task(name="apps.messaging.tasks.send_welcome_email")
@@ -147,9 +177,11 @@ def send_welcome_email(email, display_name=None, username=None):
 
 
 @shared_task(name="apps.messaging.tasks.send_contact_admin_email")
-def send_contact_admin_email(name, email, subject, message):
+def send_contact_admin_email(name, email, subject, message, contact_id=None):
     from apps.messaging import emails
-    return emails.send_contact_admin_email(name=name, email=email, subject=subject, message=message)
+    return emails.send_contact_admin_email(
+        name=name, email=email, subject=subject, message=message, contact_id=contact_id,
+    )
 
 
 @shared_task(name="apps.messaging.tasks.send_contact_user_email")
@@ -160,8 +192,93 @@ def send_contact_user_email(email, name=None):
 
 @shared_task(name="apps.messaging.tasks.send_verification_request_email")
 def send_verification_request_email(profile_id, afm=None):
+    """Notify admin of a verification request. OLD sendNewVerificationEmail
+    (verification.ts:122/187 → admin-emails.ts:20): subject + body carry the
+    user's display name / email and link to the verification + profile."""
     from apps.messaging import emails
-    return emails.send_verification_request_admin_email(profile_id=profile_id, afm=afm)
+    from apps.profiles.models import Profile, ProfileVerification
+
+    profile = Profile.objects.select_related("user").filter(id=profile_id).first()
+    if profile is None:
+        logger.warning("verification_request_email: profile not found", extra={"profile_id": profile_id})
+        return False
+    user = profile.user
+    verification = ProfileVerification.objects.filter(profile_id=profile.id).first()
+    return emails.send_verification_request_admin_email(
+        display_name=(getattr(user, "display_name", None) or getattr(user, "username", None) or "Unknown"),
+        user_email=getattr(user, "email", "") or "",
+        profile_id=str(profile.id),
+        verification_id=str(verification.id) if verification else "",
+    )
+
+
+def _reporter_info(user_id):
+    """OLD reporterInfo (report-service.ts / report-profile.ts / submit-feedback.ts)."""
+    from apps.accounts.models import User
+
+    u = User.objects.filter(id=user_id).first()
+    if u is None:
+        return None
+    return {
+        "reporter_id": str(u.id),
+        "reporter_name": u.display_name or u.username or "Unknown User",
+        "reporter_email": u.email or "",
+        "reporter_username": u.username or u.email or "",
+    }
+
+
+@shared_task(name="apps.messaging.tasks.send_service_report_email")
+def send_service_report_email(service_id, reporter_id, service_title, service_slug, description):
+    """OLD report-service.ts:78 → sendServiceReportEmail. Skips unknown service ids."""
+    from apps.messaging import emails
+    from apps.services.models import Service
+
+    if not Service.objects.filter(id=service_id).exists():
+        logger.warning("service_report_email: service not found", extra={"service_id": service_id})
+        return False
+    reporter = _reporter_info(reporter_id)
+    if reporter is None:
+        return False
+    return emails.send_service_report_email(
+        service_id=str(service_id), service_title=service_title or "",
+        service_slug=service_slug or "", report_details=description or "", **reporter,
+    )
+
+
+@shared_task(name="apps.messaging.tasks.send_profile_report_email")
+def send_profile_report_email(profile_id, reporter_id, profile_name, profile_username, description):
+    """OLD report-profile.ts:99 → sendProfileReportEmail."""
+    from apps.messaging import emails
+    from apps.profiles.models import Profile
+
+    profile = Profile.objects.select_related("user").filter(id=profile_id).first()
+    if profile is None:
+        return False
+    reporter = _reporter_info(reporter_id)
+    if reporter is None:
+        return False
+    return emails.send_profile_report_email(
+        profile_id=str(profile.id), profile_name=profile_name or "",
+        profile_email=(getattr(profile.user, "email", None) or "N/A"),
+        profile_username=profile_username or "", report_details=description or "",
+        **reporter,
+    )
+
+
+@shared_task(name="apps.messaging.tasks.send_support_feedback_email")
+def send_support_feedback_email(reporter_id, issue_type, description, page_url=None):
+    """OLD submit-feedback.ts:69 → sendSupportFeedbackEmail."""
+    from apps.messaging import emails
+
+    reporter = _reporter_info(reporter_id)
+    if reporter is None:
+        return False
+    return emails.send_support_feedback_email(
+        issue_type=issue_type, description=description or "",
+        # OLD: `pageUrl || `${NEXT_PUBLIC_APP_URL || 'https://doulitsa.gr'}/dashboard``
+        page_url=page_url or emails._frontend("/dashboard"),
+        **reporter,
+    )
 
 
 @shared_task(name="apps.messaging.tasks.send_new_review_email")

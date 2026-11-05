@@ -375,7 +375,12 @@ EMAIL_BACKEND = "anymail.backends.sendinblue.EmailBackend"
 ANYMAIL = {
     "SENDINBLUE_API_KEY": env.str("BREVO_API_KEY", default=""),
 }
-DEFAULT_FROM_EMAIL = env.str("BREVO_SENDER_EMAIL", default="noreply@example.com")
+# OLD brevo/client.ts getDefaultSender(): `BREVO_SENDER_NAME || 'Doulitsa'` <
+# `BREVO_SENDER_EMAIL || 'noreply@doulitsa.gr'`. The per-email display names
+# ("Doulitsa" / "Admin Doulitsa") are applied in apps.messaging.emails.
+BREVO_SENDER_EMAIL = env.str("BREVO_SENDER_EMAIL", default="") or "noreply@doulitsa.gr"
+BREVO_SENDER_NAME = env.str("BREVO_SENDER_NAME", default="") or "Doulitsa"
+DEFAULT_FROM_EMAIL = BREVO_SENDER_EMAIL
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 # Where admin notifications (new review / verification / contact / reports) are
@@ -383,11 +388,23 @@ SERVER_EMAIL = DEFAULT_FROM_EMAIL
 # `_admin_email()` falls back to "contact@doulitsa.gr" when unset.
 ADMIN_EMAIL = env.str("ADMIN_EMAIL", default="")
 
+# Brevo list ids. Accept BOTH the new names and OLD's env names
+# (oldnext lib/email/providers/brevo/types.ts BrevoListId: BREVO_LIST_USERS /
+# _EMPTYPROFILE / _NOSERVICES / _PROS), each defaulting to "6" like OLD, so the
+# Vercel env can be copied verbatim (lib-shared D6 / P2-32).
+def _brevo_list(*names: str, default: str = "6") -> str:
+    for name in names:
+        value = env.str(name, default="").strip()
+        if value:
+            return value
+    return default
+
+
 BREVO_LISTS = {
-    "USERS": env.str("BREVO_LIST_USERS", default=""),
-    "EMPTYPROFILE": env.str("BREVO_LIST_EMPTY_PROFILE", default=""),
-    "NOSERVICES": env.str("BREVO_LIST_NO_SERVICES", default=""),
-    "ACTIVEPROS": env.str("BREVO_LIST_ACTIVE_PROS", default=""),
+    "USERS": _brevo_list("BREVO_LIST_USERS"),
+    "EMPTYPROFILE": _brevo_list("BREVO_LIST_EMPTY_PROFILE", "BREVO_LIST_EMPTYPROFILE"),
+    "NOSERVICES": _brevo_list("BREVO_LIST_NO_SERVICES", "BREVO_LIST_NOSERVICES"),
+    "ACTIVEPROS": _brevo_list("BREVO_LIST_ACTIVE_PROS", "BREVO_LIST_PROS"),
 }
 
 # ---------------------------------------------------------------------------
@@ -413,7 +430,10 @@ STORAGES = {
 # Normalized without a trailing slash: several call sites concatenate paths
 # directly (billing redirect/return URLs, verify-email redirects), so a trailing
 # slash from the env would emit "https://host//path".
-FRONTEND_BASE_URL = env.str("FRONTEND_BASE_URL", default="http://localhost:3000").rstrip("/")
+# Default mirrors OLD `process.env.NEXT_PUBLIC_APP_URL || 'https://doulitsa.gr'`
+# (email links, verify-email redirects): an unset env must never mail out
+# localhost links (S-D2 / P3-32 E9). Local dev sets it explicitly in compose.
+FRONTEND_BASE_URL = (env.str("FRONTEND_BASE_URL", default="") or "https://doulitsa.gr").rstrip("/")
 
 CLOUDINARY = {
     "CLOUD_NAME": env.str("CLOUDINARY_CLOUD_NAME", default=""),

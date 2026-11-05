@@ -42,10 +42,15 @@ RUN pip install --upgrade pip && pip install .
 ############################
 FROM python:3.12-slim AS runtime
 
+# TZ: process-level Europe/Athens for the web, worker and beat containers
+# (OLD server TZ, instrumentation.ts). Django itself already uses
+# TIME_ZONE=Europe/Athens; this covers naive/OS-level time (logs, `date`,
+# third-party libs). /usr/share/zoneinfo ships in python:3.12-slim.
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/opt/venv/bin:$PATH" \
-    DJANGO_SETTINGS_MODULE=config.settings.prod
+    DJANGO_SETTINGS_MODULE=config.settings.prod \
+    TZ=Europe/Athens
 
 # Runtime shared libraries only:
 #   libpq5          — psycopg

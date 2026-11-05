@@ -21,6 +21,10 @@ class ProcessEmailBatchesCronView(APIView):
     """POST/GET /api/cron/process-email-batches — send unread-message digests
     (OLD cron/process-email-batches/route.ts)."""
 
+    # XC-CRONAUTH: no DRF authenticators. The default SimpleJWT authenticator
+    # would try to parse `Bearer <CRON_SECRET>` as a JWT and 401 the request
+    # before the shared-secret check below ever runs.
+    authentication_classes: list = []
     permission_classes = [AllowAny]
 
     def post(self, request):

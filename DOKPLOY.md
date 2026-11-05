@@ -57,14 +57,25 @@ the full list): `CLOUDINARY_*`, `BREVO_*`, `WORLDLINE_*`, `GOOGLE_OAUTH_*`,
 `AADE_*`, `RECAPTCHA_SECRET_KEY`, `CRON_SECRET`, `ADMIN_API_KEY`,
 `PAYMENTS_ENABLED`, `PAYMENTS_TEST_MODE`.
 
-### Celery (optional, same image)
+### Celery (REQUIRED, same image)
 
-Create two more apps from `backend/Dockerfile` with the same env **plus
+Not optional: every transactional email (verification, reset, reviews,
+contact, digests) and every Brevo list sync is a Celery task — without a
+worker they queue in Redis forever and nothing is sent; without beat no
+unread-message digest or auto-refresh runs. Create two more apps from `backend/Dockerfile` with the same env **plus
 `RUN_MIGRATIONS=0`** (so they skip migrate/collectstatic) and override the
 command:
 
 - Worker: `celery -A config worker -l INFO`
 - Beat:   `celery -A config beat -l INFO -S django`
+
+Timezone: the backend and frontend images set `TZ=Europe/Athens` (OLD forced
+the server TZ in `instrumentation.ts`). If a Dokploy app overrides `TZ`, keep
+it `Europe/Athens`, otherwise server-rendered times drift (and hydrate wrong).
+Backend email/link env: `FRONTEND_BASE_URL` (defaults to https://doulitsa.gr
+when unset — set it to the test host on test), `ADMIN_EMAIL`,
+`BREVO_SENDER_EMAIL` / `BREVO_SENDER_NAME`, `BREVO_LIST_*` (old Vercel names
+accepted, see `backend/.env.example`).
 
 ---
 

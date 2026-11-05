@@ -11,7 +11,9 @@
 # here survive the bind mount.
 # ---------------------------------------------------------------------------
 FROM node:22-bookworm-slim
-ENV NEXT_TELEMETRY_DISABLED=1
+# Server TZ = Europe/Athens like OLD (instrumentation.ts) — see Dockerfile.
+ENV NEXT_TELEMETRY_DISABLED=1 \
+    TZ=Europe/Athens
 WORKDIR /app
 
 # openssl + CA bundle for TLS during install

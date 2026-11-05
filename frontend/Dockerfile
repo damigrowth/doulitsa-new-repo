@@ -57,9 +57,14 @@ RUN yarn build
 # Stage 3 — runtime
 ############################
 FROM base AS runtime
+# TZ: OLD forced the server TZ to Europe/Athens (src/instrumentation.ts:24-34),
+# so every server-rendered date/time matched Greek users. Without it the
+# container runs UTC (XC-TZ / P1-21; pass6 K-2 /dashboard/messages hydration
+# mismatch). Node's bundled ICU resolves the zone without OS tzdata.
 ENV NODE_ENV=production \
     PORT=3000 \
-    HOSTNAME=0.0.0.0
+    HOSTNAME=0.0.0.0 \
+    TZ=Europe/Athens
 
 # CA bundle for outbound TLS; curl for the healthcheck
 RUN apt-get update && apt-get install -y --no-install-recommends \
