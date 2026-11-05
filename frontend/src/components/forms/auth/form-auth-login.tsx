@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useEffect, useState } from 'react';
+import React, { useActionState, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,7 +19,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { login } from '@/actions/auth/login';
 import { loginSchema, type LoginInput } from '@/lib/validations/auth';
-import { authClient, useSession } from '@/lib/auth/client';
+import { authClient, invalidateSession, useSession } from '@/lib/auth/client';
 import { AuthUser } from '@/lib/types/auth';
 import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import FormButton from '@/components/shared/button-form';
@@ -55,6 +55,24 @@ const LoginForm: React.FC = () => {
   const message = searchParams?.get('message');
   const showPasswordResetSuccess = message === 'password-reset-success';
 
+  // Google OAuth failures land on /login?error=<code> (callback/google route).
+  // Surface them instead of silently showing the bare form (P3-D7).
+  const oauthErrorCode = searchParams?.get('error');
+  const OAUTH_ERROR_MESSAGES: Record<string, string> = {
+    google_denied: 'Η σύνδεση με Google ακυρώθηκε.',
+    oauth_state:
+      'Η σύνδεση με Google έληξε ή δεν ήταν έγκυρη. Παρακαλώ δοκίμασε ξανά.',
+    oauth_exchange:
+      'Η σύνδεση με Google απέτυχε. Παρακαλώ δοκίμασε ξανά.',
+    oauth_network:
+      'Δεν ήταν δυνατή η σύνδεση με Google. Παρακαλώ δοκίμασε ξανά.',
+    oauth_unconfigured: 'Η σύνδεση με Google δεν είναι διαθέσιμη αυτή τη στιγμή.',
+  };
+  const oauthErrorMessage = oauthErrorCode
+    ? OAUTH_ERROR_MESSAGES[oauthErrorCode] ||
+      'Η σύνδεση με Google απέτυχε. Παρακαλώ δοκίμασε ξανά.'
+    : null;
+
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -64,8 +82,13 @@ const LoginForm: React.FC = () => {
     mode: 'onChange',
   });
 
-  // Handle successful login and redirect - same pattern as profile forms
+  // Handle successful login and redirect - same pattern as profile forms.
+  // handledStateRef: run once per action result (OLD semantics) even if the
+  // effect re-runs for another reason — never refetch/push twice.
+  const handledStateRef = useRef<LoginState | null>(null);
   useEffect(() => {
+    if (handledStateRef.current === state) return;
+    handledStateRef.current = state;
     if (state.success) {
       // Show redirecting state immediately
       setIsRedirecting(true);
@@ -87,10 +110,13 @@ const LoginForm: React.FC = () => {
 
       handleSuccessfulLogin();
     }
-  }, [state.success, state.data, router, refetch]);
+  }, [state, router, refetch]);
 
   // Handle form submission
   const handleFormSubmit = (formData: FormData) => {
+    // The cached "logged out" session is about to go stale — make the next
+    // useSession mount (e.g. the dashboard sidebar after the redirect) refetch.
+    invalidateSession();
     // Call the server action directly (no await)
     action(formData);
   };
@@ -204,6 +230,14 @@ const LoginForm: React.FC = () => {
                 Ο κωδικός σου επαναφέρθηκε επιτυχώς! Μπορείς τώρα να συνδεθείς
                 με τον νέο σου κωδικό.
               </AlertDescription>
+            </Alert>
+          )}
+
+          {/* OAuth (?error=) Display — hidden once the form itself responds */}
+          {oauthErrorMessage && !state.message && (
+            <Alert variant='destructive'>
+              <AlertCircle className='h-4 w-4' />
+              <AlertDescription>{oauthErrorMessage}</AlertDescription>
             </Alert>
           )}
 

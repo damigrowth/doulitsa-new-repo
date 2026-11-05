@@ -76,6 +76,10 @@ export function openChannelsSocket(
   const connect = async () => {
     if (closed) return;
     const token = await fetchAccessToken();
+    // close() may have run while the token fetch was in flight (unmount /
+    // chat switch). OLD guarded its async setup with a `mounted` flag; without
+    // this re-check the late socket was opened and never closed (P5-CS-6).
+    if (closed) return;
     const url = `${wsBaseUrl()}${path}${token ? `?token=${encodeURIComponent(token)}` : ''}`;
     try {
       socket = new WebSocket(url);

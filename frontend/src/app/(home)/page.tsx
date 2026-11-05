@@ -19,6 +19,14 @@ import { HomeSchema } from '@/lib/seo/schema';
 // force-dynamic, the page is fully prefetchable so client navigation is
 // instant. The data fetches underneath pass `revalidate` (anonymous, no
 // cookie reads), which is what keeps this route statically renderable.
+//
+// force-static (as OLD did) is REQUIRED alongside the 5-min revalidate: the
+// taxonomy-maps background refresh (lib/taxonomies getTaxonomyMaps) issues a
+// `no-store` fetch that can run inside this ISR render; without force-static
+// Next flags "Page changed from static to dynamic at runtime /" and the
+// regeneration fails into a 30 s back-off (P5-RW-1 / W1). Under force-static
+// that no-store fetch can't flip the route. Time/tag revalidation still works.
+export const dynamic = 'force-static';
 export const revalidate = 300;
 
 export async function generateMetadata() {

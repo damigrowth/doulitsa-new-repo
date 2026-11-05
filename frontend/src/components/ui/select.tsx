@@ -6,7 +6,38 @@ import { Check, ChevronDown, ChevronUp } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
-const Select = SelectPrimitive.Root;
+/**
+ * Radix Select root with one guard.
+ *
+ * @radix-ui/react-select 2.3.0 (OLD resolved 2.2.6) added an `onChange` on
+ * its hidden native <select> that forwards `event.target.value`. When a
+ * controlled value is set (e.g. react-hook-form `reset()` after load) while
+ * the native <select> has no matching <option> yet, the bubbled change event
+ * reads '' and Radix calls `onValueChange('')`, wiping the value. That made
+ * "Έναρξη Δραστηριότητας" / "Ελάχιστος Προϋπολογισμός" load empty and the
+ * next save write null (BLOCKER-1). A Radix item can never have the value ''
+ * (Radix throws on it), so '' here is never a real user choice; drop it.
+ * Clearing still works: the clear buttons call their own onValueChange('')
+ * directly, not through this root.
+ */
+function Select({
+  onValueChange,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Root>) {
+  const handleValueChange = React.useCallback(
+    (value: string) => {
+      if (value === '') return;
+      onValueChange?.(value);
+    },
+    [onValueChange],
+  );
+  return (
+    <SelectPrimitive.Root
+      {...props}
+      onValueChange={onValueChange ? handleValueChange : undefined}
+    />
+  );
+}
 
 const SelectGroup = SelectPrimitive.Group;
 

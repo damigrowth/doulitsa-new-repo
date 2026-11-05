@@ -13,7 +13,11 @@ export async function submitTaxonomySubmission(input: {
     const res = await taxonomyApi.submitTaxonomy(input);
     return { success: true, data: { pendingId: res.pendingId } };
   } catch (err) {
-    return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
+    // OLD contract: failures carry `message` (consumers toast `result.message`
+    // in service-details-step / form-basic-info / form-service-edit). Keep
+    // `error` too for any caller reading it.
+    const message = err instanceof ApiError ? err.message : 'Σφάλμα δικτύου';
+    return { success: false, message, error: message };
   }
 }
 

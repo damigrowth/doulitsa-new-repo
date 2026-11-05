@@ -6,7 +6,13 @@ import * as servicesApi from '@/lib/api/services';
 import { ApiError } from '@/lib/api/client';
 import type { ActionResult } from '@/lib/types/api';
 import type { DatasetItem } from '@/lib/types/datasets';
-import { getBreadcrumbsForNewRoutes, getCountiesForArchiveFilters } from '@/lib/utils/datasets';
+import {
+  findBySlug,
+  findTaxonomyBySubcategorySlug,
+  getBreadcrumbsForNewRoutes,
+  getCountiesForArchiveFilters,
+} from '@/lib/utils/datasets';
+import { isValidArchiveSortBy } from '@/lib/types/common';
 import { locationOptions } from '@/constants/datasets/locations';
 import type {
   ArchiveServiceCardData,
@@ -148,7 +154,7 @@ interface RawServiceArchiveBundle {
   };
   breadcrumbData: ServiceArchivePageData['breadcrumbData'];
   counties: DatasetItem[];
-  filters: ServiceArchivePageData['filters'];
+  filters?: ServiceArchivePageData['filters'];
   availableSubcategories?: TaxonomyStub[];
   availableSubdivisions?: TaxonomyStub[];
 }
@@ -161,22 +167,68 @@ async function _getServiceArchivePageDataUncached(params: {
   searchParams: Record<string, unknown>;
 }): Promise<ActionResult<ServiceArchivePageData>> {
   try {
+    const { findServiceBySlug, findServiceById, getServiceTaxonomies } = await import('@/lib/taxonomies');
+    type TreeNode = DatasetItem & { children?: TreeNode[] };
+    const serviceTree = getServiceTaxonomies() as TreeNode[];
+
+    // CG-1 (frontend half) — resolve the route's taxonomy context LEVEL-AWARE,
+    // exactly like OLD get-services.ts:859-898. The flat bySlug map collides on
+    // 21 slugs (wrong banners, e.g. /ipiresies/udraulika, /categories/marketing)
+    // and returned a stub for unknown slugs (soft-404). Unknown → "not found",
+    // which the pages turn into notFound() → real HTTP 404.
+    let routeCategory: TreeNode | null = null;
+    let routeSubcategory: TreeNode | null = null;
+    let routeSubdivision: TreeNode | null = null;
+    if (params.subcategorySlug) {
+      const ctx = findTaxonomyBySubcategorySlug(
+        serviceTree,
+        params.subcategorySlug,
+        params.subdivisionSlug,
+      );
+      if (!ctx) {
+        return {
+          success: false,
+          error: params.subdivisionSlug ? 'Subdivision not found' : 'Subcategory not found',
+        };
+      }
+      routeCategory = ctx.category;
+      routeSubcategory = ctx.subcategory;
+      routeSubdivision = ctx.subdivision ?? null;
+    } else if (params.categorySlug) {
+      // OLD: findBySlug(getServiceTaxonomies(), categorySlug) — depth-first,
+      // top-level nodes before their children.
+      routeCategory = findBySlug(serviceTree, params.categorySlug) ?? null;
+      if (!routeCategory) {
+        return { success: false, error: 'Category not found' };
+      }
+    }
+
     const bundle = (await servicesApi.getServiceArchiveBundle(
       params,
     )) as RawServiceArchiveBundle;
     // Backend returns thin `{slug}` references for current* and category nodes;
     // enrich them from the frontend taxonomy so pages can read .label,
     // .description, .image, .children.
-    const { findServiceBySlug, findServiceById, getServiceTaxonomies } = await import('@/lib/taxonomies');
     const taxonomyData = bundle.taxonomyData ?? {};
     // Live data stores service taxonomy as cuid ids, demo data as slugs — try
     // both so the chips/sidebar/breadcrumb show names, not raw ids.
     const lookup = (k: string | null | undefined) =>
       (findServiceBySlug(k) ?? findServiceById(k)) as DatasetItem | null;
+    // Prefer a node scoped to the expected parent (siblings of the current
+    // subcategory, children of the current subcategory) before the flat map,
+    // so colliding slugs resolve to the in-context node.
+    const lookupIn = (
+      parent: TreeNode | null | undefined,
+      k: string | null | undefined,
+    ): DatasetItem | null =>
+      (k ? parent?.children?.find((c) => c.slug === k || c.id === k) : undefined) ?? lookup(k);
 
-    const enrich = (node: TaxonomyStub | null | undefined): DatasetItem | null => {
-      if (!node || !node.slug) return null;
-      const full = lookup(node.slug);
+    const enrich = (
+      node: TaxonomyStub | null | undefined,
+      resolved?: DatasetItem | null,
+    ): DatasetItem | null => {
+      if (!node || !node.slug) return resolved ?? null;
+      const full = resolved ?? lookup(node.slug);
       // Spread backend first so the full taxonomy node's label/description/image
       // override the backend's slug-as-label slim shape.
       return full ? { ...node, ...full } : { id: node.slug, slug: node.slug, label: node.slug };
@@ -188,13 +240,14 @@ async function _getServiceArchivePageDataUncached(params: {
     // render the Greek label instead of the raw slug.
     const enrichLeafList = (
       raw: TaxonomyStub[] | undefined,
+      parent: TreeNode | null,
       defaultPlural?: string,
     ): DatasetItem[] => {
       if (!Array.isArray(raw)) return [];
       return raw
         .map((leaf): DatasetItem | null => {
           if (!leaf?.slug) return null;
-          const full = lookup(leaf.slug);
+          const full = lookupIn(parent, leaf.slug);
           return full
             ? { ...leaf, ...full }
             : { ...leaf, id: leaf.slug, label: leaf.slug, plural: defaultPlural };
@@ -205,14 +258,14 @@ async function _getServiceArchivePageDataUncached(params: {
     const enrichedTaxonomyData: ArchiveTaxonomyData = {
       categories: Array.isArray(taxonomyData.categories)
         ? taxonomyData.categories
-            .map(enrich)
+            .map((n) => enrich(n))
             .filter((x): x is DatasetItem => x != null)
         : [],
-      currentCategory: enrich(taxonomyData.currentCategory),
-      currentSubcategory: enrich(taxonomyData.currentSubcategory),
-      currentSubdivision: enrich(taxonomyData.currentSubdivision),
-      subcategories: enrichLeafList(bundle.availableSubcategories),
-      subdivisions: enrichLeafList(bundle.availableSubdivisions),
+      currentCategory: enrich(taxonomyData.currentCategory, routeCategory),
+      currentSubcategory: enrich(taxonomyData.currentSubcategory, routeSubcategory),
+      currentSubdivision: enrich(taxonomyData.currentSubdivision, routeSubdivision),
+      subcategories: enrichLeafList(bundle.availableSubcategories, routeCategory),
+      subdivisions: enrichLeafList(bundle.availableSubdivisions, routeSubcategory),
     };
 
     // The chip carousel above the listing reads `availableSubdivisions[i].label`
@@ -223,9 +276,8 @@ async function _getServiceArchivePageDataUncached(params: {
     // Root-archive chips need each subdivision's parent subcategory to build a
     // valid /ipiresies/{subcat}/{div} href (OLD get-services.ts:1305-1328 always
     // carried the context; without it /ipiresies/{div} renders 0 results).
-    type TreeNode = DatasetItem & { children?: TreeNode[] };
     const divParent = new Map<string, string>();
-    for (const cat of getServiceTaxonomies() as TreeNode[]) {
+    for (const cat of serviceTree) {
       for (const sub of cat.children ?? []) {
         for (const div of sub.children ?? []) {
           if (!divParent.has(div.slug)) divParent.set(div.slug, sub.slug);
@@ -239,7 +291,7 @@ async function _getServiceArchivePageDataUncached(params: {
       ? bundle.availableSubdivisions
           .map((d): AvailableTaxonomyLeaf | null => {
             if (!d?.slug) return null;
-            const full = lookup(d.slug);
+            const full = lookupIn(routeSubcategory, d.slug);
             const slug = full?.slug ?? d.slug;
             return {
               id: full?.id ?? slug,
@@ -270,6 +322,7 @@ async function _getServiceArchivePageDataUncached(params: {
       return enriched;
     });
 
+    const sp = (params.searchParams ?? {}) as Record<string, unknown>;
     const data: ServiceArchivePageData = {
       services,
       total: bundle.total,
@@ -279,7 +332,7 @@ async function _getServiceArchivePageDataUncached(params: {
       // taxonomy (backend's `breadcrumbs` key is unused/malformed).
       breadcrumbData: {
         segments: getBreadcrumbsForNewRoutes(
-          getServiceTaxonomies() as DatasetItem[],
+          serviceTree as DatasetItem[],
           currentSubcategorySlug ?? undefined,
           (taxonomyData.currentSubdivision?.slug ?? params.subdivisionSlug) ?? undefined,
           { basePath: '/ipiresies', baseLabel: 'Υπηρεσίες' },
@@ -293,7 +346,25 @@ async function _getServiceArchivePageDataUncached(params: {
         name: (l as { name?: string }).name ?? l.label,
         slug: l.slug,
       })) as unknown as ServiceArchivePageData['counties'],
-      filters: bundle.filters,
+      // P1-15 — OLD get-services.ts:903-930 echoed the active filters
+      // (incl. `search`) so the archive inputs/sort/county keep the term.
+      // The bundle doesn't carry them, so build them from the request the
+      // same way OLD did (backend values win if it ever sends them).
+      filters: {
+        ...(routeCategory && { category: routeCategory.id }),
+        ...(routeSubcategory && { subcategory: routeSubcategory.id }),
+        ...(routeSubdivision && { subdivision: routeSubdivision.id }),
+        county: (sp.county as string | undefined) || (sp['περιοχή'] as string | undefined),
+        online: sp.online === 'true' || sp.online === '' ? true : undefined,
+        search: sp.search as string | undefined,
+        sortBy:
+          sp.sortBy && isValidArchiveSortBy(sp.sortBy) ? (sp.sortBy as string) : 'default',
+        page: parseInt(String(sp.page ?? '1')) || 1,
+        limit: params.limit || 20,
+        ...Object.fromEntries(
+          Object.entries(bundle.filters ?? {}).filter(([, v]) => v != null && v !== ''),
+        ),
+      },
       availableSubdivisions,
     };
     return { success: true, data };

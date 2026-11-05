@@ -11,7 +11,14 @@ import type {
   ProfileArchivePageData,
 } from '@/lib/types/components';
 import type { DatasetItem } from '@/lib/types/datasets';
-import { getCountiesForArchiveFilters } from '@/lib/utils/datasets';
+import {
+  filterTaxonomyByType,
+  findAllSubcategoriesBySlug,
+  findBySlug,
+  findTaxonomyBySlugInContext,
+  getCountiesForArchiveFilters,
+  getTaxonomyBreadcrumbs,
+} from '@/lib/utils/datasets';
 import { locationOptions } from '@/constants/datasets/locations';
 
 /**
@@ -71,28 +78,112 @@ async function _getProfileArchivePageDataUncached(params: {
   searchParams: Record<string, unknown>;
 }): Promise<ActionResult<ProfileArchivePageData>> {
   try {
+    const { findProBySlug, findProById, findServiceBySlug, findServiceById, getProTaxonomies } =
+      await import('@/lib/taxonomies');
+    type TreeNode = DatasetItem & { children?: TreeNode[]; type?: string };
+    const sp = (params.searchParams ?? {}) as Record<string, unknown>;
+
+    // OLD get-profiles.ts:487-569 — TYPE-SCOPED, level-aware resolution of the
+    // route taxonomy against the PRO tree (P1-12 / CG-1). The former global
+    // `findProBySlug ?? findProById ?? findServiceBySlug ?? …` lookup let a
+    // service slug (/dir/udraulika) or a colliding slug resolve to the wrong
+    // node, and picked an arbitrary gender/type variant for the current node.
+    const archiveType = params.archiveType ?? 'directory';
+    let targetType: 'freelancer' | 'company' | undefined;
+    if (archiveType === 'directory') {
+      targetType =
+        sp.type === 'pros' ? 'freelancer' : sp.type === 'companies' ? 'company' : undefined;
+    } else {
+      targetType = archiveType === 'pros' ? 'freelancer' : 'company';
+    }
+    const proTree = getProTaxonomies() as TreeNode[];
+    const filteredTaxonomies = (
+      targetType ? filterTaxonomyByType(proTree, targetType) : proTree
+    ) as TreeNode[];
+
+    let routeCategory: TreeNode | undefined;
+    let routeSubcategory: TreeNode | undefined;
+    if (params.categorySlug) {
+      if (params.subcategorySlug) {
+        const matches = findAllSubcategoriesBySlug(
+          filteredTaxonomies,
+          params.categorySlug,
+          params.subcategorySlug,
+        );
+        if (matches.length > 0) {
+          routeCategory = findBySlug(filteredTaxonomies, params.categorySlug);
+          routeSubcategory = matches[0];
+        } else {
+          const ctx =
+            findTaxonomyBySlugInContext(
+              filteredTaxonomies,
+              params.categorySlug,
+              params.subcategorySlug,
+            ) || {};
+          routeCategory = ctx.category;
+          routeSubcategory = ctx.subcategory;
+        }
+      } else {
+        // OLD: depth-first findBySlug (top-level nodes before their children).
+        routeCategory = findBySlug(filteredTaxonomies, params.categorySlug);
+      }
+      if (!routeCategory) {
+        return { success: false, error: 'Category not found' };
+      }
+      if (params.subcategorySlug && !routeSubcategory) {
+        return { success: false, error: 'Subcategory not found' };
+      }
+    }
+
     const bundle = (await profilesApi.getArchiveBundle(params)) as ProfileArchivePageData;
     // Enrich each profile in the bundle so card components find skillsData etc.,
     // and resolve the nav taxonomy (sidebar/chips/breadcrumb) from raw pro ids
     // to labels + slug-based /dir hrefs (otherwise they show cuids like "YQqkAO").
-    const { findProBySlug, findProById, findServiceBySlug, findServiceById } =
-      await import('@/lib/taxonomies');
     const lookup = (k: string | null | undefined) =>
       (findProBySlug(k) ?? findProById(k) ?? findServiceBySlug(k) ?? findServiceById(k)) as
         DatasetItem | null;
-    const node = (n: DatasetItem | null | undefined): DatasetItem | null => {
-      if (!n) return null;
-      const f = lookup(n.slug ?? n.id);
+    const node = (
+      n: DatasetItem | null | undefined,
+      resolved?: DatasetItem | null,
+    ): DatasetItem | null => {
+      if (!n) return resolved ?? null;
+      const f = resolved ?? lookup(n.slug ?? n.id);
       return f ? { ...n, ...f } : n;
     };
-    // OLD get-profiles.ts:557-569 — unknown category/subcategory slug is a hard
-    // 'Category not found' (the pages turn it into notFound()).
-    if (params.categorySlug && !lookup(params.categorySlug)) {
-      return { success: false, error: 'Category not found' };
+
+    // Parent category of a pro subcategory (prefer the route's category so a
+    // slug shared by two categories resolves in context).
+    const parentOf = (sub: DatasetItem): TreeNode | undefined => {
+      const has = (c: TreeNode) =>
+        (c.children ?? []).some((ch) => ch.id === sub.id || ch.slug === sub.slug);
+      if (routeCategory && has(routeCategory)) return routeCategory;
+      return proTree.find((c) => (c.children ?? []).some((ch) => ch.id === sub.id));
+    };
+
+    // OLD breadcrumbs (get-profiles.ts:738-768): generated from the pro tree
+    // with PLURAL labels; base crumb links to /directory; on the root page the
+    // base crumb is unlinked.
+    let baseLabel: string;
+    let basePath: string;
+    let baseHref: string | undefined;
+    if (archiveType === 'directory') {
+      baseLabel = 'Επαγγελματικός Κατάλογος';
+      basePath = '/dir';
+      baseHref = '/directory';
+    } else {
+      baseLabel = archiveType === 'pros' ? 'Επαγγελματίες' : 'Επιχειρήσεις';
+      basePath = archiveType === 'pros' ? '/dir?type=pros' : '/dir?type=companies';
     }
-    if (params.subcategorySlug && !lookup(params.subcategorySlug)) {
-      return { success: false, error: 'Category not found' };
-    }
+    const breadcrumbSegments = params.categorySlug
+      ? getTaxonomyBreadcrumbs(
+          filteredTaxonomies,
+          params.categorySlug,
+          params.subcategorySlug,
+          undefined,
+          { basePath, baseLabel, baseHref, usePlural: true },
+        )
+      : [{ label: 'Αρχική', href: '/' }, { label: baseLabel }];
+
     const tax = bundle.taxonomyData ?? { categories: [] };
     const data: ProfileArchivePageData = {
       ...bundle,
@@ -107,41 +198,44 @@ async function _getProfileArchivePageDataUncached(params: {
       })) as unknown as ProfileArchivePageData['counties'],
       taxonomyData: {
         ...tax,
-        categories: (tax.categories ?? []).map(node).filter((x): x is DatasetItem => x != null),
-        currentCategory: node(tax.currentCategory),
-        currentSubcategory: node(tax.currentSubcategory),
+        categories: (tax.categories ?? []).map((n) => node(n)).filter((x): x is DatasetItem => x != null),
+        currentCategory: node(tax.currentCategory, routeCategory),
+        currentSubcategory: node(tax.currentSubcategory, routeSubcategory),
         currentSubdivision: node(tax.currentSubdivision),
-        subcategories: (tax.subcategories ?? []).map(node).filter((x): x is DatasetItem => x != null),
-        subdivisions: (tax.subdivisions ?? []).map(node).filter((x): x is DatasetItem => x != null),
+        subcategories: (tax.subcategories ?? []).map((n) => node(n)).filter((x): x is DatasetItem => x != null),
+        subdivisions: (tax.subdivisions ?? []).map((n) => node(n)).filter((x): x is DatasetItem => x != null),
       },
-      availableSubcategories: (bundle.availableSubcategories ?? []).map((leaf) => {
-        const r = lookup(leaf.subcategorySlug || leaf.slug);
-        const cat = leaf.categorySlug ? lookup(leaf.categorySlug)?.slug ?? leaf.categorySlug : null;
-        if (!r) return leaf;
-        const slug = r.slug;
-        return {
-          ...leaf,
-          id: r.id,
-          label: r.label,
-          slug,
-          categorySlug: cat,
-          subcategorySlug: slug,
-          href: cat ? `/dir/${cat}/${slug}` : `/dir/${slug}`,
-        };
-      }),
-      breadcrumbData: bundle.breadcrumbData
-        ? {
-            ...bundle.breadcrumbData,
-            segments: (bundle.breadcrumbData.segments ?? []).map((seg) => ({
-              ...seg,
-              label: lookup(seg.label)?.label ?? seg.label,
-              href:
-                seg.href == null
-                  ? seg.href
-                  : seg.href.split('/').map((p) => lookup(p)?.slug ?? p).join('/'),
-            })),
-          }
-        : bundle.breadcrumbData,
+      // OLD get-profiles.ts:836-905 / get-directory.ts:136-147 — pills carry
+      // the PLURAL label and link to /dir/<category>/<subcategory>. A
+      // subcategory with no resolvable parent category is dropped (OLD
+      // `if (!cat) return`), never linked as /dir/<sub> or /dir/null/<sub>.
+      availableSubcategories: (bundle.availableSubcategories ?? [])
+        .map((leaf) => {
+          const r = findProById(leaf.subcategorySlug || leaf.slug) ??
+            findProBySlug(leaf.subcategorySlug || leaf.slug);
+          if (!r) return null;
+          const cat = parentOf(r);
+          if (!cat) return null;
+          if (routeCategory && cat.slug !== routeCategory.slug) return null;
+          if (routeSubcategory && r.slug === routeSubcategory.slug) return null;
+          const subType = (r as { type?: string }).type;
+          if (targetType && subType && subType !== targetType) return null;
+          return {
+            ...leaf,
+            id: r.id,
+            label: r.plural || r.label,
+            slug: r.slug,
+            categorySlug: cat.slug,
+            subcategorySlug: r.slug,
+            type: (subType || leaf.type || 'freelancer') as 'freelancer' | 'company',
+            href: `/dir/${cat.slug}/${r.slug}`,
+          };
+        })
+        .filter((x): x is NonNullable<typeof x> => x != null),
+      breadcrumbData: {
+        ...(bundle.breadcrumbData ?? {}),
+        segments: breadcrumbSegments,
+      },
     };
     return { success: true, data };
   } catch (err) {

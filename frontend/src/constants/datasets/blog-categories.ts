@@ -17,19 +17,18 @@ export const BLOG_CATEGORIES: BlogCategory[] = [
   { slug: 'tips', label: 'Tips', description: 'Χρήσιμα tips και κόλπα για επαγγελματίες.', order: 2, emoji: '💡' },
   { slug: 'diy', label: 'DIY', description: 'Οδηγοί Do-It-Yourself για πρακτικές λύσεις.', order: 3, emoji: '🔨' },
   { slug: 'symvoules', label: 'Συμβουλές', description: 'Συμβουλές και καθοδήγηση για επαγγελματική ανάπτυξη.', order: 4, emoji: '🎯' },
-  // Slugs deliberately match the canonical service-taxonomy slugs (see
-  // `serviceTaxonomies` in `service-taxonomies.ts`). The original CMS export
-  // had typos here (`marketingk`, `technika`, `eyexia-frontida`,
-  // `ypostirixi`, `dimiourgia-periechomenou`) — they were renamed and a SQL
-  // migration was run to rewrite existing `blog_articles.categorySlug` rows.
-  { slug: 'dimiourgia-periexomenou', label: 'Δημιουργία Περιεχομένου', description: 'Άρθρα σχετικά με τη δημιουργία περιεχομένου και content marketing.', order: 5, emoji: '🎥' },
+  // Slugs MUST match OLD prod + Django (`backend/apps/blog/constants.py`) and
+  // the stored `blog_articles.categorySlug` rows (P1-22). An earlier rename to
+  // the service-taxonomy spellings broke admin saves in 5 categories and 404'd
+  // the old /articles/<category> URLs — do not "fix" these spellings.
+  { slug: 'dimiourgia-periechomenou', label: 'Δημιουργία Περιεχομένου', description: 'Άρθρα σχετικά με τη δημιουργία περιεχομένου και content marketing.', order: 5, emoji: '🎥' },
   { slug: 'ekdiloseis', label: 'Εκδηλώσεις', description: 'Εκδηλώσεις, events και networking για επαγγελματίες.', order: 6, emoji: '🎶' },
-  { slug: 'eveksia-frontida', label: 'Ευεξία & Φροντίδα', description: 'Άρθρα για ευεξία, φροντίδα και ισορροπία εργασίας-ζωής.', order: 7, emoji: '💖' },
+  { slug: 'eyexia-frontida', label: 'Ευεξία & Φροντίδα', description: 'Άρθρα για ευεξία, φροντίδα και ισορροπία εργασίας-ζωής.', order: 7, emoji: '💖' },
   { slug: 'mathimata', label: 'Μαθήματα', description: 'Εκπαιδευτικά μαθήματα και tutorials για επαγγελματίες.', order: 8, emoji: '🎓' },
-  { slug: 'marketing', label: 'Μάρκετινγκ', description: 'Στρατηγικές μάρκετινγκ και προώθησης για freelancers.', order: 9, emoji: '🎯' },
+  { slug: 'marketingk', label: 'Μάρκετινγκ', description: 'Στρατηγικές μάρκετινγκ και προώθησης για freelancers.', order: 9, emoji: '🎯' },
   { slug: 'pliroforiki', label: 'Πληροφορική', description: 'Τεχνολογία, λογισμικό και ψηφιακά εργαλεία.', order: 10, emoji: '💻' },
-  { slug: 'texnika', label: 'Τεχνικά', description: 'Τεχνικά άρθρα και οδηγοί για εξειδικευμένα θέματα.', order: 11, emoji: '🪛' },
-  { slug: 'ypostiriksi', label: 'Υποστήριξη', description: 'Οδηγοί υποστήριξης και επίλυσης προβλημάτων.', order: 12, emoji: '🤝' },
+  { slug: 'technika', label: 'Τεχνικά', description: 'Τεχνικά άρθρα και οδηγοί για εξειδικευμένα θέματα.', order: 11, emoji: '🪛' },
+  { slug: 'ypostirixi', label: 'Υποστήριξη', description: 'Οδηγοί υποστήριξης και επίλυσης προβλημάτων.', order: 12, emoji: '🤝' },
 ];
 
 /**

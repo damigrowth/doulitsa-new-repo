@@ -1547,6 +1547,8 @@ export function getTaxonomyBreadcrumbs<T extends DatasetItem>(
     basePath?: string;
     baseLabel?: string;
     usePlural?: boolean;
+    /** Link for the base crumb when it differs from basePath (e.g. '/directory') */
+    baseHref?: string;
   },
 ): Array<{ label: string; href?: string }> {
   const basePath = options?.basePath || '/services';
@@ -1555,7 +1557,7 @@ export function getTaxonomyBreadcrumbs<T extends DatasetItem>(
 
   const breadcrumbs: Array<{ label: string; href?: string }> = [
     { label: 'Αρχική', href: '/' },
-    { label: baseLabel, href: basePath },
+    { label: baseLabel, href: options?.baseHref || basePath },
   ];
 
   if (!categorySlug) {

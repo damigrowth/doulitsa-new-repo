@@ -268,7 +268,7 @@ export default async function DashboardContent() {
       </div>
 
       {/* Prompt to create first service */}
-      {!hasServices && <NoServiceDialog sessionId={userResult.success ? userResult.data.session?.id : undefined} />}
+      {!hasServices && <NoServiceDialog sessionId={user?.id} />}
     </div>
   );
 }

@@ -80,8 +80,19 @@ export async function fetchEntity(
           };
         };
         const s = bundle.service;
+        // P1-16 — the page bundle ships `category` as its Greek LABEL while
+        // subcategory/subdivision are ids, so the id-based resolve found no
+        // category and the description read " -  - …". Resolve the category to
+        // its id first (id → top-level label/slug → parent of the subcategory).
+        const tree = getServiceTaxonomies() as Array<DatasetItem & { children?: DatasetItem[] }>;
+        const categoryNode =
+          tree.find((c) => c.id === s.category) ??
+          tree.find((c) => c.label === s.category || c.slug === s.category) ??
+          (s.subcategory
+            ? tree.find((c) => (c.children ?? []).some((ch) => ch.id === s.subcategory))
+            : undefined);
         const { category, subcategory, subdivision } = resolveServiceHierarchy(
-          s.category, s.subcategory, s.subdivision,
+          categoryNode?.id ?? s.category, s.subcategory, s.subdivision,
         );
         return {
           entity: {

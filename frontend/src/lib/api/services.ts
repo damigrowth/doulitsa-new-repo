@@ -77,7 +77,15 @@ export const searchServices = (filters: unknown) =>
 export const countServices = (filters: unknown) =>
   api.post('/services/count', filters);
 
-export const getServiceTaxonomyPaths = () => api.get('/services/taxonomy-paths');
+// Public, anonymous + Data-Cache'd (OLD unstable_cache 1h, tags incl.
+// 'taxonomy-paths'). Without `revalidate` the client reads cookies() and uses
+// no-store, which made the /ipiresies and /categories sitemaps dynamic (P5-RW-2).
+export const getServiceTaxonomyPaths = () =>
+  api.get('/services/taxonomy-paths', {
+    anonymous: true,
+    revalidate: 3600,
+    tags: ['taxonomy-paths', 'services:all'],
+  });
 
 export const getServiceArchiveBundle = (body: unknown) =>
   api.post('/services/archive', body, { anonymous: true, noRequestContext: true });

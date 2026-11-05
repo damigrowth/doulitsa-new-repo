@@ -12,8 +12,20 @@ export async function toggleReviewVisibility(
     const res = (await reviewsApi.toggleReviewVisibility(reviewId)) as { visibility: boolean };
     await revalidatePublicService();
     await revalidatePublicProfile();
-    return { success: true, data: { visibility: res.visibility }, message: 'Η ορατότητα άλλαξε' };
+    // OLD toggle-review-visibility.ts:90-102 copy; failures carry `message`
+    // (the dashboard consumers toast `result.message`).
+    return {
+      success: true,
+      data: { visibility: res.visibility },
+      message: res.visibility
+        ? 'Η αξιολόγηση είναι τώρα ορατή'
+        : 'Η αξιολόγηση είναι τώρα κρυφή',
+    };
   } catch (err) {
-    return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
+    const message =
+      err instanceof ApiError && err.message
+        ? err.message
+        : 'Αποτυχία ενημέρωσης εμφάνισης αξιολόγησης';
+    return { success: false, message, error: message };
   }
 }

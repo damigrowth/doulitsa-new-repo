@@ -50,8 +50,16 @@ export const getDirectoryData = (params: { limit?: number; categorySlug?: string
     tags: ['archive:profiles', 'profiles:all'],
   });
 
+// Public, anonymous + Data-Cache'd (OLD unstable_cache, TAXONOMIES TTL 24h,
+// tags incl. 'taxonomy-paths'; profile writes purge 'profiles:all'). Without
+// `revalidate` the /dir sitemap was rendered on every request (P5-RW-2).
 export const getProfileTaxonomyPaths = (role?: 'freelancer' | 'company') =>
-  api.get('/profiles/taxonomy-paths', { query: { role } });
+  api.get('/profiles/taxonomy-paths', {
+    query: { role },
+    anonymous: true,
+    revalidate: 86400,
+    tags: ['taxonomy-paths', 'profiles:all'],
+  });
 
 // ---- POST search/count/archive (complex filter payloads) ------------------
 

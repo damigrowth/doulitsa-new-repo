@@ -16,6 +16,13 @@ import { NextLink } from '@/components';
 const STORAGE_KEY = 'no-service-dialog-dismissed';
 
 interface NoServiceDialogProps {
+  /**
+   * Stable per-login key. OLD keyed on the better-auth session id, which lives
+   * for the whole login. Django's session.id is the ACCESS-token jti (rotates
+   * every 15 min), which made the dialog reappear every ~15 min. We key on the
+   * user id instead and clear the flag on sign-out (lib/auth/client.ts), which
+   * restores "once per login session per tab".
+   */
   sessionId?: string;
 }
 
