@@ -120,26 +120,34 @@ class ReportServiceView(APIView):
         s = ReportServiceSerializer(data=request.data)
         s.is_valid(raise_exception=True)
         data = s.validated_data
-        # Notify admin (OLD report-service.ts:78 sendServiceReportEmail). Reuse
-        # the existing generic admin-email task; best-effort, never blocks the
-        # response.
+        # Notify admin (OLD report-service.ts:78 sendServiceReportEmail →
+        # dedicated SERVICE_REPORT template/subject/Reply-To). Best-effort,
+        # never blocks the response; the task skips unknown service ids.
         try:
-            from apps.messaging.tasks import send_contact_admin_email
-            reporter = request.user
-            name = getattr(reporter, "display_name", None) or getattr(reporter, "username", None) or "Unknown User"
-            subject = f"Αναφορά υπηρεσίας: {data['serviceTitle']}"
-            message = (
-                f"Service ID: {service_id}\n"
-                f"Slug: {data['serviceSlug']}\n\n"
-                f"{data['description']}"
+            from apps.messaging.tasks import send_service_report_email
+            send_service_report_email.delay(
+                service_id, request.user.id, data["serviceTitle"],
+                data["serviceSlug"], data["description"],
             )
-            send_contact_admin_email.delay(name, getattr(reporter, "email", ""), subject, message)
         except Exception:  # pragma: no cover - email is best-effort
-            pass
+            import logging
+            logging.getLogger(__name__).exception(
+                "report_service.email_enqueue_failed", extra={"service_id": service_id}
+            )
         return Response({"message": "Η αναφορά υποβλήθηκε"})
 
 
 # ----- reads (rows 56-67, 74) ---------------------------------------------
+
+
+def _query_int(request, name: str, default: int) -> int:
+    """`?name=` as a positive int; missing/invalid/≤0 → default (P3-14: a bare
+    int() turned ?page=x into a 500; OLD parseInt fell back)."""
+    try:
+        value = int(request.query_params.get(name, default))
+    except (TypeError, ValueError, OverflowError):
+        return default
+    return value if value >= 1 else default
 
 
 class ServiceCategoriesView(APIView):
@@ -151,7 +159,7 @@ class ServiceCategoriesView(APIView):
         return Response(service_reads.get_categories_page(
             category_slug=request.query_params.get("categorySlug"),
             subcategory_slug=request.query_params.get("subcategorySlug"),
-            limit=int(request.query_params.get("limit", 15)),
+            limit=_query_int(request, "limit", 15),
         ))
 
 
@@ -221,9 +229,9 @@ class ServicesListView(APIView):
 
     def get(self, request):
         return Response(service_reads.get_services_paginated(
-            page=int(request.query_params.get("page", 1)),
+            page=_query_int(request, "page", 1),
             # OLD `getServicesWithPagination` default limit is 4 (get-services.ts:301).
-            limit=int(request.query_params.get("limit", 4)),
+            limit=min(100, _query_int(request, "limit", 4)),
             category=request.query_params.get("category"),
             exclude_featured=request.query_params.get("excludeFeatured") in ("true", "1"),
         ))

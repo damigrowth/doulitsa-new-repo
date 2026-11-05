@@ -128,13 +128,41 @@ def _admin_row(s: Service) -> dict[str, Any]:
 
 
 def get_service_detail(service_id: int) -> dict[str, Any] | None:
-    s = Service.objects.select_related("profile").filter(id=service_id).first()
+    """OLD getService (actions/admin/services.ts:337-375) used `include`, so
+    every scalar (description, addons, faq, …) was returned along with
+    `profile{…, user}`, the 10 latest reviews and `_count.reviews`. The admin
+    edit forms open from these keys and their saves replace the whole column,
+    so a missing `addons`/`faq` turned "add one addon" into "replace all
+    addons with this one" (AM-WIPE, P0-4)."""
+    s = Service.objects.select_related("profile", "profile__user").filter(id=service_id).first()
     if s is None:
         return None
     out = _admin_row(s)
+    profile = s.profile
+    user = getattr(profile, "user", None) if profile else None
+    out.update({
+        "description": s.description,
+        "addons": list(s.addons or []),
+        "faq": list(s.faq or []),
+        "pid": s.profile_id,
+        # The media form uploads to users/<userId>/services/<id>
+        # (edit-service-media-form.tsx:167).
+        "userId": profile.user_id if profile else None,
+    })
+    if out.get("profile") is not None and profile is not None:
+        out["profile"].update({
+            "image": profile.image,
+            "user": {
+                "email": user.email, "name": user.name, "role": user.role,
+                "banned": user.banned, "blocked": user.blocked,
+            } if user else None,
+        })
     try:
         from apps.reviews.models import Review
-        reviews_qs = Review.objects.filter(service_id=service_id).order_by("-created_at")[:10]
+        reviews_qs = (
+            Review.objects.filter(service_id=service_id)
+            .order_by("-created_at")[:10]
+        )
         out["recentReviews"] = [{
             "id": r.id, "rating": r.rating, "comment": r.comment,
             "status": r.status, "createdAt": r.created_at.isoformat() if r.created_at else None,
@@ -143,6 +171,9 @@ def get_service_detail(service_id: int) -> dict[str, Any] | None:
     except ImportError:
         out["recentReviews"] = []
         out["reviewsCount"] = 0
+    out["reviews"] = out["recentReviews"]
+    # services/[id]/page.tsx:322 reads `service._count?.reviews`.
+    out["_count"] = {"reviews": out["reviewsCount"]}
     return out
 
 

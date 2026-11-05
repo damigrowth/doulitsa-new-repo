@@ -48,7 +48,7 @@ def list_profile_reviews(profile_id: str, *, page: int = 1, limit: int = 10) -> 
     qs = (
         _published_qs(Review.objects.filter(profile_id=profile_id))
         .filter(visibility=True)
-        .select_related("author", "author__profile", "profile")
+        .select_related("author", "profile")
         .order_by("-created_at")
     )
     return _paginate(qs, page, limit, with_service=True)
@@ -60,7 +60,7 @@ def list_service_reviews(service_id: int, *, page: int = 1, limit: int = 10) -> 
     qs = (
         _published_qs(Review.objects.filter(service_id=service_id))
         .filter(visibility=True)
-        .select_related("author", "author__profile", "profile")
+        .select_related("author", "profile")
         .order_by("-created_at")
     )
     return _paginate(qs, page, limit, with_service=False, service_null=True)
@@ -76,7 +76,7 @@ def list_profile_other_service_reviews(
             Review.objects.filter(profile_id=profile_id, service_id__isnull=False)
         )
         .filter(visibility=True)
-        .select_related("author", "author__profile", "profile")
+        .select_related("author", "profile")
     )
     if exclude_service_id:
         qs = qs.exclude(service_id=exclude_service_id)
@@ -123,7 +123,7 @@ def user_given(user: User, *, page: int = 1, limit: int = 10) -> dict[str, Any]:
     qs = (
         Review.objects
         .filter(author=user, status=ReviewStatus.APPROVED, published=True)
-        .select_related("author", "author__profile", "profile")
+        .select_related("author", "profile")
         .order_by("-created_at")
     )
     return _paginate(qs, page, limit, with_service=True, with_reviewed_profile=True)
@@ -134,7 +134,7 @@ def user_received(user: User, *, page: int = 1, limit: int = 10) -> dict[str, An
     qs = (
         Review.objects
         .filter(profile__user_id=user.id, status=ReviewStatus.APPROVED, published=True)
-        .select_related("author", "author__profile", "profile")
+        .select_related("author", "profile")
         .order_by("-created_at")
     )
     return _paginate(qs, page, limit, with_service=True)
@@ -152,7 +152,7 @@ def user_given_with_comments(user: User, *, page: int = 1, limit: int = 10) -> d
             comment__isnull=False,
         )
         .exclude(comment="")
-        .select_related("author", "author__profile", "profile")
+        .select_related("author", "profile")
         .order_by("-created_at")
     )
     return _paginate(qs, page, limit, with_service=True, with_reviewed_profile=True)
@@ -170,7 +170,7 @@ def user_received_with_comments(user: User, *, page: int = 1, limit: int = 10) -
             comment__isnull=False,
         )
         .exclude(comment="")
-        .select_related("author", "author__profile", "profile")
+        .select_related("author", "profile")
         .order_by("-created_at")
     )
     return _paginate(qs, page, limit, with_service=True)
@@ -253,12 +253,13 @@ def _card(
 ) -> dict[str, Any]:
     """Mirror OLD `ReviewWithAuthor` (types/reviews.ts:13-28).
 
-    OLD `author` = Pick<User,'id'|'name'> & Pick<Profile,'displayName'|'username'
-    |'image'> — i.e. `name` from the User row, `displayName`/`username`/`image`
-    from the author's *Profile*.
+    P2-44 REV-AUTHOR: OLD's Prisma `author` relation IS the User row — every
+    query selected `author: { id, name, displayName, username }` from the
+    **User** (get-reviews.ts:29-36, get-user-reviews.ts:86-93). Reading them
+    from the author's *Profile* left them null for simple users (no profile),
+    which rendered "Από: -" on the dashboard and blank public cards.
     """
     author = getattr(r, "author", None)
-    author_profile = getattr(author, "profile", None) if author else None
     card: dict[str, Any] = {
         "id": r.id,
         "rating": r.rating,
@@ -272,9 +273,9 @@ def _card(
         "author": {
             "id": author.id if author else None,
             "name": getattr(author, "name", None) if author else None,
-            "displayName": author_profile.display_name if author_profile else None,
-            "username": author_profile.username if author_profile else None,
-            "image": author_profile.image if author_profile else None,
+            "displayName": getattr(author, "display_name", None) if author else None,
+            "username": getattr(author, "username", None) if author else None,
+            "image": getattr(author, "image", None) if author else None,
         } if author else None,
     }
 
@@ -315,7 +316,6 @@ def admin_card(r: Review) -> dict[str, Any]:
 
 def _admin_card(r: Review, svc_map: dict[int, dict[str, Any]]) -> dict[str, Any]:
     author = getattr(r, "author", None)
-    author_profile = getattr(author, "profile", None) if author else None
     profile = getattr(r, "profile", None)
     return {
         "id": r.id,
@@ -335,8 +335,9 @@ def _admin_card(r: Review, svc_map: dict[int, dict[str, Any]]) -> dict[str, Any]
             "name": getattr(author, "name", None) if author else None,
             "email": getattr(author, "email", None) if author else None,
             "role": getattr(author, "role", None) if author else None,
-            "displayName": author_profile.display_name if author_profile else None,
-            "image": author_profile.image if author_profile else None,
+            # P2-44 / adm D16: from the author User row (OLD admin reviews.ts:80-87).
+            "displayName": getattr(author, "display_name", None) if author else None,
+            "image": getattr(author, "image", None) if author else None,
         } if author else None,
         "profile": {
             "id": profile.id if profile else None,

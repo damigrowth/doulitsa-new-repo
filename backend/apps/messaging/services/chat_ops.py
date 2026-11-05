@@ -79,7 +79,13 @@ def list_chats(user: User) -> list[dict[str, Any]]:
         "user__name", "user__display_name", "user__image",
         "user__first_name", "user__last_name",
     )
-    profile_image_by_uid: dict[str, str | None] = {}
+    # MSG-NAME (P3-25): the Profile fields used to be written into
+    # `other_by_chat` keyed by USER id while the loop below reads it by CHAT
+    # id, so they were never found and the list showed the User name while the
+    # header (`get_chat`) showed the Profile name. Key them by user id here and
+    # look them up by the member's user id, so list and header agree.
+    # (Profile-vs-User as the name SOURCE is product decision §5 D-11.)
+    profile_by_uid: dict[str, dict[str, Any]] = {}
     try:
         from apps.profiles.models import Profile  # type: ignore
         other_uids = {r["user_id"] for r in member_rows if r["user_id"] != user.id}
@@ -87,19 +93,18 @@ def list_chats(user: User) -> list[dict[str, Any]]:
             for row in Profile.objects.filter(user_id__in=other_uids).values(
                 "user_id", "image", "display_name", "username"
             ):
-                profile_image_by_uid[row["user_id"]] = row["image"]
-                # Promote the pro profile fields when the User-side ones are blank
-                other_by_chat.setdefault(row["user_id"], {}).update({
-                    "username": row.get("username"),
-                    "profileDisplayName": row.get("display_name"),
-                })
+                profile_by_uid[row["user_id"]] = row
     except ImportError:
         pass
 
     for row in member_rows:
         if row["user_id"] == user.id:
             continue
-        prev = other_by_chat.get(row["chat_id"]) or {}
+        prof = profile_by_uid.get(row["user_id"]) or {}
+        prev = {
+            "username": prof.get("username"),
+            "profileDisplayName": prof.get("display_name"),
+        }
         # OLD `transformChatForList` (utils/messages.ts:33-46) falls back
         # displayName → firstName+lastName → 'Χρήστης'. Keep the NEW-only
         # user.name promotion just before the final Greek fallback.
@@ -114,7 +119,7 @@ def list_chats(user: User) -> list[dict[str, Any]]:
                 or full_name
                 or row["user__name"]
                 or "Χρήστης",
-            "image": profile_image_by_uid.get(row["user_id"]) or row["user__image"],
+            "image": prof.get("image") or row["user__image"],
             "username": prev.get("username"),
         })
         other_by_chat[row["chat_id"]] = prev
@@ -278,8 +283,11 @@ def get_or_create_dm(user: User, other_user_id: str) -> dict[str, Any]:
         # Django's ORM INSERT…RETURNING `id` fails, so use raw SQL.
         from django.db import connection
         with connection.cursor() as cur:
+            # P2-38 / schema D3: supply every NOT NULL column explicitly — the
+            # prod (Prisma-dump) table may carry no DB defaults for them.
             cur.execute(
-                'INSERT INTO chat_members ("chatId", uid) VALUES (%s, %s), (%s, %s) '
+                'INSERT INTO chat_members ("chatId", uid, "joinedAt", "lastSeen", muted, online) '
+                'VALUES (%s, %s, NOW(), NOW(), false, false), (%s, %s, NOW(), NOW(), false, false) '
                 'ON CONFLICT DO NOTHING',
                 [chat.id, user.id, chat.id, other_user_id],
             )
@@ -415,7 +423,7 @@ def mark_messages_read(*, user: User, message_ids: list[str]) -> int:
     for msg_id, chat_id in affected:
         by_chat.setdefault(chat_id, []).append(msg_id)
     for chat_id, msg_ids in by_chat.items():
-        _broadcast(chat_id, "chat.read", {"messageIds": msg_ids, "userId": user.id})
+        _broadcast(chat_id, "chat.read", {"chatId": chat_id, "messageIds": msg_ids, "userId": user.id})
     return marked
 
 

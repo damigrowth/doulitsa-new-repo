@@ -68,22 +68,21 @@ def _pro_node_ids(level: str, value: Any) -> list[str]:
     return out
 
 
-def _county_coverage_q(county: str) -> Q:
-    """Match a profile whose coverage references `county` (a slug, county id, or
-    area slug). The frontend sends a *slug*; coverage stores *ids*, so resolve
-    first. Matches county/counties/area/areas + nationwide sentinels.
-    """
-    from apps.core.locations import NATIONWIDE_IDS, resolve_to_county_id
+def _county_coverage_q(county_id: str) -> Q:
+    """Match a profile whose coverage references the RESOLVED `county_id`.
 
-    loc_id = resolve_to_county_id(county) or str(county)
+    Literal port of OLD get-profiles.ts:139-161 / 182-204: coverage.county ==
+    id OR coverage.counties ∋ id OR coverage.counties ∋ nationwide. CG-3: no
+    area/areas clauses and no `county == nationwide` (OLD had neither).
+    """
+    from apps.core.locations import NATIONWIDE_IDS
+
     cond = (
-        Q(coverage__county=loc_id)
-        | Q(coverage__counties__contains=[loc_id])
-        | Q(coverage__area=loc_id)
-        | Q(coverage__areas__contains=[loc_id])
+        Q(coverage__county=county_id)
+        | Q(coverage__counties__contains=[county_id])
     )
     for nw in NATIONWIDE_IDS:
-        cond |= Q(coverage__counties__contains=[nw]) | Q(coverage__county=nw)
+        cond |= Q(coverage__counties__contains=[nw])
     return cond
 
 
@@ -93,33 +92,30 @@ def _apply_coverage_filters(
     county_id: str | None,
     online: bool | None,
 ) -> QuerySet[Profile]:
-    """Coverage matching mirrors the TS code (get-profiles.ts:122-206):
+    """Coverage matching — literal port of get-profiles.ts:122-206.
 
-    OLD distinguishes `online === undefined` (no filter) from an explicit
-    boolean. When `online` is set, it filters `coverage.online === online`
-    (so `online=false` actively selects non-online profiles).
+    `county_id` is the RAW county param (slug/name); it is resolved with OLD
+    `resolveToCountyId` (area → parent county; unresolvable → None).
 
-    - online set + county → online (truthy) profiles OR county-based profiles;
-      when county resolution fails, fall back to `coverage.online == online`
+    - online set + county: resolved → online(true) profiles OR county-based
+      profiles; unresolved → fall back to `coverage.online == online`
     - online set, no county → `coverage.online == online`
-    - county only → coverage references the county (or nationwide)
+    - county only: resolved → county-based profiles; unresolved → NO filter
     """
+    from apps.core.locations import resolve_to_county_id
+
     online_set = online is not None
+    resolved = resolve_to_county_id(county_id) if county_id else None
     if online_set and county_id:
-        # OLD only ORs the *truthy* online branch with the county branch
-        # (get-profiles.ts:128-162); the false fallback only applies when the
-        # county can't be resolved, which _county_coverage_q handles by always
-        # producing a condition. Match the truthy-OR semantics here.
-        if online:
-            return qs.filter(Q(coverage__online=True) | _county_coverage_q(county_id))
-        # online=false + county: OLD's OR uses `equals: true` for the online
-        # branch regardless, so a false `online` only matters in the no-county
-        # path. With a county present we still match county-based profiles.
-        return qs.filter(Q(coverage__online=True) | _county_coverage_q(county_id))
+        if resolved:
+            # OLD's OR uses `equals: true` for the online branch regardless of
+            # the requested boolean (get-profiles.ts:130-137).
+            return qs.filter(Q(coverage__online=True) | _county_coverage_q(resolved))
+        return qs.filter(coverage__online=bool(online))
     if online_set:
         return qs.filter(coverage__online=bool(online))
-    if county_id:
-        return qs.filter(_county_coverage_q(county_id))
+    if county_id and resolved:
+        return qs.filter(_county_coverage_q(resolved))
     return qs
 
 
@@ -200,8 +196,16 @@ _SORT_MAP = {
 }
 
 
-def _apply_sort(qs: QuerySet[Profile], sort_by: str | None) -> QuerySet[Profile]:
-    if sort_by in _SORT_MAP:
+def _valid_sort(sort_by: Any) -> str | None:
+    """A known sort key, else None (= default). A repeated ?sortBy= arrives as
+    a list (unhashable → TypeError 500); OLD `isValidArchiveSortBy` fell back
+    to 'default' for anything it didn't recognise (get-profiles.ts:580-583)."""
+    return sort_by if isinstance(sort_by, str) and sort_by in _SORT_MAP else None
+
+
+def _apply_sort(qs: QuerySet[Profile], sort_by: Any) -> QuerySet[Profile]:
+    sort_by = _valid_sort(sort_by)
+    if sort_by:
         return qs.order_by(*_SORT_MAP[sort_by])
     # Default: featured first, then most recent
     return qs.order_by("-featured", "-updated_at")
@@ -212,8 +216,9 @@ def _apply_sort(qs: QuerySet[Profile], sort_by: str | None) -> QuerySet[Profile]
 
 def list_profiles_by_filters(filters: dict[str, Any]) -> dict[str, Any]:
     """Mirrors `getProfilesByFilters` (tracker row 44)."""
+    # P1-3 AUTHZ-PUB: published is FORCED (backs an AllowAny endpoint).
     qs = Profile.objects.select_related("user").filter(
-        published=filters.get("published", True),
+        published=True,
         is_active=True,
     )
     qs = _apply_user_join_filters(qs, filters.get("role"))
@@ -226,8 +231,11 @@ def list_profiles_by_filters(filters: dict[str, Any]) -> dict[str, Any]:
     qs = _apply_search_filter(qs, filters.get("search"))
     qs = _apply_sort(qs, filters.get("sortBy"))
 
-    page = max(1, int(filters.get("page") or 1))
-    limit = max(1, min(100, int(filters.get("limit") or 20)))
+    page = _safe_page(filters.get("page"))
+    try:
+        limit = max(1, min(100, int(filters.get("limit") or 20)))
+    except (TypeError, ValueError):
+        limit = 20
     offset = (page - 1) * limit
 
     total = qs.count()
@@ -235,7 +243,7 @@ def list_profiles_by_filters(filters: dict[str, Any]) -> dict[str, Any]:
 
     # Default-sort variant: shuffle featured profiles within their bucket so
     # the front page rotates. Mirrors the random-shuffle tweak in the TS code.
-    if filters.get("sortBy") in (None, "", "default"):
+    if _valid_sort(filters.get("sortBy")) is None:
         featured = [p for p in rows if p.featured]
         non_featured = [p for p in rows if not p.featured]
         random.shuffle(featured)
@@ -261,8 +269,9 @@ def count_profiles_by_filters(filters: dict[str, Any]) -> int:
     if cached is not None:
         return cached
 
+    # P1-3 AUTHZ-PUB: published is FORCED (backs an AllowAny endpoint).
     qs = Profile.objects.select_related("user").filter(
-        published=filters.get("published", True),
+        published=True,
         is_active=True,
     )
     qs = _apply_user_join_filters(qs, filters.get("role"))
@@ -410,7 +419,8 @@ def archive_data(
         "county": sp.get("county") or sp.get("περιοχή"),
         "online": online,
         "search": sp.get("search"),
-        "sortBy": sp.get("sortBy"),
+        # Invalid / repeated (list) sortBy → default (P2-38 / SORT-1 validation).
+        "sortBy": _valid_sort(sp.get("sortBy")),
         "page": _safe_page(sp.get("page")),
         "limit": limit,
     }
@@ -465,13 +475,17 @@ def archive_data(
     if subcategory_slug:
         breadcrumbs.append({"label": subcategory_slug, "href": None})
 
+    filter_categories, filter_subcategories = _archive_filter_taxonomies(role, category_slug)
+
     return {
         **listing,
         "taxonomyData": {
-            "categories": [],  # taxonomy app populates this
+            # DROP-1: the filter-drawer dropdowns, built like OLD
+            # get-profiles.ts:770-814 (all populated, type-scoped, taxonomy order).
+            "categories": filter_categories,
             "currentCategory": {"slug": category_slug} if category_slug else None,
             "currentSubcategory": {"slug": subcategory_slug} if subcategory_slug else None,
-            "subcategories": [],
+            "subcategories": filter_subcategories,
         },
         "breadcrumbData": {"segments": breadcrumbs},
         "counties": [],  # taxonomy app populates this
@@ -484,6 +498,71 @@ def archive_data(
         },
         "availableSubcategories": available_subcategories,
     }
+
+
+def _slim_node(node: dict[str, Any]) -> dict[str, Any]:
+    """Dropdown node: the taxonomy fields, without the nested children."""
+    return {k: v for k, v in node.items() if k != "children"}
+
+
+def _archive_filter_taxonomies(
+    role: str | None, category_slug: str | None,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """DROP-1 — port of OLD get-profiles.ts:509-511 + 770-814.
+
+    - `filteredTaxonomies` = the pro tree, type-filtered for the archive's
+      target role (`filterTaxonomyByType`: keep subcategories without a type or
+      of that type; drop categories left empty).
+    - categories = those with ≥1 profile (getProTaxonomyPaths(role)), in tree
+      order, first 10 (OLD `.slice(0, 10)`).
+    - subcategories = ALL children of the current category that have profiles
+      and match the type, in tree order (no top-N, no count ordering).
+    """
+    from apps.core.taxonomy import _level_tree
+    from apps.profiles.selectors.profile_reads import get_taxonomy_paths
+
+    tree = _level_tree("pro")
+    if role:
+        typed = []
+        for cat in tree:
+            kids = cat.get("children")
+            if not kids:
+                typed.append(cat)
+                continue
+            kept = [sub for sub in kids if not sub.get("type") or sub.get("type") == role]
+            if kept:
+                typed.append({**cat, "children": kept})
+        tree = typed
+
+    paths = get_taxonomy_paths(role)
+    available_categories = {p["category"] for p in paths if p.get("category")}
+    categories = [_slim_node(c) for c in tree if c.get("slug") in available_categories][:10]
+
+    subcategories: list[dict[str, Any]] = []
+    if category_slug:
+        # OLD `findBySlug(filteredTaxonomies, slug)` = depth-first
+        # `findByField` (datasets.ts:40-55): each node, then its children.
+        def _dfs(nodes: list[dict[str, Any]]) -> dict[str, Any] | None:
+            for n in nodes:
+                if n.get("slug") == category_slug:
+                    return n
+                found = _dfs(n.get("children") or [])
+                if found is not None:
+                    return found
+            return None
+
+        current = _dfs(tree)
+        if current is not None:
+            available_subs = {
+                p["subcategory"] for p in paths
+                if p.get("category") == current.get("slug") and p.get("subcategory")
+            }
+            subcategories = [
+                _slim_node(sub) for sub in current.get("children") or []
+                if (not role or not sub.get("type") or sub.get("type") == role)
+                and sub.get("slug") in available_subs
+            ]
+    return categories, subcategories
 
 
 def _safe_page(value) -> int:
@@ -566,16 +645,21 @@ def profile_page_bundle(username: str) -> dict[str, Any] | None:
     except ImportError:
         pass
 
+    # PRIV-1: the email leaves the server ONLY when the pro chose to show it.
+    # OLD rendered the ContactReveal (the client component that receives the
+    # value) only when `visibility.email === true` (profile-info.tsx:165); the
+    # NEW bundle used to ship BOTH profile.email and the login user.email to
+    # any anonymous caller, cached 30 min. One `email` field, gated; no `user`.
+    visibility = profile.visibility if isinstance(profile.visibility, dict) else {}
+    public_email = None
+    if visibility.get("email") is True:
+        public_email = profile.email or (profile.user.email if profile.user_id else None)
+
     payload = {
-        # The public profile page shows a (visibility-gated) contact email.
-        # OLD selected the linked `user.email` (get-profile.ts:208) and the
-        # frontend reveals it only when `visibility.email === true`. Attach it
-        # here on the page bundle only — NOT in the shared card serializer — so
-        # archive/search cards never carry the email.
         "profile": {
             **serialize_profile_summary(profile),
-            "email": profile.email,
-            "user": {"email": profile.user.email} if profile.user_id else None,
+            "email": public_email,
+            "user": None,
         },
         "category": {"slug": profile.category} if profile.category else None,
         "subcategory": {"slug": profile.subcategory} if profile.subcategory else None,

@@ -124,6 +124,11 @@ def list_my_submissions(*, user: User, type: str | None = None) -> list[dict]:
         submitted_by=user.id, status=TaxonomySubmissionStatus.PENDING
     )
     if type:
+        # P2-38: `type` is a PG ENUM — an unknown value 500'd (DataError).
+        if type not in TaxonomySubmissionType.values:
+            from rest_framework.exceptions import ValidationError
+
+            raise ValidationError({"type": ["Μη έγκυρος τύπος"]})
         qs = qs.filter(type=type)
     return [
         {

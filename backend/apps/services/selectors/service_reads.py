@@ -31,17 +31,17 @@ def _public_qs(status: str = ServiceStatus.PUBLISHED) -> QuerySet[Service]:
 def _county_coverage_q(county_id: str) -> Q:
     """Match a service whose profile coverage references `county_id`.
 
-    Ports OLD `buildCountyCoverageFilter` (get-services.ts:73-103): county OR
-    counties[] OR nationwide(Πανελλαδικά)[]. Coverage stores location *ids*.
+    Literal port of OLD `buildCountyCoverageFilter` (get-services.ts:73-103):
+    coverage.county == id OR coverage.counties ∋ id OR coverage.counties ∋
+    nationwide. CG-3: no area/areas clauses and no `county == nationwide`
+    (OLD had neither; the extra clauses broadened the result set).
     """
     cond = (
         Q(profile__coverage__county=county_id)
         | Q(profile__coverage__counties__contains=[county_id])
-        | Q(profile__coverage__area=county_id)
-        | Q(profile__coverage__areas__contains=[county_id])
     )
     for nw in NATIONWIDE_IDS:
-        cond |= Q(profile__coverage__counties__contains=[nw]) | Q(profile__coverage__county=nw)
+        cond |= Q(profile__coverage__counties__contains=[nw])
     return cond
 
 
@@ -80,7 +80,9 @@ def _build_search_conditions(word: str, original: str | None = None) -> Q:
             out.extend(taxonomy.taxonomy_value_candidates(s))
         return out
 
-    tag_cands = _expand(taxonomy.matching_tag_slugs(word))
+    # CG-2: tags are stored as tag IDS ('23'); OLD matched label → id
+    # (findMatchingTagIds). Slug candidates never matched the stored ids.
+    tag_cands = taxonomy.matching_tag_ids(word)
     if tag_cands:
         cond |= Q(tags__overlap=tag_cands)
     sub_cands = _expand(taxonomy.matching_service_subcategory_slugs(word))
@@ -132,28 +134,35 @@ def _apply_filters(qs: QuerySet[Service], filters: dict[str, Any]) -> QuerySet[S
     online_set = online is not None
     online_bool = online in (True, "true", "1", 1, "")
     county = filters.get("county")
-    county_id = resolve_to_county_id(county) or (str(county) if county else None)
+    # CG-3: area → parent county; unresolvable → None (OLD resolveToCountyId).
+    county_id = resolve_to_county_id(county) if county else None
 
-    # Coverage / online combination — mirrors getServicesByFiltersInternal
+    # Coverage / online combination — literal port of getServicesByFiltersInternal
     # (get-services.ts:444-514). onbase/onsite gating lives on Service.type.
-    if online_set and county_id:
-        # online services OR (county coverage AND (onbase OR onsite))
-        qs = qs.filter(
-            Q(type__online=True)
-            | (_county_coverage_q(county_id) & _onbase_or_onsite_q())
-        )
+    # OLD branches on the RAW `filters.county` and then applies the filter only
+    # `if (countyId)`: an unresolvable county means NO location/online filter at
+    # all (not a filter on the raw string, which matched nothing).
+    if online_set and county:
+        if county_id:
+            # online services OR (county coverage AND (onbase OR onsite))
+            qs = qs.filter(
+                Q(type__online=True)
+                | (_county_coverage_q(county_id) & _onbase_or_onsite_q())
+            )
     elif online_set:
         # match both online=true and online=false (OLD `equals: filters.online`)
         qs = qs.filter(type__online=online_bool)
-    elif county_id:
-        qs = qs.filter(_county_coverage_q(county_id) & _onbase_or_onsite_q())
+    elif county:
+        if county_id:
+            qs = qs.filter(_county_coverage_q(county_id) & _onbase_or_onsite_q())
 
-    # Auto location-from-search (slug/Greek name → county) when no explicit
-    # county filter is set (get-services.ts:406-441).
+    # Auto location-from-search when no explicit county filter is set
+    # (get-services.ts:406-441): OLD looks up the NORMALIZED term only
+    # (`findLocationBySlugOrName(normalizeTerm(term))`) → county / parent county.
     if filters.get("search") and not county:
         term = (filters["search"] or "").strip()
         if len(term) >= 2:
-            auto_county_id = resolve_to_county_id(normalize_term(term)) or resolve_to_county_id(term)
+            auto_county_id = resolve_to_county_id(normalize_term(term))
             if auto_county_id:
                 qs = qs.filter(_county_coverage_q(auto_county_id))
 
@@ -166,8 +175,21 @@ def _apply_filters(qs: QuerySet[Service], filters: dict[str, Any]) -> QuerySet[S
     return qs
 
 
-def _apply_sort(qs: QuerySet[Service], sort_by: str | None) -> QuerySet[Service]:
-    return qs.order_by(*_SORT_MAP.get(sort_by, ("-featured", "-sort_date")))
+def _apply_sort(qs: QuerySet[Service], sort_by: Any) -> QuerySet[Service]:
+    # A repeated ?sortBy= arrives as a list (unhashable → TypeError 500 in
+    # `.get`). OLD `isValidArchiveSortBy` fell back to the default sort.
+    key = sort_by if isinstance(sort_by, str) else None
+    return qs.order_by(*_SORT_MAP.get(key, ("-featured", "-sort_date")))
+
+
+def _safe_int(value: Any, default: int, *, minimum: int = 1) -> int:
+    """Parse an int query/body param; invalid/missing/below-minimum → default
+    (OLD `parseInt(x || default)` semantics, never a 500)."""
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError, OverflowError):
+        return default
+    return parsed if parsed >= minimum else default
 
 
 def _card(s: Service) -> dict[str, Any]:
@@ -577,13 +599,14 @@ def get_services_paginated(*, page: int, limit: int, category: str | None, exclu
 
 
 def search_services(filters: dict[str, Any]) -> dict[str, Any]:
-    # OLD defaulted status to 'published' but allowed an explicit override
-    # (get-services.ts:392). Mirror that.
-    qs = _public_qs(filters.get("status") or ServiceStatus.PUBLISHED)
+    # P1-2 / CG-5: PUBLISHED is forced. OLD's status override (get-services.ts:
+    # 392) was only reachable server-side; this selector backs an AllowAny
+    # endpoint, so honouring a caller `status` listed drafts to anyone.
+    qs = _public_qs(ServiceStatus.PUBLISHED)
     qs = _apply_filters(qs, filters)
     qs = _apply_sort(qs, filters.get("sortBy"))
-    page = max(1, int(filters.get("page") or 1))
-    limit = max(1, min(100, int(filters.get("limit") or 20)))
+    page = _safe_int(filters.get("page"), 1)
+    limit = min(100, _safe_int(filters.get("limit"), 20))
     offset = (page - 1) * limit
     total = qs.count()
     rows = list(qs[offset:offset + limit])
@@ -600,14 +623,19 @@ def search_services(filters: dict[str, Any]) -> dict[str, Any]:
 def count_services(filters: dict[str, Any]) -> int:
     # OLD `getServicesCount` (get-services.ts:668) counts using ONLY the taxonomy
     # fields (category/subcategory/subdivision) and ignores search/county/online.
-    # Cache key is keyed on category/subcategory only.
+    # The key carries every input the count depends on: the (forced) status and
+    # all three taxonomy levels. Keying on category|subcategory only let a
+    # subdivision-scoped count — or (before the status override was removed) an
+    # anonymous {"status":"draft"} call — poison the shared published count for
+    # 30 min (pass-4 / pass-6 repro).
     cache_key = "services:count:" + "|".join(
-        str(filters.get(k, "")) for k in ("category", "subcategory")
+        [ServiceStatus.PUBLISHED]
+        + [str(filters.get(k) or "") for k in ("category", "subcategory", "subdivision")]
     )
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
-    qs = _public_qs(filters.get("status") or ServiceStatus.PUBLISHED)
+    qs = _public_qs(ServiceStatus.PUBLISHED)
     if filters.get("category"):
         qs = qs.filter(category__in=_taxonomy_candidates(filters["category"]))
     if filters.get("subcategory"):
@@ -677,24 +705,6 @@ def get_archive_bundle(
         .order_by("-count")[:8]
     )
 
-    # Sibling subcategories — every subcategory in the active category that
-    # has at least one published service. When no category context is set,
-    # fall back to the same-category derived from the current subcategory.
-    sibling_filters = {**filters, "subcategory": None, "subdivision": None}
-    if not sibling_filters.get("category") and subcategory_slug:
-        parent_row = (
-            _public_qs().filter(subcategory=subcategory_slug)
-            .values("category").first()
-        )
-        if parent_row and parent_row.get("category"):
-            sibling_filters["category"] = parent_row["category"]
-    sibling_qs = _apply_filters(_public_qs(), sibling_filters)
-    sibling_subcats = (
-        sibling_qs.exclude(subcategory__isnull=True).exclude(subcategory="")
-        .values("subcategory").annotate(count=Count("id"))
-        .order_by("-count")
-    )
-
     breadcrumbs = [{"label": "Αρχική", "href": "/"}, {"label": "Υπηρεσίες", "href": "/s"}]
     if category_slug:
         breadcrumbs.append({"label": category_slug, "href": f"/s/{category_slug}"})
@@ -703,23 +713,77 @@ def get_archive_bundle(
     if subdivision_slug:
         breadcrumbs.append({"label": subdivision_slug, "href": None})
 
+    filter_tax = _archive_filter_taxonomies(subcategory_slug)
+
     return {
         **listing,
         "taxonomyData": {
-            "categories": [],
+            "categories": filter_tax["categories"],
             "currentCategory": {"slug": category_slug} if category_slug else None,
             "currentSubcategory": {"slug": subcategory_slug} if subcategory_slug else None,
             "currentSubdivision": {"slug": subdivision_slug} if subdivision_slug else None,
+            # DROP-1 (OLD get-services.ts:1120-1190): the sidebar/drawer lists.
+            "subcategories": filter_tax["subcategories"],
+            "subdivisions": filter_tax["subdivisions"],
         },
         "breadcrumbs": breadcrumbs,
         "counties": [],
+        # Carousel pills (unchanged semantics: top 8 under the active filters).
         "availableSubdivisions": [
             {"slug": row["subdivision"], "count": row["count"]} for row in sub_grouped
         ],
-        "availableSubcategories": [
-            {"slug": row["subcategory"], "count": row["count"]} for row in sibling_subcats
-        ],
+        # DROP-1 / P2-22: the sidebar subcategory list = OLD
+        # `filteredSubcategories`: EVERY subcategory that has a published
+        # service, in taxonomy order (not filtered, not count-ordered).
+        "availableSubcategories": filter_tax["subcategories"],
     }
+
+
+def _archive_filter_taxonomies(subcategory_slug: str | None) -> dict[str, list[dict[str, Any]]]:
+    """Port of OLD get-services.ts:1120-1214 (taxonomyData lists).
+
+    Built from `getServiceTaxonomyPaths()` (ALL published services, global —
+    OLD did not scope it to the route or the active filters):
+    - subcategories: every subcategory with ≥1 published service, in taxonomy
+      order, each carrying only its populated subdivisions as `children`;
+    - subdivisions: the populated children of the CURRENT subcategory, in
+      taxonomy order ([] when there is no subcategory, e.g. root /ipiresies);
+    - categories: categories with services, taxonomy order, first 10.
+    """
+    paths = get_taxonomy_paths()
+    used_subcats = {p["subcategory"] for p in paths if p.get("subcategory")}
+    used_cats = {p["category"] for p in paths if p.get("category")}
+    divs_by_sub: dict[str, set[str]] = {}
+    for p in paths:
+        if p.get("subcategory") and p.get("subdivision"):
+            divs_by_sub.setdefault(p["subcategory"], set()).add(p["subdivision"])
+
+    def _slim(node: dict[str, Any]) -> dict[str, Any]:
+        return {k: v for k, v in node.items() if k != "children"}
+
+    tree = taxonomy._service_indexes()["categories"]
+    subcategories: list[dict[str, Any]] = []
+    current_sub: dict[str, Any] | None = None
+    for cat in tree:
+        for sub in cat.get("children") or []:
+            if subcategory_slug and current_sub is None and sub.get("slug") == subcategory_slug:
+                current_sub = sub
+            if sub.get("slug") not in used_subcats:
+                continue
+            item = _slim(sub)
+            kids = sub.get("children") or []
+            if kids:
+                populated = divs_by_sub.get(sub.get("slug"), set())
+                item["children"] = [_slim(d) for d in kids if d.get("slug") in populated]
+            subcategories.append(item)
+
+    subdivisions: list[dict[str, Any]] = []
+    if current_sub is not None:
+        populated = divs_by_sub.get(current_sub.get("slug"), set())
+        subdivisions = [_slim(d) for d in current_sub.get("children") or [] if d.get("slug") in populated]
+
+    categories = [_slim(c) for c in tree if c.get("slug") in used_cats][:10]
+    return {"categories": categories, "subcategories": subcategories, "subdivisions": subdivisions}
 
 
 # ----- user dashboard (rows 68-69) ----------------------------------------
@@ -728,6 +792,12 @@ def get_archive_bundle(
 def get_user_services_dashboard(user: User, *, query: dict[str, Any]) -> dict[str, Any]:
     qs = Service.objects.filter(profile__user_id=user.id)
     if query.get("status") and query["status"] != "all":
+        # P2-38: `services.status` is a PG ENUM — an unknown value raised
+        # DataError 22P02 (HTTP 500). Reject it as a 400 instead.
+        if query["status"] not in ServiceStatus.values:
+            from rest_framework.exceptions import ValidationError
+
+            raise ValidationError({"status": ["Μη έγκυρη κατάσταση υπηρεσίας"]})
         qs = qs.filter(status=query["status"])
     if query.get("category"):
         qs = qs.filter(category=query["category"])
@@ -758,9 +828,10 @@ def get_user_services_dashboard(user: User, *, query: dict[str, Any]) -> dict[st
         sort_col = f"-{sort_col}"
     qs = qs.order_by(sort_col)
 
-    page = max(1, int(query.get("page", 1)))
+    # Bare int() 500'd on ?page=x (P3-14); OLD parseInt fallbacks → defaults.
+    page = _safe_int(query.get("page"), 1)
     # OLD `getUserServices` default limit is 12 (get-user-services.ts:74).
-    limit = max(1, min(100, int(query.get("limit", 12))))
+    limit = min(100, _safe_int(query.get("limit"), 12))
     offset = (page - 1) * limit
     total = qs.count()
     rows = list(qs[offset:offset + limit])

@@ -65,16 +65,20 @@ class ContactView(APIView):
         if settings.RECAPTCHA_SECRET_KEY and not _verify_recaptcha(token):
             return Response({"error": {"code": "captcha_failed", "message": "Captcha verification failed"}}, status=400)
 
-        Contact.objects.create(
+        contact = Contact.objects.create(
             name=s.validated_data["name"],
             email=s.validated_data["email"],
             message=s.validated_data["message"],
             subject=s.validated_data.get("subject") or None,
         )
         from apps.messaging.tasks import send_contact_admin_email, send_contact_user_email
+        # OLD contact.ts:85-91: subject 'Φόρμα Επικοινωνίας' + `contactId` (the
+        # builder applies the 'Φόρμα Επικοινωνίας' fallback and the OLD subject
+        # line `Νέα Φόρμα Επικοινωνίας - {email}`).
         send_contact_admin_email.delay(
             s.validated_data["name"], s.validated_data["email"],
-            s.validated_data.get("subject") or "Επικοινωνία", s.validated_data["message"],
+            s.validated_data.get("subject") or "Φόρμα Επικοινωνίας", s.validated_data["message"],
+            contact.id,
         )
         send_contact_user_email.delay(s.validated_data["email"], s.validated_data["name"])
         return Response({"message": "Το μήνυμά σας εστάλη"})
@@ -97,11 +101,13 @@ class FeedbackView(APIView):
                     f"page: {s.validated_data.get('pageUrl', '')}",
             subject=f"Feedback: {s.validated_data['issueType']}",
         )
-        from apps.messaging.tasks import send_contact_admin_email
-        send_contact_admin_email.delay(
-            request.user.display_name or request.user.email,
-            request.user.email,
-            f"Feedback: {s.validated_data['issueType']}",
-            f"{s.validated_data['description']}\n\npage: {s.validated_data.get('pageUrl', '')}",
+        # OLD submit-feedback.ts:69 → sendSupportFeedbackEmail (dedicated
+        # SUPPORT_FEEDBACK subject/body, Reply-To the reporter).
+        from apps.messaging.tasks import send_support_feedback_email
+        send_support_feedback_email.delay(
+            request.user.id,
+            s.validated_data["issueType"],
+            s.validated_data["description"],
+            s.validated_data.get("pageUrl") or None,
         )
         return Response({"message": "Ευχαριστούμε για την αναφορά"})

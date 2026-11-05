@@ -33,6 +33,19 @@ FREE_REFRESH_DAILY_LIMIT = 3
 DRAFT_RATE_LIMIT = timedelta(seconds=30)
 
 
+def _athens_day(dt: datetime | None):
+    """Calendar day of `dt` in the server TZ (Europe/Athens), or None.
+
+    OLD refresh-service.ts:86-95 / update-service.ts:258-266 compared against
+    `new Date(y, m, d)` = local midnight with the server TZ forced to
+    Europe/Athens (instrumentation.ts). Comparing UTC dates instead reset the
+    daily quota at 02:00/03:00 Athens time (XC-TZ / P1-21).
+    """
+    from django.utils import timezone as dj_timezone
+
+    return dj_timezone.localtime(dt).date() if dt else None
+
+
 def _refresh_daily_limit(user: User) -> int | None:
     """None = unlimited (promoted plan)."""
     from apps.services.selectors.service_reads import _active_plan
@@ -338,10 +351,8 @@ def update_service_info(*, user: User, service_id: int, payload: dict[str, Any])
 
     # car.gr refresh-on-edit eligibility (update-service.ts:255-278).
     now = datetime.now(timezone.utc)
-    today = now.date()
-    last_day = (
-        profile.last_service_refresh_date.date() if profile.last_service_refresh_date else None
-    )
+    today = _athens_day(now)
+    last_day = _athens_day(profile.last_service_refresh_date)
     current_daily = profile.daily_service_refresh_count or 0
     if last_day != today:
         current_daily = 0
@@ -443,12 +454,26 @@ def archive_service(*, user: User, service_id: int) -> None:
     service = _owner_or_404(service_id, profile)
     service.status = ServiceStatus.INACTIVE
     service.save(update_fields=["status", "updated_at"])
+    # OLD delete-service.ts:197 (archiveService): sync the Brevo list (may move
+    # PROS → NOSERVICES if that was the last published service).
+    _brevo_resync(user, "service_archived")
 
 
 def delete_service(*, user: User, service_id: int) -> None:
     profile = _require_profile(user)
     service = _owner_or_404(service_id, profile)
     service.delete()
+    # OLD delete-service.ts:104 (deleteService): same Brevo re-sync.
+    _brevo_resync(user, "service_deleted")
+
+
+def _brevo_resync(user: User, reason: str) -> None:
+    """Best-effort `handleUserStateChange` equivalent; never blocks the write."""
+    try:
+        from apps.messaging.tasks import brevo_state_change
+        brevo_state_change.delay(user.id, reason)
+    except Exception:
+        logger.exception("service_brevo_sync.failed", extra={"user_id": user.id, "reason": reason})
 
 
 def refresh_service(*, user: User, service_id: int) -> dict[str, Any]:
@@ -470,8 +495,8 @@ def refresh_service(*, user: User, service_id: int) -> dict[str, Any]:
         )
 
     # Per-user 10/day limit
-    today = now.date()
-    last_day = profile.last_service_refresh_date.date() if profile.last_service_refresh_date else None
+    today = _athens_day(now)
+    last_day = _athens_day(profile.last_service_refresh_date)
     if last_day != today:
         profile.daily_service_refresh_count = 0
 

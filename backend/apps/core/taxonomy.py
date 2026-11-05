@@ -41,37 +41,79 @@ def _maps() -> dict[str, Any]:
         return {}
 
 
+def _level_tree(space: str) -> list[dict[str, Any]]:
+    """Level-aware category tree for `space` (categories → subcategories →
+    subdivisions), in taxonomy display order — the equivalent of OLD
+    `getServiceTaxonomies()` / `getProTaxonomies()`.
+
+    CG-1: never derive levels from `bySlug`. That map is keyed by slug, so the
+    21 service slug collisions (20 subcategory↔subdivision + `marketing`
+    category↔subcategory) collapse onto ONE node and a bySlug walk mis-levels
+    them (it yielded 73/437/448 instead of 8/88/490 and dropped the whole
+    Μάρκετινγκ category). Sources, in order:
+    1. `tree` — present in the DB-built maps (maps_builder), FK-reconstructed.
+    2. `hierarchy` + `byId` — the shipped JSON fallback (service space only).
+    3. `byId` nodes that are nobody's child (raw nested `children`).
+    """
+    space_map = _maps().get(space) or {}
+    tree = space_map.get("tree")
+    if tree:
+        return tree
+
+    by_id = space_map.get("byId") or {}
+    hierarchy = space_map.get("hierarchy") or {}
+    if hierarchy and by_id:
+        cats: dict[str, dict[str, Any]] = {}
+        subs: dict[str, dict[str, Any]] = {}
+        # byId preserves the dataset order; group by the hierarchy levels.
+        for nid in by_id:
+            h = hierarchy.get(nid) or {}
+            if h.get("subdivision") or h.get("subcategory") or not h.get("category"):
+                continue
+            cats[nid] = {**by_id[nid], "children": []}
+        for nid in by_id:
+            h = hierarchy.get(nid) or {}
+            if h.get("subcategory") == nid and not h.get("subdivision") and h.get("category") in cats:
+                node = {**by_id[nid], "children": []}
+                subs[nid] = node
+                cats[h["category"]]["children"].append(node)
+        for nid in by_id:
+            h = hierarchy.get(nid) or {}
+            if h.get("subdivision") == nid and h.get("subcategory") in subs:
+                subs[h["subcategory"]]["children"].append(dict(by_id[nid]))
+        return list(cats.values())
+
+    child_ids: set[str] = set()
+    for node in by_id.values():
+        for ch in node.get("children") or []:
+            if isinstance(ch, dict) and ch.get("id") is not None:
+                child_ids.add(str(ch["id"]))
+    return [n for nid, n in by_id.items() if str(nid) not in child_ids]
+
+
 @functools.lru_cache(maxsize=1)
 def _service_indexes() -> dict[str, Any]:
-    """Build flat slug→node indexes for service categories / subcategories /
-    subdivisions by walking the bySlug tree.
+    """Flat indexes over the LEVEL-AWARE service tree (see `_level_tree`).
 
-    OLD `getServiceTaxonomies()` is the list of categories; each has `children`
-    (subcategories), each of which has `children` (subdivisions). Here we flatten
-    that tree so callers can do O(1) lookups and label-fuzzy scans.
+    `categories` are the top-level nodes (each carrying `children` =
+    subcategories, each carrying `children` = subdivisions), `subcategories` /
+    `subdivisions` the flattened lower levels, all in taxonomy order. Expected
+    on the live dataset: 8 / 88 / 490.
+
+    `by_slug` stays the flat `bySlug` map (slug → primary node) for the
+    label lookups that accept a slug-or-id.
     """
-    svc = (_maps().get("service") or {}).get("bySlug") or {}
-    categories: list[dict[str, Any]] = []
+    by_slug: dict[str, dict[str, Any]] = dict(
+        (_maps().get("service") or {}).get("bySlug") or {}
+    )
+    categories: list[dict[str, Any]] = list(_level_tree("service"))
     subcategories: list[dict[str, Any]] = []
     subdivisions: list[dict[str, Any]] = []
-    by_slug: dict[str, dict[str, Any]] = {}
-
-    # bySlug contains nodes at every level keyed by slug; the category nodes are
-    # the ones whose children are subcategories. Walk the category nodes (those
-    # present in byCategory) to assign levels deterministically.
-    by_category = (_maps().get("service") or {}).get("byCategory") or {}
-    category_ids = set(by_category.keys())
-
-    for slug, node in svc.items():
-        by_slug[slug] = node
-
-    for slug, node in svc.items():
-        if node.get("id") in category_ids:
-            categories.append(node)
-            for sub in node.get("children") or []:
-                subcategories.append(sub)
-                for div in sub.get("children") or []:
-                    subdivisions.append(div)
+    for cat in categories:
+        for sub in cat.get("children") or []:
+            subcategories.append(sub)
+            for div in sub.get("children") or []:
+                subdivisions.append(div)
 
     return {
         "by_slug": by_slug,
@@ -259,19 +301,41 @@ def matching_tag_slugs(search_term: str) -> list[str]:
     return out
 
 
+def matching_tag_ids(search_term: str) -> list[str]:
+    """Stored tag values whose label contains the (normalized) search term.
+
+    CG-2: exact port of OLD `findMatchingTagIds` (build-search-conditions.ts:
+    19-27) — iterates EVERY tag (byId, not the slug-collapsed bySlug) and
+    returns the tag **ids**, which is what `services.tags` stores (the create
+    form saves `tag.id`, e.g. '23'). The slug is appended too so rows stored
+    with slugs (demo seed) still match; it can never collide with a numeric id.
+    Used by the archive search + suggestions (`tags__overlap`).
+    """
+    if not search_term:
+        return []
+    needle = normalize_term(search_term)
+    by_id = (_maps().get("tags") or {}).get("byId") or {}
+    out: list[str] = []
+    for tid, node in by_id.items():
+        label = node.get("label")
+        if label and needle in normalize_term(label):
+            for v in (str(node.get("id") or tid), node.get("slug")):
+                if v and v not in out:
+                    out.append(v)
+    return out
+
+
 # ----- pro subcategory label matching (search-conditions parity) ----------
 
 
 @functools.lru_cache(maxsize=1)
 def _pro_subcategories() -> list[dict[str, Any]]:
-    pro = (_maps().get("pro") or {}).get("bySlug") or {}
-    by_category = (_maps().get("pro") or {}).get("byCategory") or {}
-    category_ids = set(by_category.keys())
+    # Level-aware (CG-1): walk the pro category tree, never the slug-collapsed
+    # bySlug map (13 pro slugs are shared by gender-variant siblings).
     subs: list[dict[str, Any]] = []
-    for slug, node in pro.items():
-        if node.get("id") in category_ids:
-            for sub in node.get("children") or []:
-                subs.append(sub)
+    for cat in _level_tree("pro"):
+        for sub in cat.get("children") or []:
+            subs.append(sub)
     return subs
 
 

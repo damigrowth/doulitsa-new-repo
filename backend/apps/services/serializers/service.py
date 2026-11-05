@@ -422,9 +422,10 @@ class ServiceFiltersSerializer(serializers.Serializer):
     # (get-services.ts:922). The selector interprets ''/true/'true' itself.
     online = serializers.JSONField(required=False, allow_null=True)
     search = serializers.CharField(required=False, allow_null=True, allow_blank=True, max_length=255)
-    # OLD allowed an explicit status override on archive search (default
-    # 'published'); keep it accepted (get-services.ts:392).
-    status = serializers.CharField(required=False, allow_null=True, allow_blank=True, max_length=16)
+    # NO `status` field (P1-2 / CG-5): this endpoint is AllowAny, and OLD's
+    # `getServicesByFilters` status override was server-internal only (no
+    # client importer). An unknown `status` key is now silently dropped and the
+    # selectors force PUBLISHED, so anonymous callers can't list drafts.
     page = serializers.IntegerField(required=False, default=1, min_value=1)
     limit = serializers.IntegerField(required=False, default=20, min_value=1, max_value=100)
     sortBy = serializers.ChoiceField(
@@ -436,11 +437,47 @@ class ServiceFiltersSerializer(serializers.Serializer):
     excludeFeatured = serializers.BooleanField(required=False, default=False)
 
 
+class LenientIntegerField(serializers.Field):
+    """Integer query/body param that never 400s/500s: a missing, null, NaN or
+    non-numeric value becomes `default`, and the result is clamped to
+    [min_value, max_value]. Mirrors OLD `params.limit || 20` /
+    `parseInt(page || '1')` fallbacks (P3-13 XC-PAGEPARAMS)."""
+
+    def __init__(self, *, default_value: int, min_value: int = 1, max_value: int | None = None, **kwargs):
+        kwargs.setdefault("required", False)
+        kwargs.setdefault("default", default_value)
+        self.default_value = default_value
+        self.min_value = min_value
+        self.max_value = max_value
+        super().__init__(**kwargs)
+
+    def validate_empty_values(self, data):
+        if data is None:
+            return (True, self.default_value)
+        return super().validate_empty_values(data)
+
+    def to_internal_value(self, data):
+        try:
+            value = int(float(data)) if not isinstance(data, bool) else self.default_value
+        except (TypeError, ValueError, OverflowError):
+            return self.default_value
+        if value < self.min_value:
+            return self.default_value if value <= 0 else self.min_value
+        if self.max_value is not None and value > self.max_value:
+            return self.max_value
+        return value
+
+    def to_representation(self, value):
+        return value
+
+
 class ServiceArchiveRequestSerializer(serializers.Serializer):
     categorySlug = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     subcategorySlug = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     subdivisionSlug = serializers.CharField(required=False, allow_null=True, allow_blank=True)
-    limit = serializers.IntegerField(required=False, default=20, min_value=1, max_value=100)
+    # Lenient (P3-13): the page sends parseInt(?limit) → NaN → JSON null for a
+    # bad ?limit; OLD fell back to 20 instead of erroring the whole page.
+    limit = LenientIntegerField(default_value=20, min_value=1, max_value=100)
     searchParams = serializers.JSONField(required=False, default=dict)
 
 

@@ -7,7 +7,7 @@ import * as messagingApi from '@/lib/api/messaging';
 import { ApiError } from '@/lib/api/client';
 import type { ChatHeaderUser, ChatListItem } from '@/lib/types/messages';
 import { getDashboardMetadata } from '@/lib/seo/pages';
-import { redirect, notFound } from 'next/navigation';
+import { redirect } from 'next/navigation';
 
 // Real-time chat with Channels WebSocket — disable Next route caching
 export const dynamic = 'force-dynamic';
@@ -41,13 +41,19 @@ export default async function MessagesPage({ params }: MessagesPageProps) {
     }
   }
   if (!chat) {
-    notFound();
+    // msg D2 parity: OLD sent non-members (and unknown ids) back to the
+    // inbox instead of a 404 (Django now 404s non-members too).
+    redirect('/dashboard/messages');
   }
   const selectedChatId = chat.id;
 
   // Fetch all chats + messages
   const chats = (await getChats(userId)) as ChatListItem[];
   const messages = await getMessages(selectedChatId, userId);
+  if (messages.length === 0) {
+    // msg D2 parity: OLD never opened an empty conversation.
+    redirect('/dashboard/messages');
+  }
 
   const selectedChat = chats.find((c) => c.id === selectedChatId);
 

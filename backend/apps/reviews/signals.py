@@ -9,6 +9,7 @@ apps/profiles/services/cache.py).
 from __future__ import annotations
 
 from django.core.cache import cache
+from django.db import transaction
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
@@ -25,6 +26,16 @@ def _invalidate_review_caches(sender, instance: Review, **kwargs) -> None:
         username = getattr(instance.profile, "username", None) if instance.profile_id else None
         if username:
             keys.append(f"profile:page:{username}")
+        # XC-ONCOMMIT (P2-16): purge after commit (immediately outside atomic).
+        transaction.on_commit(lambda: _purge(keys))
+    except Exception:  # pragma: no cover - defensive
+        import logging
+
+        logging.getLogger(__name__).exception("review_cache_invalidation_failed")
+
+
+def _purge(keys: list[str]) -> None:
+    try:
         cache.delete_many(keys)
     except Exception:  # pragma: no cover - defensive
         import logging

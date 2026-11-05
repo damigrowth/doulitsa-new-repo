@@ -91,12 +91,11 @@ def report_profile(
     target = Profile.objects.filter(id=profile_id).first()
     if target is None:
         raise ApiError("Το προφίλ δεν βρέθηκε", code="profile_not_found", status_code=404)
-    from apps.messaging.tasks import send_contact_admin_email
-    send_contact_admin_email.delay(
-        reporter.display_name or reporter.email,
-        reporter.email,
-        f"Καταγγελία προφίλ: {profile_username}",
-        f"Reported profile {profile_name} ({profile_id})\n\n{description}",
+    # OLD report-profile.ts:99 → sendProfileReportEmail (dedicated
+    # PROFILE_REPORT subject/body, Reply-To the reporter).
+    from apps.messaging.tasks import send_profile_report_email
+    send_profile_report_email.delay(
+        target.id, reporter.id, profile_name, profile_username, description,
     )
     logger.info(
         "profile_reported",

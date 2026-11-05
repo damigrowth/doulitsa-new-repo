@@ -264,8 +264,22 @@ async function _getServiceArchivePageDataUncached(params: {
       currentCategory: enrich(taxonomyData.currentCategory, routeCategory),
       currentSubcategory: enrich(taxonomyData.currentSubcategory, routeSubcategory),
       currentSubdivision: enrich(taxonomyData.currentSubdivision, routeSubdivision),
-      subcategories: enrichLeafList(bundle.availableSubcategories, routeCategory),
-      subdivisions: enrichLeafList(bundle.availableSubdivisions, routeSubcategory),
+      // DROP-1: the backend now ships the FULL populated lists in
+      // taxonomyData.subcategories/.subdivisions (taxonomy order, like OLD);
+      // availableSub* stays the top-8 the chip carousel uses. Fall back to it
+      // only if the full list is absent (older backend).
+      subcategories: enrichLeafList(
+        ((taxonomyData as { subcategories?: TaxonomyStub[] }).subcategories?.length
+          ? (taxonomyData as { subcategories?: TaxonomyStub[] }).subcategories
+          : bundle.availableSubcategories),
+        routeCategory,
+      ),
+      subdivisions: enrichLeafList(
+        ((taxonomyData as { subdivisions?: TaxonomyStub[] }).subdivisions?.length
+          ? (taxonomyData as { subdivisions?: TaxonomyStub[] }).subdivisions
+          : bundle.availableSubdivisions),
+        routeSubcategory,
+      ),
     };
 
     // The chip carousel above the listing reads `availableSubdivisions[i].label`

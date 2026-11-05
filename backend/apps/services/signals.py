@@ -10,6 +10,7 @@ too.
 from __future__ import annotations
 
 from django.core.cache import cache
+from django.db import transaction
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
@@ -29,6 +30,18 @@ def _invalidate_service_caches(sender, instance: Service, **kwargs) -> None:
         )
         if username:
             keys.append(f"profile:page:{username}")
+    except Exception:  # pragma: no cover - defensive
+        import logging
+
+        logging.getLogger(__name__).exception("service_cache_invalidation_failed")
+        return
+    # XC-ONCOMMIT (P2-16): purge after the write commits (immediately when not
+    # inside an atomic block), so a concurrent read can't re-cache stale data.
+    transaction.on_commit(lambda: _purge(keys))
+
+
+def _purge(keys: list[str]) -> None:
+    try:
         cache.delete_many(keys)
         try:
             cache.delete_pattern("services:count:*")

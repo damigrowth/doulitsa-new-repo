@@ -14,6 +14,15 @@ from apps.profiles.serializers.profile_filters import (
 from common.exceptions import NotFound
 
 
+def _query_limit(raw, default: int) -> int:
+    """Bare int() 500'd on ?limit=x (P3-14); invalid/≤0 → default."""
+    try:
+        value = int(raw) if raw is not None else default
+    except (TypeError, ValueError, OverflowError):
+        return default
+    return min(100, value) if value >= 1 else default
+
+
 class ProfilesDirectoryView(APIView):
     """GET /api/profiles/directory (row 40)."""
 
@@ -21,7 +30,7 @@ class ProfilesDirectoryView(APIView):
 
     def get(self, request):
         return Response(aggs.directory_data(
-            limit=int(request.query_params.get("limit", 15)),
+            limit=_query_limit(request.query_params.get("limit"), 15),
             category_slug=request.query_params.get("categorySlug"),
             subcategory_slug=request.query_params.get("subcategorySlug"),
         ))

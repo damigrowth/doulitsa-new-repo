@@ -82,8 +82,10 @@ export const adminProfiles = {
   // and upserts a verification when one does not exist.
   updateVerificationStatus: (id: string, body: { status: 'PENDING' | 'APPROVED' | 'REJECTED'; notes?: string }) =>
     api.patch(`/admin/profiles/${id}/verification-status`, body),
-  search: (searchQuery: string) =>
-    api.get<AdminProfileRow[]>('/admin/profiles/search', { query: { searchQuery } }),
+  search: (searchQuery: string, opts: { published?: boolean } = {}) =>
+    api.get<AdminProfileRow[]>('/admin/profiles/search', {
+      query: { searchQuery, ...(opts.published ? { published: true } : {}) },
+    }),
   searchForServices: (searchQuery: string) =>
     api.get<AdminProfileRow[]>('/admin/profiles/search/for-services', { query: { searchQuery } }),
   stats: () => api.get<AdminProfileStats>('/admin/profiles/stats'),

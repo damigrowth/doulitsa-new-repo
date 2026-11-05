@@ -64,9 +64,10 @@ def test_coverage_normalized_helper() -> None:
     from apps.profiles.services.profile_updates import _coverage_normalized
 
     assert _coverage_normalized({}) is None
-    out = _coverage_normalized({"county": "Αττική", "areas": ["Αθήνα", "Πειραιάς"]})
-    assert out is not None
-    # Greek accents stripped + lowercased by normalize_term
-    assert "αττικη" in out
-    assert "αθηνα" in out
-    assert "πειραιας" in out
+    # Coverage stores location IDS. OLD generateCoverageNormalized doc example
+    # (datasets.ts:930-938): areas 216/224 (Γαλάτσι, Γέρακας) + county 2.
+    out = _coverage_normalized({"areas": ["216", "224"], "counties": ["2"]})
+    assert out == "γαλατσι γερακας αττικης"
+    # LOC-1: id 2 is the county "Αττικής" AND a zipcode "12351" — OLD
+    # getLocationName checks counties first, so it must never be "12351".
+    assert _coverage_normalized({"county": "2", "area": "2", "counties": ["2"], "areas": ["2"]}) == "αττικης"

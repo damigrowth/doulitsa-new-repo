@@ -57,9 +57,17 @@ _SORT_COLS = {
 
 def list_submissions(*, filters: dict[str, Any]) -> dict[str, Any]:
     qs = TaxonomySubmission.objects.all()
+    # P2-38: status/type are PG ENUMs — an unknown value raised DataError
+    # 22P02 (HTTP 500). Reject it as a 400 before it reaches the DB.
+    from rest_framework.exceptions import ValidationError
+
     if (s := filters.get("status")) and s != "all":
+        if s not in TaxonomySubmissionStatus.values:
+            raise ValidationError({"status": ["Μη έγκυρη κατάσταση"]})
         qs = qs.filter(status=s)
     if (t := filters.get("type")) and t != "all":
+        if t not in TaxonomySubmissionType.values:
+            raise ValidationError({"type": ["Μη έγκυρος τύπος"]})
         qs = qs.filter(type=t)
     # OLD search matches label only (admin/taxonomy-submission.ts:45-47).
     if q := filters.get("searchQuery"):

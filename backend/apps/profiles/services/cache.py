@@ -14,8 +14,17 @@ from __future__ import annotations
 from django.core.cache import cache
 
 
-def invalidate_profile_caches(username: str | None = None) -> None:
+def invalidate_profile_caches(
+    username: str | None = None,
+    *,
+    service_ids: list[int] | None = None,
+) -> None:
     """Purge the cached public payloads a profile write can affect.
+
+    CACHE-1: `service:page:{id}` (30 min) embeds the owner's full profile
+    summary (contact card + About section), so a profile edit must purge the
+    page of every service the profile owns (OLD purged them through the
+    `service.byProfile` / `collections.services` tags, revalidation.ts:146-151).
 
     Best-effort: never raises (a failed purge only means the TTL decides).
     """
@@ -23,12 +32,14 @@ def invalidate_profile_caches(username: str | None = None) -> None:
         keys = ["core:home"]
         if username:
             keys.append(f"profile:page:{username}")
+        keys.extend(f"service:page:{sid}" for sid in (service_ids or []))
         cache.delete_many(keys)
         try:
             cache.delete_pattern("profiles:directory:*")
             cache.delete_pattern("profiles:count:*")
             if not username:
                 cache.delete_pattern("profile:page:*")
+                cache.delete_pattern("service:page:*")
         except AttributeError:  # non-redis backend (tests) — fall back to TTL
             pass
     except Exception:  # pragma: no cover - defensive

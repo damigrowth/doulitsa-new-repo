@@ -14,6 +14,17 @@ from apps.messaging.services import chat_ops
 from common.exceptions import NotFound
 
 
+def _query_int(request, name: str, default: int, *, maximum: int = 100) -> int:
+    """`?name=` as a positive int; missing/invalid/≤0 → default. P3-14 /
+    msg D11: a bare int() 500'd on ?limit=x and a negative limit raised an
+    AssertionError on the negative queryset slice."""
+    try:
+        value = int(request.query_params.get(name, default))
+    except (TypeError, ValueError, OverflowError):
+        return default
+    return min(maximum, value) if value >= 1 else default
+
+
 # ----- serializers --------------------------------------------------------
 
 
@@ -87,7 +98,7 @@ class ChatMessagesView(APIView):
         # OLD default page size is 20 (messages.ts:17), not 50.
         return Response(chat_ops.list_messages(
             user=request.user, chat_id=chat_id,
-            limit=int(request.query_params.get("limit", 20)),
+            limit=_query_int(request, "limit", 20),
             before=request.query_params.get("before"),
         ))
 
@@ -168,7 +179,7 @@ class ChatRecentUnreadView(APIView):
     def get(self, request):
         return Response({"messages": chat_ops.recent_unread_messages(
             user=request.user,
-            minutes=int(request.query_params.get("minutes", 15)),
+            minutes=_query_int(request, "minutes", 15, maximum=60 * 24 * 30),
         )})
 
 

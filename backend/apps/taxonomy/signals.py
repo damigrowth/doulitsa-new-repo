@@ -4,6 +4,7 @@ these — intentional; the seed/backfill clear caches explicitly if needed.)
 """
 from __future__ import annotations
 
+from django.db import transaction
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
@@ -22,4 +23,8 @@ from apps.taxonomy.services.cache import invalidate_taxonomy_caches
 @receiver(post_save, sender=Tag)
 @receiver(post_delete, sender=Tag)
 def _on_taxonomy_write(sender, **kwargs):
-    invalidate_taxonomy_caches()
+    # XC-ONCOMMIT (P2-16): bump/purge only after the write commits. Purging
+    # inside the transaction let a concurrent maps build cache the PRE-write
+    # tree under the NEW version/ETag, which then self-perpetuated. Outside an
+    # atomic block on_commit runs immediately (same as before).
+    transaction.on_commit(invalidate_taxonomy_caches)

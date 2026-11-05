@@ -52,6 +52,10 @@ export function useChatListSubscription({
       message: trigger,
       message_edited: trigger,
       message_deleted: trigger,
+      // msg D1: mark-read broadcasts `read` (now with chatId) — without it the
+      // open chat's unread badge only cleared on the next poll.
+      read: trigger,
+      reaction: trigger,
     });
 
     return () => {

@@ -397,6 +397,14 @@ export interface AdminChatMessageRow {
   id: string;
   content: string | null;
   authorId: string;
+  /** `_msg` in apps/messaging/views/admin/chats.py (OLD chats.ts:494-501). */
+  author: {
+    id: string;
+    displayName: string | null;
+    username: string | null;
+    image: string | null;
+  } | null;
+  isCreator: boolean | null;
   createdAt: string;
   deleted: boolean;
   edited: boolean;

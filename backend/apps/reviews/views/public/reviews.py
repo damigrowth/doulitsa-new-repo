@@ -11,12 +11,27 @@ from apps.reviews.serializers.review import CreateReviewSerializer
 from apps.reviews.services import review_ops
 
 
+def _query_int(request, name: str, default: int, *, maximum: int = 100) -> int:
+    """`?name=` as a positive int; missing/invalid/≤0 → default (P3-14 /
+    rev D11: a bare int() turned ?page=x into a 500)."""
+    try:
+        value = int(request.query_params.get(name, default))
+    except (TypeError, ValueError, OverflowError):
+        return default
+    return min(maximum, value) if value >= 1 else default
+
+
+def _optional_int(raw) -> int | None:
+    try:
+        return int(raw) if raw not in (None, "") else None
+    except (TypeError, ValueError, OverflowError):
+        return None
+
+
 def _page_limit(request, default_page=1, default_limit=10):
     # OLD default page-size for profile/service/me lists is 10
     # (get-reviews.ts:84,184; get-user-reviews.ts:49,206,371,473).
-    return int(request.query_params.get("page", default_page)), int(
-        request.query_params.get("limit", default_limit)
-    )
+    return _query_int(request, "page", default_page, maximum=10**6), _query_int(request, "limit", default_limit)
 
 
 class CreateReviewView(APIView):
@@ -55,7 +70,7 @@ class CanUserReviewView(APIView):
         return Response(review_ops.can_user_review(
             user=request.user,
             profile_id=profile_id,
-            service_id=int(service_id) if service_id else None,
+            service_id=_optional_int(service_id),
         ))
 
 
@@ -97,8 +112,8 @@ class ProfileOtherServiceReviewsView(APIView):
         # OLD getProfileOtherServiceReviews default limit 5 (get-reviews.ts:285).
         return Response(review_reads.list_profile_other_service_reviews(
             profile_id,
-            exclude_service_id=int(exclude) if exclude else None,
-            limit=int(request.query_params.get("limit", 5)),
+            exclude_service_id=_optional_int(exclude),
+            limit=_query_int(request, "limit", 5),
         ))
 
 

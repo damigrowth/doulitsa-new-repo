@@ -78,9 +78,16 @@ def _user_role(profile: Profile) -> str | None:
 
 
 def serialize_profile_summary(profile: Profile) -> dict[str, Any]:
-    """Public summary payload (used by /api/profiles/by-username/{username}).
+    """PUBLIC summary payload (by-username, /api/home, /api/saved, service
+    page, profile page bundle).
 
-    Returns a JSON-friendly dict so views don't need a heavyweight serializer.
+    PRIV-1: carries NO email and NO first/last name. OLD used the names only
+    server-side for avatar initials (user-avatar.tsx, no 'use client') and the
+    public card initials already come from `displayName` (required for pros);
+    the email is attached only by the profile-page bundle, and only when
+    `visibility.email` is true. Owner-only fields live in
+    `serialize_profile_owner`. Phone/viber/whatsapp/terms stay: OLD rendered
+    them publicly on every profile page (profile-info.tsx:124-159).
     """
     return {
         "id": profile.id,
@@ -122,8 +129,6 @@ def serialize_profile_summary(profile: Profile) -> dict[str, Any]:
         "settlementMethods": profile.settlement_methods or [],
         "budget": profile.budget,
         "size": profile.size,
-        "firstName": profile.first_name,
-        "lastName": profile.last_name,
         "commencement": profile.commencement,
         "terms": profile.terms,
         "createdAt": profile.created_at.isoformat() if profile.created_at else None,
@@ -134,7 +139,7 @@ def serialize_profile_summary(profile: Profile) -> dict[str, Any]:
 # Contact/PII fields the public card rows must NOT carry — OLD's archive select
 # (PROFILE_ARCHIVE_SELECT, src/lib/database/selects/profile.ts:16-39) had none of
 # these; they belong only to the profile-page bundle (ContactReveal) and owner paths.
-_CARD_EXCLUDED_FIELDS = ("phone", "viber", "whatsapp", "firstName", "lastName", "terms")
+_CARD_EXCLUDED_FIELDS = ("phone", "viber", "whatsapp", "terms")
 
 
 def serialize_profile_card(profile: Profile) -> dict[str, Any]:
@@ -149,6 +154,12 @@ def serialize_profile_owner(profile: Profile) -> dict[str, Any]:
     """Owner payload — includes private fields the public version omits."""
     base = serialize_profile_summary(profile)
     base.update({
+        # Owner-only identity fields (stripped from the public summary, PRIV-1).
+        "firstName": profile.first_name,
+        "lastName": profile.last_name,
+        # prof-dash D10: the presentation form reads `initialProfile.email`
+        # (falls back to the user's email) — OLD returned the profile row.
+        "email": profile.email,
         "billing": profile.billing,
         "contactMethods": profile.contact_methods or [],
         "paymentMethods": profile.payment_methods or [],

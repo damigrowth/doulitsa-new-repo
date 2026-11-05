@@ -28,6 +28,14 @@ export async function lookupAfm(afm: string): Promise<ActionResult<AfmLookupResu
     const data = (await profilesApi.lookupAfm(afm)) as AfmLookupResult;
     return { success: true, data };
   } catch (err) {
-    return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
+    // AFM-1: surface Django's specific AADE reason (ΑΦΜ απενεργοποιημένο,
+    // AADE unavailable, …) instead of collapsing everything to one message.
+    return {
+      success: false,
+      error:
+        err instanceof ApiError && err.message
+          ? err.message
+          : 'Το ΑΦΜ δεν βρέθηκε. Ελέγξτε ότι τα στοιχεία είναι σωστά.',
+    };
   }
 }
