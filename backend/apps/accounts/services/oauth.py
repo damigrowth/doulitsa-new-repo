@@ -37,7 +37,12 @@ def complete_oauth_setup(
     if type not in (UserType.USER, UserType.PRO):
         raise FieldErrors(details={"type": ["Invalid"]})
     if type == UserType.PRO and role not in (UserRole.FREELANCER, UserRole.COMPANY):
-        raise FieldErrors(details={"role": ["Invalid for pro"]})
+        # OLD oauth-setup.ts:34-40 message.
+        raise ApiError(
+            "Παρακαλώ επιλέξτε αν είστε Επαγγελματίας ή Επιχείρηση",
+            code="role_required",
+            status_code=400,
+        )
     if type == UserType.PRO:
         if not username or len(username) < 3:
             raise FieldErrors(details={"username": ["Required ≥3 chars"]})
@@ -94,7 +99,10 @@ def complete_oauth_setup(
         from apps.messaging.tasks import brevo_state_change
         brevo_state_change.delay(user.id, "oauth_setup_complete")
     except Exception:
-        pass
+        import logging
+        logging.getLogger(__name__).exception(
+            "oauth_setup.brevo_enqueue_failed", extra={"user_id": user.id}
+        )
 
     return user
 

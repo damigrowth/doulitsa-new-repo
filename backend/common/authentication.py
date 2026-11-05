@@ -1,9 +1,8 @@
 """Custom authentication classes.
 
-`ApiKeyAuthentication`: matches Better Auth's API-key plugin behaviour. The
-client passes either a static env-key (Authorization: ApiKey <env-key>) or a
-DB-stored key. DB keys are owned by an admin user and may be enabled/disabled
-or expired.
+`ApiKeyAuthentication`: Authorization: ApiKey <env-key | DB key>. Opt-in per
+view (`allow_api_key_auth = True`); ignored everywhere else. DB keys are owned
+by an admin user and may be enabled/disabled or expired.
 
 `CookieJWTAuthentication`: reads the SimpleJWT access token from the
 `dj_access` cookie that Next.js sets `httpOnly` after login. Lets client
@@ -16,8 +15,10 @@ from datetime import datetime, timezone
 from typing import Any
 
 from django.conf import settings
+from django.utils.crypto import constant_time_compare
 from rest_framework import authentication, exceptions
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
 
 COOKIE_NAME_ACCESS = "dj_access"
@@ -28,10 +29,10 @@ class CookieJWTAuthentication(JWTAuthentication):
 
     Returns `None` (not an error) when the cookie is missing, so the request
     falls through to the other authentication classes (Authorization header
-    Bearer, API key, etc.). Only treats malformed/expired tokens as failures
-    — and silently does so by returning `None` to avoid leaking SimpleJWT's
-    error envelope from public endpoints accessed by browsing users whose
-    refresh token may also have expired.
+    Bearer, API key, etc.). Malformed/expired tokens and unknown/inactive users
+    also return `None` (to avoid leaking SimpleJWT's error envelope from public
+    endpoints accessed by browsing users whose refresh token may also have
+    expired). Any other error (e.g. the DB is down) propagates.
     """
 
     def authenticate(self, request: Any) -> tuple[Any, Any] | None:
@@ -41,13 +42,25 @@ class CookieJWTAuthentication(JWTAuthentication):
         try:
             validated = self.get_validated_token(raw_token)
             return (self.get_user(validated), validated)
-        except exceptions.AuthenticationFailed:
-            return None
-        except Exception:
+        except (exceptions.AuthenticationFailed, InvalidToken, TokenError):
+            # Only auth failures (bad/expired token, unknown or inactive user)
+            # read as "anonymous". A DB error must surface as a 500, not as a
+            # silent logout (P5-BR-8; it fed the cookie-clearing refresh path).
             return None
 
 
 class ApiKeyAuthentication(authentication.BaseAuthentication):
+    """Admin API-key authentication — OPT-IN per view (AZ-D1 / P1-4).
+
+    OLD never accepted API keys as session credentials (`validateAdminApiKey`
+    was validate-only; better-auth `enableSessionForAPIKeys` defaulted to
+    false). This class sits in DEFAULT_AUTHENTICATION_CLASSES, which made any
+    key a bearer credential for the whole API. It now authenticates ONLY on
+    views that set `allow_api_key_auth = True` (none do today), and even then
+    compares in constant time and requires the key owner to be an active admin.
+    On every other view the header is ignored (returns None).
+    """
+
     keyword = "ApiKey"
 
     def authenticate(self, request: Any) -> tuple[Any, str] | None:
@@ -55,43 +68,57 @@ class ApiKeyAuthentication(authentication.BaseAuthentication):
         if not auth_header.startswith(f"{self.keyword} "):
             return None
 
+        view = (getattr(request, "parser_context", None) or {}).get("view")
+        if not getattr(view, "allow_api_key_auth", False):
+            return None
+
         provided_key = auth_header[len(self.keyword) + 1 :].strip()
         if not provided_key:
             raise exceptions.AuthenticationFailed("Empty API key.")
 
         # 1. Static env-level key (used by infra/ops scripts)
-        if settings.ADMIN_API_KEY and provided_key == settings.ADMIN_API_KEY:
+        if settings.ADMIN_API_KEY and constant_time_compare(provided_key, settings.ADMIN_API_KEY):
             user = self._get_static_admin_user()
-            return (user, provided_key)
+            return (self._require_active_admin(user), provided_key)
 
         # 2. DB-backed admin API key
         from apps.admin_api.models.api_key import ApiKey
 
-        try:
-            api_key = ApiKey.objects.select_related("user").get(key=provided_key, enabled=True)
-        except ApiKey.DoesNotExist as exc:
-            raise exceptions.AuthenticationFailed("Invalid API key.") from exc
+        candidates = ApiKey.objects.select_related("user").filter(enabled=True)
+        match = next(
+            (k for k in candidates if k.key and constant_time_compare(k.key, provided_key)),
+            None,
+        )
+        if match is None:
+            raise exceptions.AuthenticationFailed("Invalid API key.")
 
-        if api_key.expires_at and api_key.expires_at < datetime.now(timezone.utc):
+        if match.expires_at and match.expires_at < datetime.now(timezone.utc):
             raise exceptions.AuthenticationFailed("API key expired.")
 
-        return (api_key.user, provided_key)
+        return (self._require_active_admin(match.user), provided_key)
 
     def authenticate_header(self, request: Any) -> str:
         return self.keyword
 
     @staticmethod
+    def _require_active_admin(user: Any) -> Any:
+        from apps.accounts.models.user import UserRole
+
+        if (
+            user is None
+            or getattr(user, "role", None) != UserRole.ADMIN
+            or not getattr(user, "is_active", False)
+        ):
+            raise exceptions.AuthenticationFailed("API key owner is not an active admin.")
+        return user
+
+    @staticmethod
     def _get_static_admin_user() -> Any:
-        """Returns a synthetic super-admin user for the env-level key.
+        """The env-level key maps to the oldest ACTIVE admin (never a synthetic
+        unsaved user)."""
+        from apps.accounts.models.user import User, UserRole
 
-        The user has role='admin' and is_authenticated=True, but is NOT
-        persisted. Use sparingly — DB keys are preferred for auditability.
-        """
-        from apps.accounts.models.user import User
-
-        try:
-            return User.objects.filter(role="admin").order_by("created_at").first() or User(
-                id="env-admin", email="env@admin", role="admin", type="user"
-            )
-        except Exception:
-            return User(id="env-admin", email="env@admin", role="admin", type="user")
+        for user in User.objects.filter(role=UserRole.ADMIN).order_by("created_at"):
+            if user.is_active:
+                return user
+        return None

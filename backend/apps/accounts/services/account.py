@@ -12,6 +12,7 @@ Mirrors:
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -22,6 +23,8 @@ from apps.accounts.models import User
 from apps.accounts.models.user import JourneyStep, UserRole, UserType
 from apps.accounts.selectors.users import is_username_available
 from common.exceptions import ApiError, FieldErrors
+
+logger = logging.getLogger(__name__)
 
 USERNAME_COOLDOWN_DAYS = 30  # matches OLD cooldown.ts:8
 OAUTH_INTENT_COOKIE = "oauth_intent"
@@ -102,6 +105,11 @@ def change_username(user: User, new_username: str, confirm_username: str) -> Use
         )
 
     now = datetime.now(timezone.utc)
+    # OLD change-username.ts:105-129: User AND Profile.username are written in
+    # ONE transaction. A failure on either rolls both back and surfaces as an
+    # error (no "success" answer with a half-applied rename) — P5-BR D5.
+    from apps.profiles.models.profile import Profile
+
     with transaction.atomic():
         user.username = new_lower
         user.display_username = new_username  # preserve original case
@@ -109,13 +117,31 @@ def change_username(user: User, new_username: str, confirm_username: str) -> Use
         user.save(update_fields=[
             "username", "display_username", "last_username_change_at", "updated_at",
         ])
-        # Profile.username sync — done lazily by the profiles app to avoid
-        # cross-app import; view will call profiles.services.sync_username().
+        profile = Profile.objects.select_for_update().filter(user_id=user.id).first()
+        old_profile_username = profile.username if profile else None
+        if profile is not None:
+            profile.username = new_lower
+            profile.save(update_fields=["username", "updated_at"])
+            if old_profile_username and old_profile_username != new_lower:
+                # The Profile post_save signal purges the NEW username's page;
+                # the OLD key would keep serving for up to 30 min otherwise.
+                transaction.on_commit(
+                    lambda key=f"profile:page:{old_profile_username}": _safe_cache_delete(key)
+                )
 
     return UsernameChangeResult(
         new_username=new_lower,
         next_change_at=now + timedelta(days=USERNAME_COOLDOWN_DAYS),
     )
+
+
+def _safe_cache_delete(key: str) -> None:
+    try:
+        from django.core.cache import cache
+
+        cache.delete(key)
+    except Exception:  # Redis hiccup: the 30-min TTL is the fallback
+        logger.exception("username_change.cache_purge_failed", extra={"key": key})
 
 
 # ----- Delete account (DELETE /api/auth/account) ---------------------------
@@ -227,7 +253,10 @@ def upgrade_to_pro(user: User, *, username: str, role: str) -> User:
         from apps.messaging.tasks import brevo_state_change
         brevo_state_change.delay(user.id, "upgrade_to_pro")
     except Exception:
-        pass
+        import logging
+        logging.getLogger(__name__).exception(
+            "upgrade_to_pro.brevo_enqueue_failed", extra={"user_id": user.id}
+        )
 
     return user
 

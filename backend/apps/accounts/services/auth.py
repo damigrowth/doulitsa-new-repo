@@ -72,9 +72,13 @@ def login(identifier: str, password: str) -> LoginResult:
             status_code=401,
         )
 
+    # An expired ban is lifted on sign-in (better-auth admin plugin auto-unban,
+    # AUTH-G4); only a ban still in force refuses the login.
+    user.clear_expired_ban()
+
     # Blocked OR banned (Better Auth admin plugin `banned` flag) — same Greek
     # blocked-account message OLD produced at sign-in.
-    if user.blocked or user.banned:
+    if user.blocked or user.is_ban_active():
         raise ApiError(
             "Ο λογαριασμός σας έχει αποκλειστεί",
             code="account_blocked",

@@ -180,14 +180,30 @@ def _resolve_pro_username(desired: str) -> str:
     )
 
 
+class VerificationFailed(ApiError):
+    """Verification-link failure. Carries the token's email (when the token
+    row is known) so the view can send the user to the resend form
+    (`/register/failure?email=...`), as OLD did."""
+
+    def __init__(self, message: str, *, code: str, email: str | None = None) -> None:
+        super().__init__(message, code=code, status_code=400)
+        self.email = email
+
+
 def verify_email_token(token: str) -> User:
-    """Consume a verification token and advance the user's journey.
+    """Validate a verification token and advance the user's journey.
 
     Mirrors the auth-config databaseHooks: on email verification, simple users
     jump straight to DASHBOARD; professional users move to ONBOARDING.
+
+    OLD parity (P1-5 / P3-D3): better-auth's token was a stateless JWT, valid
+    until it expired and usable more than once (each click signed the user in
+    again). So the row is NOT deleted on use; it simply expires after
+    VERIFICATION_TOKEN_TTL. Re-clicking a still-valid link is a no-op on the
+    user row and does not re-fire the post-verification tasks.
     """
     if not token:
-        raise ApiError("Λείπει το token επαλήθευσης", code="missing_token")
+        raise VerificationFailed("Λείπει το token επαλήθευσης", code="missing_token")
 
     record = (
         Verification.objects
@@ -196,7 +212,7 @@ def verify_email_token(token: str) -> User:
         .first()
     )
     if record is None:
-        raise ApiError("Μη έγκυρο token", code="invalid_token", status_code=400)
+        raise VerificationFailed("Μη έγκυρο token", code="invalid_token")
     expires_at = record.expires_at
     if expires_at is not None and expires_at.tzinfo is None:
         # Legacy safety net: the Verification column was `timestamp without time
@@ -206,54 +222,61 @@ def verify_email_token(token: str) -> User:
         # an aware value) in case an unmigrated DB is ever pointed at this code.
         expires_at = expires_at.replace(tzinfo=timezone.utc)
     if expires_at < datetime.now(timezone.utc):
-        raise ApiError("Το token έχει λήξει", code="expired_token", status_code=400)
+        raise VerificationFailed(
+            "Το token έχει λήξει", code="expired_token", email=record.identifier,
+        )
 
     user = get_user_by_email(record.identifier)
     if user is None:
-        raise ApiError("Λογαριασμός δεν βρέθηκε", code="user_not_found", status_code=404)
+        raise VerificationFailed(
+            "Λογαριασμός δεν βρέθηκε", code="user_not_found", email=record.identifier,
+        )
 
-    with transaction.atomic():
-        user.email_verified = True
-        user.confirmed = True
-        if user.step == JourneyStep.EMAIL_VERIFICATION:
-            user.step = (
-                JourneyStep.ONBOARDING if user.type == UserType.PRO else JourneyStep.DASHBOARD
-            )
-        user.save(update_fields=["email_verified", "confirmed", "step", "updated_at"])
+    newly_verified = not user.email_verified
+    if newly_verified:
+        with transaction.atomic():
+            user.email_verified = True
+            # OLD verifyEmail only set emailVerified (confirmed is already
+            # True for email signups, config.ts:385); keep confirmed as-is.
+            if user.step == JourneyStep.EMAIL_VERIFICATION:
+                user.step = (
+                    JourneyStep.ONBOARDING if user.type == UserType.PRO else JourneyStep.DASHBOARD
+                )
+            user.save(update_fields=["email_verified", "step", "updated_at"])
 
-        # One-time use — delete the token
-        record.delete()
-
-    # OLD timing (config.ts:427,438-448): the welcome email + Brevo list sync
-    # fire at email-verification success for ALL users (not at onboarding
-    # completion). Fire-and-forget — never break verification on task errors.
-    try:
-        from apps.messaging.tasks import brevo_state_change, send_welcome_email
-        send_welcome_email.delay(user.email, user.display_name, user.username)
-        brevo_state_change.delay(user.id, "email_verified")
-    except Exception:
-        logger.exception("post-verification tasks failed", extra={"user_id": user.id})
+    if newly_verified:
+        # OLD timing (config.ts:438-448): the Brevo list sync fires at
+        # email-verification success for ALL users. OLD sent NO transactional
+        # welcome email ("Welcome email is now sent via Brevo automation when
+        # contact is added to list", config.ts:431; `sendWelcomeEmail` was
+        # imported but never called) — sending one here as well doubled the
+        # welcome (P2-7 / A-D18). Fire-and-forget — never break verification.
+        try:
+            from apps.messaging.tasks import brevo_state_change
+            brevo_state_change.delay(user.id, "email_verified")
+        except Exception:
+            logger.exception("post-verification tasks failed", extra={"user_id": user.id})
 
     return user
 
 
-def resend_verification_email(email: str) -> tuple[User, str]:
-    """Generate a fresh verification token. Caller emails it via Brevo."""
-    user = get_user_by_email(email)
-    if user is None:
-        # Don't disclose whether the email exists.
-        raise ApiError(
-            "Αν υπάρχει λογαριασμός, στάλθηκε νέο email επαλήθευσης",
-            code="ok_silent",
-            status_code=200,
-        )
+# OLD resend copy (actions/auth/resend-verification.ts:35-38). better-auth's
+# sendVerificationEmail answered status:true for unknown AND already-verified
+# emails, so OLD always showed this success message (no enumeration oracle).
+RESEND_SUCCESS_MESSAGE = (
+    "Το email επιβεβαίωσης στάλθηκε! Έλεγξε τα εισερχόμενά σου και τον φάκελο spam."
+)
 
-    if user.email_verified:
-        raise ApiError(
-            "Το email έχει ήδη επαληθευτεί",
-            code="already_verified",
-            status_code=409,
-        )
+
+def resend_verification_email(email: str) -> tuple[User, str] | None:
+    """Generate a fresh verification token. Caller emails it via Brevo.
+
+    Returns None (caller still answers with the generic success copy) when the
+    email is unknown or already verified — OLD never disclosed either case.
+    """
+    user = get_user_by_email(email)
+    if user is None or user.email_verified:
+        return None
 
     token = secrets.token_urlsafe(48)
     Verification.objects.create(

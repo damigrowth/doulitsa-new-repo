@@ -17,6 +17,8 @@ after Phase 7 sign-off when Next.js stops writing.
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone as dt_timezone
+
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 
@@ -142,8 +144,36 @@ class User(AbstractBaseUser):
 
     @property
     def is_active(self) -> bool:  # type: ignore[override]
-        """Used by Django's auth backend to decide whether the user can log in."""
-        return self.confirmed and not self.blocked and not self.banned
+        """Used by Django's auth backend + SimpleJWT `get_user` to decide whether
+        the user may hold a session.
+
+        OLD parity (AUTH-G4 / P1-7): `confirmed` never gated sign-in in OLD
+        (login.ts checked only `blocked`; better-auth's admin plugin refused
+        only an UNEXPIRED ban). So: not blocked, and no ban in force. An
+        expired ban (`ban_expires` in the past) no longer locks the user out.
+        """
+        return not self.blocked and not self.is_ban_active()
+
+    def is_ban_active(self, now: datetime | None = None) -> bool:
+        """True while a ban is in force: banned with no expiry, or an expiry
+        still in the future (better-auth admin plugin semantics)."""
+        if not self.banned:
+            return False
+        if self.ban_expires is None:
+            return True
+        return self.ban_expires > (now or datetime.now(dt_timezone.utc))
+
+    def clear_expired_ban(self) -> bool:
+        """Auto-unban once `ban_expires` has passed, as better-auth's admin
+        plugin did on session creation (`CcYw7b-A.mjs:100-131`). Returns True
+        when the row was updated."""
+        if self.banned and self.ban_expires is not None and not self.is_ban_active():
+            self.banned = False
+            self.ban_reason = None
+            self.ban_expires = None
+            self.save(update_fields=["banned", "ban_reason", "ban_expires", "updated_at"])
+            return True
+        return False
 
     @property
     def is_authenticated(self) -> bool:  # type: ignore[override]
@@ -184,29 +214,48 @@ class User(AbstractBaseUser):
     def __str__(self) -> str:
         return self.email or self.id
 
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        instance = super().from_db(db, field_names, values)
+        # Remember the loaded email_verified so save() can detect the
+        # False→True transition (None when the field was deferred).
+        instance._loaded_email_verified = instance.__dict__.get("email_verified")
+        return instance
+
     def save(self, *args, **kwargs):
-        """Auto-advance the journey step when an admin flips email_verified.
+        """Auto-advance the journey step when email_verified flips False→True.
 
         Why: the verification *endpoint* (services.registration.verify_email_token)
         advances `step` from EMAIL_VERIFICATION on its own, but a manual flip in
-        Django admin doesn't run that path. Without this hook, support staff who
-        tick the box leave the user stuck on the "check your email" page.
+        Django admin / the admin status endpoint doesn't run that path. Without
+        this hook, support staff who tick the box leave the user stuck on the
+        "check your email" page.
 
-        Mirrors the endpoint: pros → ONBOARDING, simple users → DASHBOARD. The
-        type was already chosen at registration, so TYPE_SELECTION would leave a
-        pro in the dashboard with no profile.
+        OLD parity (SM-D2, config.ts:416-453): the advance ran only on the
+        verification UPDATE itself, and never touched `confirmed`. So this hook
+        fires only on the actual False→True transition of a loaded row (not on
+        every save of an already-verified user, which used to override admin
+        step edits), only for provider=email (as OLD), and leaves `confirmed`
+        alone.
+
+        Mirrors the endpoint: pros → ONBOARDING, simple users → DASHBOARD.
         """
+        update_fields = kwargs.get("update_fields")
+        was_verified = getattr(self, "_loaded_email_verified", None)
         if (
             self.pk
+            and not self._state.adding
+            and was_verified is False
             and self.email_verified
             and self.step == JourneyStep.EMAIL_VERIFICATION
+            and (self.provider or "email") == "email"
+            and (update_fields is None or "email_verified" in update_fields)
         ):
             self.step = (
                 JourneyStep.ONBOARDING if self.type == UserType.PRO else JourneyStep.DASHBOARD
             )
-            if not self.confirmed:
-                self.confirmed = True
-            update_fields = kwargs.get("update_fields")
             if update_fields is not None:
-                kwargs["update_fields"] = {*update_fields, "step", "confirmed"}
+                kwargs["update_fields"] = {*update_fields, "step"}
         super().save(*args, **kwargs)
+        if update_fields is None or "email_verified" in (update_fields or ()):
+            self._loaded_email_verified = self.email_verified

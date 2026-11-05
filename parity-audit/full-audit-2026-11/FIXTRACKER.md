@@ -8,7 +8,7 @@ Batch reports with evidence: fixes-B1..B5.md in this folder.
 | Id | Fix | Batch | Status |
 |---|---|---|---|
 | P0-1 | provider_customer_id MID write + Q0c cleanup | — | ❄️ frozen (payments) |
-| P0-2 | OAuth setup accepts simple users (+unstick 4 users) | B1 | ⏳ |
+| P0-2 | OAuth setup accepts simple users (+unstick 4 users) | B1 | ✅ (B1, 40/40 tests; stuck user unstuck live) |
 | P0-3 | Admin user-detail payload/page crash | B4 | ⏳ |
 | P0-4 | Admin service edit wipes addons/faq/description | B4 | ⏳ |
 | P0-5 | Admin profile additional-info wipe | B4 | ⏳ |
@@ -20,10 +20,10 @@ Batch reports with evidence: fixes-B1..B5.md in this folder.
 |---|---|---|---|
 | PRIV-1 | Public serializer: email gated, names stripped | B2 | ⏳ |
 | P1-2/P1-3 AUTHZ-PUB | Drafts/unpublished exposure + count poisoning | B2 | ⏳ |
-| P1-4 AZ-D1 | API-key auth scoping | B1 | ⏳ |
-| P1-5 A-D1/D15 | Verify-email logs in + resend error surfacing | B1 | ⏳ |
-| P1-6 A-D2/D3 | Broken-pro onboarding safeguards | B1 | ⏳ |
-| P1-7 AUTH-G4 | confirmed/ban_expires login semantics | B1 | ⏳ |
+| P1-4 AZ-D1 | API-key auth scoping | B1 | 🔶 partial (B1 scope done; api_keys.py hardening pending) |
+| P1-5 A-D1/D15 | Verify-email logs in + resend error surfacing | B1 | ✅ (B1; verify logs in, resend 200-always, failure page) |
+| P1-6 A-D2/D3 | Broken-pro onboarding safeguards | B1 | ✅ (B1) |
+| P1-7 AUTH-G4 | confirmed/ban_expires login semantics | B1 | ✅ (B1; token-holder message = frontend follow-up) |
 | P1-12 | /dir pills broken links | B3 | ⏳ |
 | P1-13/14 DROP-1 | Dropdown caps (10/8) → full lists | B2 | ⏳ |
 | P1-15 | Archive search term lost | B3 | ⏳ |
@@ -33,8 +33,8 @@ Batch reports with evidence: fixes-B1..B5.md in this folder.
 | P1-22 | Blog category slugs revert (frontend) | B3 | ⏳ |
 | P1-24/P2-13 CACHE-1 | Signal purges: service pages + on_commit | B2 | ⏳ |
 | P1-25 AFM-1 | AADE lookup (3 bugs) | B2 | ⏳ |
-| AZ-D3 | Support can't modify admins | B1 | ⏳ |
-| XC-THROTTLE THR-1 | Throttles real (forgot-password parity) | B1 | ⏳ |
+| AZ-D3 | Support can't modify admins | B1 | ✅ (B1; token-only legacy revoke gap noted) |
+| XC-THROTTLE THR-1 | Throttles real (forgot-password parity) | B1 | ✅ (B1; globals restored, forgot-pw 1/10min/email) |
 | S-D1/P3-D2 | Refresh-logout causes (client refresh + race) | B3(+B1) | ⏳ |
 | BILL-G1/G2, P2-26 gate | Featured purge, Cardlink proxy, checkout gate | — | ❄️ frozen |
 
@@ -51,7 +51,8 @@ Batch reports with evidence: fixes-B1..B5.md in this folder.
 | MSG-NAME + msg D1 badge + msg D2 guards | B2 | ⏳ |
 | Review author names (rev D1 + public cards + admin D16) | B2+B4 | ⏳ |
 | Admin: D5/D8/D10/D12/D14, billing-details '' , D2 sort, D3 stats | B4 | ⏳ |
-| XC-CRONAUTH (3 non-billing views) + P5-BR-2 missing task | B5 | ⏳ |
+| XC-CRONAUTH (3 non-billing views) | B5 | ⏳ |
+| P5-BR-2 missing cleanup task | B1 | ✅ (tasks.py created, worker lists it) |
 | useSession vein (P5-CS-1..5 + NoServiceDialog) | B3 | ⏳ |
 | Taxonomy approve purge no-op (CG-8) | B2 | ⏳ |
 
@@ -70,3 +71,9 @@ Batch reports with evidence: fixes-B1..B5.md in this folder.
 - 🗳️ §5 product decisions (23 items) — await user choices
 - 🛠️ Server-side actions from SERVER-CHECKS-RESULTS.md: celery-beat down since
   July, disable renewals beat row, close 5432 (✅ closed), env checks (§4.2)
+
+## Cross-batch handoffs collected (apply at integration)
+- B3: google callback 403 account_blocked → Greek /login?message; forgot-password action shows backend message; resend already_verified branch dead
+- B5: brevo.py:242 use is_ban_active(); FRONTEND_BASE_URL local :3000 vs :3100 note
+- Follow-up (post-batch): AZ-D1 remainder in apps/admin_api/services/api_keys.py (hash at rest, owner scoping, constant-time, drop from default auth classes)
+- B1 extras fixed: SM-D1 ✅, SM-D2 ✅, VM-D1 ✅ (8 fields), P5-BR-8 ✅, D5 username atomicity ✅

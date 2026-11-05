@@ -112,10 +112,42 @@ def has_resource_permission(
     return _satisfies(ROLE_PERMISSIONS[role].get(resource), level)
 
 
-def HasResourcePermission(resource: str, level: PermissionLevel = "view") -> type[BasePermission]:
+_ADMIN_LIKE_ROLES = {UserRole.ADMIN, UserRole.SUPPORT, UserRole.EDITOR}
+_SAFE_METHODS = ("GET", "HEAD", "OPTIONS")
+ADMIN_TARGET_FORBIDDEN_MESSAGE = (
+    "Μόνο ένας διαχειριστής μπορεί να τροποποιήσει λογαριασμό της ομάδας διαχείρισης"
+)
+
+
+def _writes_admin_like_target(request, view) -> bool:
+    """True when a non-admin actor sends a write to a `<user_id>` URL whose
+    target is an admin/support/editor account (AZ-D3 / P2-35). OLD support
+    lacked set-password/set-role and the admin plugin refused writes on admins
+    unless the actor was in ADMIN_USER_IDS."""
+    if request.method in _SAFE_METHODS:
+        return False
+    if getattr(request.user, "role", None) == UserRole.ADMIN:
+        return False
+    target_id = (getattr(view, "kwargs", None) or {}).get("user_id")
+    if not target_id:
+        return False
+    from apps.accounts.models import User
+
+    target_role = User.objects.filter(id=target_id).values_list("role", flat=True).first()
+    return target_role in _ADMIN_LIKE_ROLES
+
+
+def HasResourcePermission(
+    resource: str,
+    level: PermissionLevel = "view",
+    *,
+    protect_admin_targets: bool = False,
+) -> type[BasePermission]:
     """Permission class factory.
 
     Used as `permission_classes = [HasResourcePermission(AdminResource.USERS, "edit")]`.
+    With `protect_admin_targets=True`, writes to an admin-like `<user_id>`
+    target are refused unless the actor is an admin.
     """
 
     class _Permission(BasePermission):
@@ -125,7 +157,12 @@ def HasResourcePermission(resource: str, level: PermissionLevel = "view") -> typ
             user = request.user
             if not user or not user.is_authenticated:
                 return False
-            return has_resource_permission(user.role, resource, level)
+            if not has_resource_permission(user.role, resource, level):
+                return False
+            if protect_admin_targets and _writes_admin_like_target(request, view):
+                self.message = ADMIN_TARGET_FORBIDDEN_MESSAGE
+                return False
+            return True
 
     _Permission.__name__ = f"Has{resource.title()}{level.title()}Permission"
     return _Permission

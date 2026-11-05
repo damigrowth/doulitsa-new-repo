@@ -6,7 +6,13 @@ GET redirect).
 """
 from __future__ import annotations
 
+import logging
+import math
+import time
+from urllib.parse import quote
+
 from django.conf import settings
+from django.core.cache import cache
 from django.shortcuts import redirect
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
@@ -26,13 +32,15 @@ from apps.accounts.serializers.auth import (
 from apps.accounts.services import auth as auth_service
 from apps.accounts.services import password as password_service
 from apps.accounts.services import registration as registration_service
-from common.exceptions import ApiError
+from common.exceptions import RateLimited
 from common.throttling import (
     LoginThrottle,
     PasswordResetThrottle,
     RegisterThrottle,
     VerificationResendThrottle,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class LoginView(APIView):
@@ -95,7 +103,7 @@ class RegisterView(APIView):
             from apps.messaging.tasks import brevo_state_change
             brevo_state_change.delay(result.user_id, "registration")
         except Exception:
-            pass
+            logger.exception("register.brevo_enqueue_failed", extra={"user_id": result.user_id})
         body = {
             "message": "Επιτυχής εγγραφή. Έλεγξε το email σου για επαλήθευση.",
             "userId": result.user_id,
@@ -127,7 +135,8 @@ class ForgotPasswordView(APIView):
     """POST /api/auth/password/forgot (tracker row 21).
 
     Always returns the same generic success message regardless of whether the
-    email is registered (avoid leaking the user list). Throttled.
+    email is registered (avoid leaking the user list). Limited to 1 request /
+    10 min per email (OLD parity) on top of the global anon/user throttles.
     """
 
     permission_classes = [AllowAny]
@@ -137,6 +146,7 @@ class ForgotPasswordView(APIView):
     def post(self, request):
         serializer = ForgotPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        _enforce_forgot_password_limit(serializer.validated_data["email"])
         result = password_service.initiate_password_reset(serializer.validated_data["email"])
         # Send the reset email only when the account exists (result is a (user, token)
         # tuple); the response stays generic either way to avoid leaking the user list.
@@ -151,8 +161,35 @@ class ForgotPasswordView(APIView):
         return Response(body)
 
 
+# OLD forgot-password.ts:9-40: 1 request per 10 minutes PER EMAIL (checked
+# before the account lookup, so unknown emails are limited too).
+FORGOT_PASSWORD_LIMIT_SECONDS = 10 * 60
+
+
+def _enforce_forgot_password_limit(email: str) -> None:
+    key = f"ratelimit:forgot:{email.strip().lower()}"
+    now = time.time()
+    try:
+        if cache.add(key, now + FORGOT_PASSWORD_LIMIT_SECONDS, FORGOT_PASSWORD_LIMIT_SECONDS):
+            return
+        reset_at = cache.get(key) or now + FORGOT_PASSWORD_LIMIT_SECONDS
+    except Exception:  # cache down: fail open, like OLD's per-instance limiter
+        logger.exception("forgot_password_limit.cache_failed")
+        return
+    minutes = max(1, math.ceil((float(reset_at) - now) / 60))
+    raise RateLimited(
+        "Μπορείς να ζητήσεις επαναφορά κωδικού 1 φορά κάθε 10 λεπτά. "
+        f"Δοκίμασε ξανά σε {minutes} {'λεπτό' if minutes == 1 else 'λεπτά'}.",
+        details={"retryAfterMinutes": minutes},
+    )
+
+
 class ResendVerificationView(APIView):
-    """POST /api/auth/verification/resend (tracker row 22)."""
+    """POST /api/auth/verification/resend (tracker row 22).
+
+    OLD parity (A-D15): always the same success copy, whether the email is
+    unknown, already verified or pending — no 409, no error envelope.
+    """
 
     permission_classes = [AllowAny]
     throttle_classes = [VerificationResendThrottle]
@@ -161,25 +198,20 @@ class ResendVerificationView(APIView):
     def post(self, request):
         serializer = ResendVerificationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        try:
-            user, token = registration_service.resend_verification_email(
-                serializer.validated_data["email"]
-            )
-        except ApiError as exc:
-            # 'ok_silent' / 'already_verified' propagate as their own HTTP shape
-            if exc.default_code == "ok_silent":
-                return Response({"message": str(exc.detail)})
-            raise
-        # Actually send the email — resend_verification_email only mints the
-        # token (its docstring says "Caller emails it via Brevo"). Without this
-        # the endpoint claimed "email sent" but never sent anything.
-        from apps.messaging.tasks import send_verification_email
-        send_verification_email.delay(
-            user.email, token, getattr(user, "display_name", None), user.username or None,
+        result = registration_service.resend_verification_email(
+            serializer.validated_data["email"]
         )
-        body = {"message": "Στάλθηκε email επαλήθευσης"}
-        if settings.DEBUG:
-            body["devVerificationToken"] = token
+        body = {"message": registration_service.RESEND_SUCCESS_MESSAGE}
+        if result is not None:
+            user, token = result
+            # Actually send the email — resend_verification_email only mints the
+            # token (its docstring says "Caller emails it via Brevo").
+            from apps.messaging.tasks import send_verification_email
+            send_verification_email.delay(
+                user.email, token, getattr(user, "display_name", None), user.username or None,
+            )
+            if settings.DEBUG:
+                body["devVerificationToken"] = token
         return Response(body)
 
 
@@ -202,8 +234,11 @@ class ResetPasswordView(APIView):
 class VerifyEmailRedirectView(APIView):
     """GET /api/auth/verify-email?token=... (tracker rows 3, 22→consume).
 
-    Browser-driven: consumes the token and 302-redirects to the frontend.
-    Failure also redirects (with `?verified=false&reason=...`).
+    Browser-driven (proxied by the Next route `/api/verify-email`, which
+    forwards our Set-Cookie headers). OLD parity (P1-5 / A-D1):
+      - success → the user is signed in (better-auth autoSignInAfterVerification):
+        we set the `dj_access` / `dj_refresh` cookies on the redirect;
+      - failure → `/register/failure?email=<token email>` (the resend form).
     """
 
     permission_classes = [AllowAny]
@@ -213,10 +248,39 @@ class VerifyEmailRedirectView(APIView):
         token = request.query_params.get("token", "")
         try:
             user = registration_service.verify_email_token(token)
-        except ApiError as exc:
-            return redirect(
-                f"{settings.FRONTEND_BASE_URL}/register/success?verified=false"
-                f"&reason={exc.default_code}"
-            )
+        except registration_service.VerificationFailed as exc:
+            target = f"{settings.FRONTEND_BASE_URL}/register/failure"
+            if exc.email:
+                target += f"?email={quote(exc.email)}"
+            return redirect(target)
         target = registration_service.determine_post_verification_redirect(user)
-        return redirect(f"{settings.FRONTEND_BASE_URL}{target}")
+        response = redirect(f"{settings.FRONTEND_BASE_URL}{target}")
+        # A blocked / banned user is verified but gets no session.
+        if user.is_active:
+            set_auth_cookies(response, auth_service.issue_tokens(user))
+        return response
+
+
+# Must match frontend/src/lib/auth/cookies.ts (names, flags and lifetimes).
+_ACCESS_COOKIE = "dj_access"
+_REFRESH_COOKIE = "dj_refresh"
+_REFRESH_COOKIE_MAX_AGE = 3 * 24 * 60 * 60  # REFRESH_MAX_AGE (3 days)
+
+
+def set_auth_cookies(response, tokens: dict[str, str]) -> None:
+    access_max_age = int(settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].total_seconds())
+    refresh_max_age = min(
+        _REFRESH_COOKIE_MAX_AGE,
+        int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds()),
+    )
+    # The browser only ever sees the frontend origin (the Next proxy relays
+    # this header), so `secure` follows the deployment, not this hop's scheme.
+    secure = not settings.DEBUG
+    for name, value, max_age in (
+        (_ACCESS_COOKIE, tokens["access"], access_max_age),
+        (_REFRESH_COOKIE, tokens["refresh"], refresh_max_age),
+    ):
+        response.set_cookie(
+            name, value, max_age=max_age, path="/", httponly=True,
+            secure=secure, samesite="Lax",
+        )

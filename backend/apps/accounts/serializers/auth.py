@@ -13,12 +13,12 @@ from apps.accounts.models.user import UserRole
 
 class LoginSerializer(serializers.Serializer):
     identifier = serializers.CharField(min_length=2, max_length=255)
-    password = serializers.CharField(min_length=1, max_length=255, write_only=True)
+    password = serializers.CharField(min_length=1, max_length=255, write_only=True, trim_whitespace=False)
 
 
 class RegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
-    password = serializers.CharField(min_length=6, max_length=100, write_only=True)
+    password = serializers.CharField(min_length=6, max_length=100, write_only=True, trim_whitespace=False)
     authType = serializers.ChoiceField(choices=("user", "pro"))
     role = serializers.ChoiceField(
         choices=(UserRole.FREELANCER, UserRole.COMPANY),
@@ -44,9 +44,9 @@ class VerifyEmailQuerySerializer(serializers.Serializer):
 
 
 class ChangePasswordSerializer(serializers.Serializer):
-    currentPassword = serializers.CharField(min_length=6, max_length=100, write_only=True)
-    newPassword = serializers.CharField(min_length=6, max_length=100, write_only=True)
-    confirmPassword = serializers.CharField(min_length=6, max_length=100, write_only=True)
+    currentPassword = serializers.CharField(min_length=6, max_length=100, write_only=True, trim_whitespace=False)
+    newPassword = serializers.CharField(min_length=6, max_length=100, write_only=True, trim_whitespace=False)
+    confirmPassword = serializers.CharField(min_length=6, max_length=100, write_only=True, trim_whitespace=False)
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         if attrs["newPassword"] != attrs["confirmPassword"]:
@@ -64,7 +64,7 @@ class ForgotPasswordSerializer(serializers.Serializer):
 
 class ResetPasswordSerializer(serializers.Serializer):
     token = serializers.CharField(min_length=1, max_length=128)
-    newPassword = serializers.CharField(min_length=6, max_length=100, write_only=True)
+    newPassword = serializers.CharField(min_length=6, max_length=100, write_only=True, trim_whitespace=False)
 
 
 class UpdateAccountSerializer(serializers.Serializer):

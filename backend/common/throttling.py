@@ -23,6 +23,8 @@ from django.conf import settings
 from django.utils.crypto import constant_time_compare
 from rest_framework.throttling import (
     AnonRateThrottle as _AnonRateThrottle,
+    BaseThrottle,
+    SimpleRateThrottle,
     ScopedRateThrottle as _ScopedRateThrottle,
     UserRateThrottle as _UserRateThrottle,
 )
@@ -66,40 +68,101 @@ class UserRateThrottle(ClientIPThrottleMixin, _UserRateThrottle):
 
 
 class ScopedRateThrottle(ClientIPThrottleMixin, _ScopedRateThrottle):
-    pass
+    """DRF's view-attribute variant: limits only views that set
+    `throttle_scope`. (It overwrites any class-level `scope` with
+    `view.throttle_scope`, so it can NOT be subclassed per scope.)"""
 
 
-class LoginThrottle(ScopedRateThrottle):
+class ClassScopedRateThrottle(ClientIPThrottleMixin, SimpleRateThrottle):
+    """Throttle whose `scope` is the class attribute (XC-THROTTLE fix).
+
+    The old per-scope classes subclassed DRF's ScopedRateThrottle, which resets
+    `self.scope` from `view.throttle_scope` (unset everywhere) and then allows
+    every request, so they were all no-ops. This honours `scope` and keys on
+    the user id (authenticated) or the real visitor IP.
+    """
+
+    def get_cache_key(self, request, view):
+        if request.user and request.user.is_authenticated:
+            ident = request.user.pk
+        else:
+            ident = self.get_ident(request)
+        return self.cache_format % {"scope": self.scope, "ident": ident}
+
+
+class DefaultRatesThrottle(BaseThrottle):
+    """Applies exactly the global `anon` + `user` throttles.
+
+    A view's `throttle_classes` REPLACES `DEFAULT_THROTTLE_CLASSES`, so a view
+    listing only a per-endpoint class used to drop the global limits too. The
+    endpoint classes below inherit from this one, which keeps the global
+    anon/user buckets (same cache keys) for those views.
+    """
+
+    def __init__(self):
+        self._throttles = [AnonRateThrottle(), UserRateThrottle()]
+        self._failed: list = []
+
+    def allow_request(self, request, view):
+        self._failed = [t for t in self._throttles if not t.allow_request(request, view)]
+        return not self._failed
+
+    def wait(self):
+        waits = [w for w in (t.wait() for t in self._failed) if w is not None]
+        return max(waits) if waits else None
+
+
+# ----- Per-endpoint classes -------------------------------------------------
+#
+# Parity (MASTER XC-THROTTLE / §5 D-10, pass4-verify-auth §0): OLD had NO rate
+# limit on any of these endpoints (better-auth's limiter only ran inside its
+# HTTP router, which the server actions bypassed). The only OLD limit was
+# forgot-password, 1 request / 10 min PER EMAIL, which is implemented in
+# `ForgotPasswordView` (it keys on the email, not on the client).
+#
+# So each endpoint class applies only the global anon/user limits. `scope`
+# names the `DEFAULT_THROTTLE_RATES` entry that turns on a stricter
+# per-endpoint limit: to enforce it (a product decision, D-10), add
+# `ClassScopedRateThrottle` to the class bases, e.g.
+#     class LoginThrottle(ClassScopedRateThrottle): scope = "login"
+# and keep `DefaultRatesThrottle` in the view's throttle_classes.
+
+
+class _EndpointThrottle(DefaultRatesThrottle):
+    scope: str = ""
+
+
+class LoginThrottle(_EndpointThrottle):
     scope = "login"
 
 
-class RegisterThrottle(ScopedRateThrottle):
+class RegisterThrottle(_EndpointThrottle):
     scope = "register"
 
 
-class PasswordResetThrottle(ScopedRateThrottle):
+class PasswordResetThrottle(_EndpointThrottle):
     scope = "password_reset"
 
 
-class VerificationResendThrottle(ScopedRateThrottle):
+class VerificationResendThrottle(_EndpointThrottle):
     scope = "verification_resend"
 
 
-class ServiceDraftThrottle(ScopedRateThrottle):
+class ServiceDraftThrottle(_EndpointThrottle):
     scope = "service_draft"
 
 
-class TaxonomySubmissionThrottle(ScopedRateThrottle):
+class TaxonomySubmissionThrottle(_EndpointThrottle):
     scope = "taxonomy_submission"
 
 
-class AfmLookupThrottle(ScopedRateThrottle):
+class AfmLookupThrottle(_EndpointThrottle):
     scope = "afm_lookup"
 
 
-class ContactFormThrottle(ScopedRateThrottle):
+class ContactFormThrottle(_EndpointThrottle):
     scope = "contact_form"
 
 
-class ReportThrottle(ScopedRateThrottle):
+class ReportThrottle(_EndpointThrottle):
     scope = "report"

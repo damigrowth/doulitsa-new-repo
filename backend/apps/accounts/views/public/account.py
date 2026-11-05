@@ -104,14 +104,8 @@ class ChangeUsernameView(APIView):
             serializer.validated_data["newUsername"],
             serializer.validated_data["confirmUsername"],
         )
-        # Mirror the new username onto the user's Profile (OLD change-username.ts
-        # :117-128). Best-effort.
-        try:
-            from apps.profiles.services.profile_updates import sync_username_to_profile
-            sync_username_to_profile(request.user, result.new_username)
-        except Exception:  # pragma: no cover - defensive
-            import logging
-            logging.getLogger(__name__).exception("username_to_profile_sync_failed")
+        # Profile.username is updated inside change_username's transaction
+        # (OLD change-username.ts:105-129), so there is no separate sync here.
         return Response({
             "message": "Το username άλλαξε επιτυχώς!",
             "data": {

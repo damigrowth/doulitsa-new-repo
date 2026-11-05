@@ -3,9 +3,10 @@
 The browser-facing redirect + callback live in the Next.js frontend, so the
 user never sees the Django URL and the secret never leaves the backend. This
 module only does the secret-bearing token exchange, find-or-creates the Google
-user (matching OLD Better Auth: provider=google, emailVerified/confirmed=True;
-brand-new users land at TYPE_SELECTION so the existing oauth-setup flow can
-collect type/role/username), and mints the session tokens. The frontend sets the
+user (matching OLD Better Auth: new users get provider=google,
+emailVerified/confirmed=True and land at TYPE_SELECTION so the existing
+oauth-setup flow can collect type/role/username; existing users only get
+emailVerified=True), and mints the session tokens. The frontend sets the
 dj_access / dj_refresh cookies and routes by `user['step']`.
 """
 from __future__ import annotations
@@ -104,6 +105,9 @@ def exchange_code(*, code: str, redirect_uri: str, intent: Any = None) -> dict[s
     sub = info.get("sub") or email
     name = info.get("name") or email.split("@")[0]
     picture = info.get("picture")
+    # OLD mapProfileToUser (config.ts:174-189) stored Google's given/family name.
+    first_name = info.get("given_name") or None
+    last_name = info.get("family_name") or None
 
     # 3) find-or-create the user (provider=google, pre-verified)
     user = User.objects.filter(email__iexact=email).first()
@@ -116,6 +120,8 @@ def exchange_code(*, code: str, redirect_uri: str, intent: Any = None) -> dict[s
             display_username=None,
             display_name=name,
             name=name,
+            first_name=first_name,
+            last_name=last_name,
             image=picture,
             role=intent_role or UserRole.USER,
             type=UserType.PRO if intent_type == "pro" else UserType.USER,
@@ -128,21 +134,26 @@ def exchange_code(*, code: str, redirect_uri: str, intent: Any = None) -> dict[s
         )
         Account.objects.create(user=user, account_id=str(sub), provider_id="google")
     else:
-        changed: list[str] = []
+        # OLD account linking (better-auth handleOAuthUserInfo, no
+        # overrideUserInfoOnSignIn) only marks the email verified. It never
+        # re-confirmed the account or replaced the image (SM-D1 / AUTH-G5).
         if not user.email_verified:
             user.email_verified = True
-            changed.append("email_verified")
-        if not user.confirmed:
-            user.confirmed = True
-            changed.append("confirmed")
-        if picture and not user.image:
-            user.image = picture
-            changed.append("image")
-        if changed:
-            changed.append("updated_at")
-            user.save(update_fields=changed)
+            user.save(update_fields=["email_verified", "updated_at"])
         Account.objects.get_or_create(
             account_id=str(sub), defaults={"user": user, "provider_id": "google"}
+        )
+
+    # Account-status gate (AUTH-G4 / A-D5). OLD better-auth refused a ban
+    # still in force at OAuth session creation and auto-lifted an expired one.
+    # Blocked users are refused too: a blocked account must not get a session.
+    # The Next callback maps this code to a /login message.
+    user.clear_expired_ban()
+    if user.blocked or user.is_ban_active():
+        raise ApiError(
+            "Ο λογαριασμός σας έχει αποκλειστεί",
+            code="account_blocked",
+            status_code=403,
         )
 
     refresh = RefreshToken.for_user(user)

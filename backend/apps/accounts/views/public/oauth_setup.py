@@ -26,7 +26,16 @@ from apps.accounts.services.auth import issue_tokens
 class OAuthSetupSerializer(serializers.Serializer):
     username = serializers.RegexField(regex=r"^[a-zA-Z0-9_-]{3,30}$", required=False, allow_null=True)
     displayName = serializers.CharField(min_length=1, max_length=80, required=False, allow_null=True)
-    role = serializers.ChoiceField(choices=("freelancer", "company"), required=False, allow_null=True)
+    # P0-2 / AUTH-G2: the setup form always appends role='user' for simple
+    # accounts (OLD oauth-setup.ts accepted user/freelancer/company). Accept it;
+    # the service ignores `role` for type='user' and enforces a pro role for
+    # type='pro'.
+    role = serializers.ChoiceField(
+        choices=("user", "freelancer", "company"),
+        required=False,
+        allow_null=True,
+        allow_blank=True,
+    )
     type = serializers.ChoiceField(choices=("user", "pro"))
 
 
