@@ -8,6 +8,26 @@ test-mode revert details), `DATABASE-RESTORE-RUNBOOK.md` (dump restore).
 
 ---
 
+## 0) GATE (added 2026-11-05): the full parity audit must clear first
+
+A 6-pass audit (static + live E2E) produced
+`parity-audit/full-audit-2026-11/MASTER-FINDINGS.md` — 122 verified fixes
+(7 P0, 26 P1, 45 P2, 44 P3). **Do not cut over before:**
+
+- [ ] All 7 P0 entries fixed and deployed to test (payments unique-column
+      bug, admin crash + two data-wiping forms, session revoke, the
+      server-side checkout gate, the cutover data path below).
+- [ ] The cutover DATA PATH is decided and rehearsed (MASTER P0-7 /
+      pass2-schema-db D1): the four deploy docs contradict each other on how
+      the FINAL prod dump lands on the Django schema. One rehearsal restore
+      on a scratch DB, documented, replaces them all.
+- [ ] The server-checks appendix of MASTER-FINDINGS run on prod/test (one
+      SQL block, env list, Cardlink/Brevo checks) — it sizes several P0/P1s.
+- [ ] P1 list triaged: fix now vs accepted-for-launch, recorded in
+      MASTER-FINDINGS.
+- [ ] celery-beat + worker confirmed running (they are the ONLY email/cron
+      trigger — the HTTP cron endpoints cannot authenticate).
+
 ## 1) Pending RIGHT NOW on test.doulitsa.gr
 
 One-time commands in the Dokploy **backend** terminal:
