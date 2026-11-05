@@ -16,6 +16,8 @@ export interface AdminChatMember {
   userId: string | null;
   email: string | null;
   displayName: string | null;
+  username: string | null;
+  image: string | null;
 }
 
 export interface AdminChatDetailStats {

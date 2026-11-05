@@ -317,6 +317,10 @@ def update_article(*, article_id: str, payload: dict[str, Any]) -> BlogArticle:
         _validate_author_profiles(author_ids)
 
     update_fields: list[str] = []
+    # Remember the pre-update slug: a rename must also purge the OLD
+    # `blog:article:{slug}` key (blog D9), else the old URL keeps serving the
+    # cached article for the TTL.
+    previous_slug = article.slug
     if "title" in payload:
         article.title = payload["title"]
         article.title_normalized = normalize_term(article.title)
@@ -359,6 +363,8 @@ def update_article(*, article_id: str, payload: dict[str, Any]) -> BlogArticle:
             for i, author_id in enumerate(author_ids):
                 BlogArticleAuthor.objects.create(article=article, profile_id=author_id, order=i)
     _purge_cache(article.slug, article.category_slug)
+    if previous_slug and previous_slug != article.slug:
+        cache.delete(f"blog:article:{previous_slug}")
     return article
 
 

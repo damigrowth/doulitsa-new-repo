@@ -56,8 +56,10 @@ export async function createUser(data: Record<string, unknown>) {
 
 export async function setUserRole(data: { userId: string; role: string }) {
   try {
+    const result = await adminUsers.setRole(data.userId, data.role);
+    // NEW-1: purge AFTER the Django write succeeded (OLD order).
     await revalidatePublicProfile();
-    return { success: true, data: await adminUsers.setRole(data.userId, data.role) };
+    return { success: true, data: result };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
   }
@@ -65,14 +67,13 @@ export async function setUserRole(data: { userId: string; role: string }) {
 
 export async function banUser(data: { userId: string; banReason?: string; banExpiresIn?: number }) {
   try {
+    const result = await adminUsers.ban(data.userId, {
+      banReason: data.banReason,
+      banExpiresIn: data.banExpiresIn,
+    });
+    // NEW-1: purge AFTER the Django write succeeded (OLD order).
     await revalidatePublicProfile();
-    return {
-      success: true,
-      data: await adminUsers.ban(data.userId, {
-        banReason: data.banReason,
-        banExpiresIn: data.banExpiresIn,
-      }),
-    };
+    return { success: true, data: result };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
   }
@@ -80,8 +81,10 @@ export async function banUser(data: { userId: string; banReason?: string; banExp
 
 export async function unbanUser(data: { userId: string }) {
   try {
+    const result = await adminUsers.unban(data.userId);
+    // NEW-1: purge AFTER the Django write succeeded (OLD order).
     await revalidatePublicProfile();
-    return { success: true, data: await adminUsers.unban(data.userId) };
+    return { success: true, data: result };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
   }
@@ -99,8 +102,10 @@ export async function removeUser(data: { userId: string }) {
 
 export async function updateUser(data: { userId: string; role?: string }) {
   try {
+    const result = await adminUsers.update(data.userId, { role: data.role });
+    // NEW-1: purge AFTER the Django write succeeded (OLD order).
     await revalidatePublicProfile();
-    return { success: true, data: await adminUsers.update(data.userId, { role: data.role }) };
+    return { success: true, data: result };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
   }
@@ -123,8 +128,10 @@ export async function updateUserBasicInfo(data: {
 }) {
   try {
     const { userId, ...rest } = data;
+    const result = await adminUsers.updateBasicInfo(userId, rest);
+    // NEW-1: purge AFTER the Django write succeeded (OLD order).
     await revalidatePublicProfile();
-    return { success: true, data: await adminUsers.updateBasicInfo(userId, rest) };
+    return { success: true, data: result };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
   }
@@ -140,8 +147,10 @@ export async function updateUserStatus(data: {
 }) {
   try {
     const { userId, ...rest } = data;
+    const result = await adminUsers.updateStatus(userId, rest);
+    // NEW-1: purge AFTER the Django write succeeded (OLD order).
     await revalidatePublicProfile();
-    return { success: true, data: await adminUsers.updateStatus(userId, rest) };
+    return { success: true, data: result };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
   }
@@ -155,8 +164,10 @@ export async function updateUserBanStatus(data: {
 }) {
   try {
     const { userId, ...rest } = data;
+    const result = await adminUsers.updateBanStatus(userId, rest);
+    // NEW-1: purge AFTER the Django write succeeded (OLD order).
     await revalidatePublicProfile();
-    return { success: true, data: await adminUsers.updateBanStatus(userId, rest) };
+    return { success: true, data: result };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
   }
@@ -166,8 +177,10 @@ export async function updateUserImage(
   data: { userId: string; image: string | null },
 ): Promise<ActionResult<AdminUserRow>> {
   try {
+    const result = await adminUsers.updateImage(data.userId, data.image);
+    // NEW-1: purge AFTER the Django write succeeded (OLD order).
     await revalidatePublicProfile();
-    return { success: true, data: await adminUsers.updateImage(data.userId, data.image) };
+    return { success: true, data: result };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
   }
@@ -175,8 +188,10 @@ export async function updateUserImage(
 
 export async function toggleUserBlock(data: { userId: string; blocked: boolean }) {
   try {
+    const result = await adminUsers.toggleBlocked(data.userId, data.blocked);
+    // NEW-1: purge AFTER the Django write succeeded (OLD order).
     await revalidatePublicProfile();
-    return { success: true, data: await adminUsers.toggleBlocked(data.userId, data.blocked) };
+    return { success: true, data: result };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
   }
@@ -184,8 +199,10 @@ export async function toggleUserBlock(data: { userId: string; blocked: boolean }
 
 export async function toggleUserConfirmation(data: { userId: string; confirmed: boolean }) {
   try {
+    const result = await adminUsers.toggleConfirmed(data.userId, data.confirmed);
+    // NEW-1: purge AFTER the Django write succeeded (OLD order).
     await revalidatePublicProfile();
-    return { success: true, data: await adminUsers.toggleConfirmed(data.userId, data.confirmed) };
+    return { success: true, data: result };
   } catch (err) {
     return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
   }
@@ -296,17 +313,27 @@ export async function updateUserImageAction(
 
 export async function updateAccountAdmin(prevState: ActionResult<unknown> | null, formData: FormData) {
   const userId = getFormString(formData, 'userId');
+  if (!userId) return { success: false, message: 'User ID is required' };
   const displayName = getFormString(formData, 'displayName') || undefined;
-  let image: unknown = null;
+  // OLD updateAccountAdmin (actions/admin/users.ts:1306-1405): the image is
+  // only touched when the form posted it (`processedImage !== undefined`). The
+  // form uses `skipEmpty`, so a removed avatar is simply absent → untouched.
+  const body: Record<string, unknown> = {};
+  if (displayName) body.displayName = displayName;
   const raw = formData.get('image');
   if (raw && typeof raw === 'string') {
-    try { image = JSON.parse(raw); } catch { image = raw; }
+    try { body.image = JSON.parse(raw); } catch {
+      return { success: false, message: 'Invalid image data' };
+    }
   }
   try {
+    const data = await adminUsers.updateAccount(userId, body);
     await revalidatePublicProfile();
-    return { success: true, data: await adminUsers.updateAccount(userId, { displayName, image }) };
+    // form-account.tsx toasts + refreshes only when `message` is present.
+    return { success: true, data, message: 'Ο λογαριασμός ενημερώθηκε επιτυχώς!' };
   } catch (err) {
-    return { success: false, error: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
+    const message = err instanceof ApiError ? err.message : 'Σφάλμα δικτύου';
+    return { success: false, error: message, message };
   }
 }
 

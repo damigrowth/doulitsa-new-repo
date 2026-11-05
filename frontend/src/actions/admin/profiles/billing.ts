@@ -16,11 +16,12 @@ export async function updateProfileBillingAdmin(
     await adminProfiles.updateBilling(profileId, {
       receipt: getFormString(formData, 'receipt') === 'true',
       invoice: getFormString(formData, 'invoice') === 'true',
-      afm: getFormString(formData, 'afm') || null,
-      doy: getFormString(formData, 'doy') || null,
-      name: getFormString(formData, 'name') || null,
-      profession: getFormString(formData, 'profession') || null,
-      address: getFormString(formData, 'address') || null,
+      // OLD admin billing.ts:97-105 stores '' — null poisons the form schema.
+      afm: getFormString(formData, 'afm') || '',
+      doy: getFormString(formData, 'doy') || '',
+      name: getFormString(formData, 'name') || '',
+      profession: getFormString(formData, 'profession') || '',
+      address: getFormString(formData, 'address') || '',
     });
     // OLD revalidated public caches after the write
     // (actions/admin/profiles/billing.ts:117-127).

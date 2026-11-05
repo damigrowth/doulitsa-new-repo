@@ -122,7 +122,7 @@ export function EditTaxonomyItemForm({
       });
 
       if (!result.success) {
-        toast.error('Failed to save changes — please try again');
+        toast.error(('error' in result && result.error) || 'Failed to save changes — please try again');
         return;
       }
 

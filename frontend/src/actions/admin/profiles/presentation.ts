@@ -18,13 +18,17 @@ export async function updateProfilePresentationAdmin(
 ): Promise<ActionResponse> {
   const profileId = getFormString(formData, 'profileId');
   if (!profileId) return { success: false, message: 'Λείπει το profileId' };
-  const body: Record<string, unknown> = {};
-  if (formData.get('phone') !== null) body.phone = getFormString(formData, 'phone') || null;
-  if (formData.get('website') !== null) body.website = getFormString(formData, 'website') || null;
-  if (formData.get('viber') !== null) body.viber = getFormString(formData, 'viber') || null;
-  if (formData.get('whatsapp') !== null) body.whatsapp = getFormString(formData, 'whatsapp') || null;
-  if (formData.get('visibility') !== null) body.visibility = parseJSON(formData, 'visibility', null);
-  if (formData.get('socials') !== null) body.socials = parseJSON(formData, 'socials', null);
+  // OLD admin presentation.ts:106-118 writes every field (`value || null`);
+  // the form posts with skipEmpty, so a CLEARED input is absent — send it as
+  // null so the admin can clear phone/website/viber/whatsapp/socials.
+  const body: Record<string, unknown> = {
+    phone: getFormString(formData, 'phone') || null,
+    website: getFormString(formData, 'website') || null,
+    viber: getFormString(formData, 'viber') || null,
+    whatsapp: getFormString(formData, 'whatsapp') || null,
+    visibility: parseJSON(formData, 'visibility', null),
+    socials: parseJSON(formData, 'socials', null),
+  };
   try {
     await adminProfiles.updatePresentation(profileId, body);
     // OLD revalidated public caches after the write

@@ -135,7 +135,12 @@ class AdminProfileSearchView(APIView):
     permission_classes = [IsAuthenticated, _PERM_VIEW]
 
     def get(self, request):
-        results = svc.search_profiles_for_selection(request.query_params.get("searchQuery", ""))
+        # `published=true` + empty query = the article author picker list
+        # (OLD: every published profile ordered by displayName).
+        results = svc.search_profiles_for_selection(
+            request.query_params.get("searchQuery", ""),
+            published_list=_bool(request.query_params.get("published")) is True,
+        )
         return Response(results)
 
 
@@ -187,16 +192,6 @@ class AdminProfileSettingsView(APIView):
 # ----- Admin variants of own-profile updates (rows 218-222) ---------------
 # These reuse the same field shapes as the public endpoints but target a
 # specific profile by ID instead of the caller's profile.
-
-
-def _patch_profile_fields(profile_id: str, mapping: dict[str, str], data: dict) -> None:
-    """Generic helper: map serializer field → DB column."""
-    update_kwargs = {}
-    for field, col in mapping.items():
-        if field in data:
-            update_kwargs[col] = data[field]
-    if update_kwargs:
-        svc.update_profile(profile_id, **update_kwargs)
 
 
 class AdminProfileBasicInfoView(APIView):
@@ -254,10 +249,19 @@ class AdminProfilePresentationView(APIView):
     def patch(self, request, profile_id):
         s = UpdatePresentationSerializer(data=request.data, partial=True)
         s.is_valid(raise_exception=True)
-        _patch_profile_fields(profile_id, {
-            "phone": "phone", "website": "website", "viber": "viber",
-            "whatsapp": "whatsapp", "visibility": "visibility", "socials": "socials",
-        }, s.validated_data)
+        d = s.validated_data
+        # OLD admin presentation.ts:106-118 writes all six fields; blank or
+        # absent → null (visibility → {email:true}) so the admin can CLEAR
+        # phone/website/viber/whatsapp/socials (adm D10).
+        svc.admin_update_presentation(
+            profile_id,
+            phone=d.get("phone"),
+            website=d.get("website"),
+            viber=d.get("viber"),
+            whatsapp=d.get("whatsapp"),
+            visibility=d.get("visibility"),
+            socials=d.get("socials"),
+        )
         return Response(svc.get_profile_detail(profile_id))
 
 
@@ -295,10 +299,13 @@ class AdminProfileBillingView(APIView):
         s = UpdateBillingSerializer(data=request.data)
         s.is_valid(raise_exception=True)
         d = s.validated_data
+        # OLD admin billing.ts:97-105 stores '' (never null) for blank invoice
+        # fields; a null poisons the form's `z.string().optional()` schema and
+        # keeps its Save button disabled (pass3-adm D1).
         svc.update_profile(profile_id, billing={
             "receipt": d["receipt"], "invoice": d["invoice"],
-            "afm": d.get("afm"), "doy": d.get("doy"),
-            "name": d.get("name"), "profession": d.get("profession"),
-            "address": d.get("address"),
+            "afm": d.get("afm") or "", "doy": d.get("doy") or "",
+            "name": d.get("name") or "", "profession": d.get("profession") or "",
+            "address": d.get("address") or "",
         })
         return Response(svc.get_profile_detail(profile_id))

@@ -82,9 +82,17 @@ class AdminUserDetailSerializer(serializers.Serializer):
 # ----- Write -----
 
 
+class AdminUpdateAccountSerializer(serializers.Serializer):
+    """OLD updateAccountAdmin schema (actions/admin/users.ts:1338-1343):
+    displayName 1-100 optional; image nullable/optional."""
+
+    displayName = serializers.CharField(required=False, min_length=1, max_length=100)
+    image = serializers.JSONField(required=False, allow_null=True)
+
+
 class AdminCreateUserSerializer(serializers.Serializer):
     email = serializers.EmailField()
-    password = serializers.CharField(min_length=6, max_length=100, write_only=True)
+    password = serializers.CharField(min_length=6, max_length=100, write_only=True, trim_whitespace=False)
     role = serializers.ChoiceField(choices=[(r.value, r.value) for r in UserRole])
     name = serializers.CharField(required=False, allow_blank=True, max_length=100)
     displayName = serializers.CharField(required=False, allow_blank=True, max_length=100)
@@ -112,7 +120,7 @@ class AdminBanStatusSerializer(serializers.Serializer):
 
 
 class AdminSetPasswordSerializer(serializers.Serializer):
-    newPassword = serializers.CharField(min_length=6, max_length=100, write_only=True)
+    newPassword = serializers.CharField(min_length=6, max_length=100, write_only=True, trim_whitespace=False)
 
 
 class AdminUpdateBasicInfoSerializer(serializers.Serializer):

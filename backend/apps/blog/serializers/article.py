@@ -91,6 +91,15 @@ class UpdateArticleSerializer(CreateArticleSerializer):
             raise serializers.ValidationError(errors)
         return attrs
 
+    # Fields where an explicit null means "clear it" — OLD updateArticle did
+    # `coverImage || null` / `excerpt || null` / `categorySlug || null`
+    # (manage-articles.ts:130-133), so removing the cover image in the picker
+    # (onChange(null)) actually removed it. Every other None is dropped.
+    _NULL_CLEARS = ("coverImage", "excerpt", "categorySlug")
+
     def to_internal_value(self, data):
         data = super().to_internal_value(data)
-        return {k: v for k, v in data.items() if v is not None}
+        return {
+            k: v for k, v in data.items()
+            if v is not None or k in self._NULL_CLEARS
+        }

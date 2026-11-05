@@ -122,8 +122,10 @@ def _build_feed() -> list[dict[str, Any]]:
 
     # Pending reviews
     try:
-        from apps.reviews.models import Review
-        for r in Review.objects.filter(status="PENDING").order_by("-created_at")[:10]:
+        from apps.reviews.models import Review, ReviewStatus
+        # P3-30: review statuses are lowercase ('pending'); the uppercase
+        # literal matched nothing (verifications DO use 'PENDING', above).
+        for r in Review.objects.filter(status=ReviewStatus.PENDING).order_by("-created_at")[:10]:
             created = getattr(r, "created_at", None)
             out.append({
                 "id": f"review:{r.id}",

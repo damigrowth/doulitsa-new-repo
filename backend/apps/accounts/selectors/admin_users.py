@@ -105,8 +105,24 @@ def get_user_with_relations(user_id: str) -> dict[str, Any] | None:
     accounts_qs = user.accounts.all().order_by("-created_at")
     sessions_qs = user.sessions.all().order_by("-created_at")
 
+    # OLD getUser (actions/admin/users.ts:50-90) includes
+    # `profile: { include: { _count: { services, reviews } } }`.
+    from django.db.models import Count
+
+    from apps.profiles.models import Profile
+
+    profile = (
+        Profile.objects.filter(user_id=user.id)
+        .annotate(
+            _services_count=Count("services", distinct=True),
+            _reviews_count=Count("reviews_received", distinct=True),
+        )
+        .first()
+    )
+
     return {
         "user": user,
+        "profile": profile,
         "accounts": list(accounts_qs),
         "sessions": list(sessions_qs),
     }

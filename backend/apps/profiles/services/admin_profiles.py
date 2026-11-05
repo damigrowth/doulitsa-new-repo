@@ -113,29 +113,25 @@ def _admin_profile_row(p: Profile) -> dict[str, Any]:
 
 
 def get_profile_detail(profile_id: str) -> dict[str, Any] | None:
+    """OLD getProfile (actions/admin/profiles.ts:184-230) returned the FULL
+    Prisma profile row + `user: true` + `_count{services,reviews}`. The admin
+    section forms reset from those keys and their saves write every field
+    back, so any key missing here is wiped on the next save (AM-WIPE)."""
     profile = (
         Profile.objects
         .select_related("user")
+        .annotate(
+            _services_count=Count("services", distinct=True),
+            _reviews_count=Count("reviews_received", distinct=True),
+        )
         .filter(id=profile_id)
         .first()
     )
     if profile is None:
         return None
 
-    services_count = 0
-    reviews_count = 0
-    try:
-        from apps.services.models import Service  # type: ignore
-        services_count = Service.objects.filter(profile=profile).count()
-    except ImportError:
-        pass
-    try:
-        from apps.reviews.models import Review  # type: ignore
-        reviews_count = Review.objects.filter(profile=profile).count()
-    except ImportError:
-        pass
-
     verification = ProfileVerification.objects.filter(profile=profile).first()
+    user = profile.user
 
     payload = _admin_profile_row(profile)
     payload.update({
@@ -143,6 +139,7 @@ def get_profile_detail(profile_id: str) -> dict[str, Any] | None:
         "bio": profile.bio,
         "skills": profile.skills or [],
         "speciality": profile.speciality,
+        "size": profile.size,
         "coverage": profile.coverage,
         "portfolio": profile.portfolio,
         "visibility": profile.visibility,
@@ -151,15 +148,51 @@ def get_profile_detail(profile_id: str) -> dict[str, Any] | None:
         "website": profile.website,
         "viber": profile.viber,
         "whatsapp": profile.whatsapp,
+        "firstName": profile.first_name,
+        "lastName": profile.last_name,
         "rate": profile.rate,
+        "commencement": profile.commencement,
         "experience": profile.experience,
-        "billing": profile.billing,
+        "contactMethods": profile.contact_methods or [],
+        "paymentMethods": profile.payment_methods or [],
+        "settlementMethods": profile.settlement_methods or [],
+        "budget": profile.budget,
+        "terms": profile.terms,
+        "billing": _billing_for_form(profile.billing),
         "stars": profile.stars,
-        "servicesCount": services_count,
-        "reviewsCount": reviews_count,
+        "authorBio": profile.author_bio,
+        "servicesCount": payload["_count"]["services"],
+        "reviewsCount": payload["_count"]["reviews"],
         "verification": _verification_row(verification) if verification else None,
     })
+    if user is not None:
+        # OLD `user: true` — the page reads user.banned/step/username/image/
+        # displayName/createdAt/updatedAt (profiles/[id]/page.tsx:51-64).
+        payload["user"] = {
+            **(payload.get("user") or {}),
+            "banned": user.banned,
+            "step": user.step,
+            "username": user.username,
+            "displayName": user.display_name,
+            "image": user.image,
+            "type": user.type,
+            "emailVerified": user.email_verified,
+            "createdAt": user.created_at.isoformat() if user.created_at else None,
+            "updatedAt": user.updated_at.isoformat() if user.updated_at else None,
+        }
     return payload
+
+
+def _billing_for_form(billing: Any) -> Any:
+    """Rows previously saved by the NEW admin path hold `null` invoice fields;
+    the billing form's schema is `z.string().optional()`, which rejects null
+    and keeps Save disabled. Present null text fields as '' (OLD stored '')."""
+    if not isinstance(billing, dict):
+        return billing
+    return {
+        k: ("" if v is None and k in ("afm", "doy", "name", "profession", "address") else v)
+        for k, v in billing.items()
+    }
 
 
 # ----- Admin section updates (rows 218-221) -------------------------------
@@ -232,6 +265,32 @@ def admin_update_additional_info(
     p.budget = budget or None
     p.terms = terms or None
     p.save()
+    return p
+
+
+def admin_update_presentation(
+    profile_id: str, *,
+    phone: str | None = None,
+    website: str | None = None,
+    viber: str | None = None,
+    whatsapp: str | None = None,
+    visibility: dict | None = None,
+    socials: dict | None = None,
+) -> Profile:
+    """Mirrors OLD actions/admin/profiles/presentation.ts:106-118 — every field
+    is written; a blank/absent value CLEARS it (the form posts with
+    skipEmpty, so a cleared input is simply absent). The generic
+    `update_profile` skips None, which made these fields un-clearable."""
+    p = _get_or_404(profile_id)
+    p.phone = phone or None
+    p.website = website or None
+    p.viber = viber or None
+    p.whatsapp = whatsapp or None
+    p.visibility = visibility or {"email": True}
+    p.socials = socials if socials else None
+    p.save(update_fields=[
+        "phone", "website", "viber", "whatsapp", "visibility", "socials", "updated_at",
+    ])
     return p
 
 
@@ -310,17 +369,40 @@ def delete_profile(profile_id: str) -> dict[str, Any]:
     p = _get_or_404(profile_id)
     cascade = {"profileId": p.id, "uid": p.user_id}
     p.delete()
+    # OLD admin/profiles.ts:629-631: sync the owner's Brevo list (pro user
+    # loses the profile → EMPTYPROFILE). Best-effort; never blocks the delete.
+    if p.user_id:
+        try:
+            from apps.messaging.tasks import brevo_state_change
+            brevo_state_change.delay(p.user_id, "profile_deleted")
+        except Exception:
+            logger.exception("profile_delete_brevo_sync.failed", extra={"user_id": p.user_id})
     return cascade
 
 
-def search_profiles_for_selection(query: str, *, max_results: int = 50) -> list[dict[str, Any]]:
-    # OLD searchProfilesForSelection (admin/profiles.ts:656-...): min-2-chars
-    # guard; searches username | displayName | profile.email | user.email.
+def search_profiles_for_selection(
+    query: str, *, max_results: int = 50, published_list: bool = False,
+) -> list[dict[str, Any]]:
+    # OLD searchProfilesForSelection (admin/profiles.ts:656-735): min-2-chars
+    # guard; searches username | displayName | profile.email | user.email;
+    # selects coverage (the admin create-service wizard derives the disabled
+    # presence/online options from it — admin-create-service-form.tsx:211-222).
     query = (query or "").strip()
+    if published_list and not query:
+        # OLD articles/create|[id]/page.tsx: the "Συγγραφείς" author picker is
+        # `prisma.profile.findMany({ where: { published: true }, orderBy:
+        # { displayName: 'asc' } })` — every published profile, no limit.
+        qs = (
+            Profile.objects.select_related("user")
+            .filter(published=True)
+            .order_by("display_name")
+        )
+        return [_selection_row(p) for p in qs]
     if len(query) < 2:
         return []
     qs = (
         Profile.objects
+        .select_related("user")
         .filter(
             Q(username__icontains=query)
             | Q(display_name__icontains=query)
@@ -330,7 +412,13 @@ def search_profiles_for_selection(query: str, *, max_results: int = 50) -> list[
         .filter(user__role__in=("freelancer", "company"))
         .order_by("display_name")[:max_results]
     )
-    return [_admin_profile_row(p) for p in qs]
+    return [_selection_row(p) for p in qs]
+
+
+def _selection_row(p: Profile) -> dict[str, Any]:
+    row = _admin_profile_row(p)
+    row["coverage"] = p.coverage
+    return row
 
 
 def get_profile_stats() -> dict[str, Any]:

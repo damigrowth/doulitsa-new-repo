@@ -33,9 +33,11 @@ from apps.accounts.serializers.admin_users import (
 from apps.accounts.services import admin_users as admin_users_service
 from common.exceptions import NotFound
 
-_PERM_VIEW = HasResourcePermission(AdminResource.USERS, "view")
-_PERM_EDIT = HasResourcePermission(AdminResource.USERS, "edit")
-_PERM_FULL = HasResourcePermission(AdminResource.USERS, "full")
+# protect_admin_targets: support can't write to admin/support/editor accounts
+# (password, role, ban, sessions, delete, basic info…) — AZ-D3 / P2-35.
+_PERM_VIEW = HasResourcePermission(AdminResource.USERS, "view", protect_admin_targets=True)
+_PERM_EDIT = HasResourcePermission(AdminResource.USERS, "edit", protect_admin_targets=True)
+_PERM_FULL = HasResourcePermission(AdminResource.USERS, "full", protect_admin_targets=True)
 
 
 def _get_target(user_id: str) -> User:
@@ -43,6 +45,27 @@ def _get_target(user_id: str) -> User:
     if user is None:
         raise NotFound("Ο χρήστης δεν βρέθηκε", details={"userId": user_id})
     return user
+
+
+def _profile_summary(p) -> dict:
+    """The profile keys the admin user-detail page reads (header links + the
+    "Profile & Activity" card)."""
+    return {
+        "id": p.id,
+        "uid": p.user_id,
+        "username": p.username,
+        "displayName": p.display_name,
+        "image": p.image,
+        "type": p.type,
+        "published": p.published,
+        "isActive": p.is_active,
+        "createdAt": p.created_at.isoformat() if p.created_at else None,
+        "updatedAt": p.updated_at.isoformat() if p.updated_at else None,
+        "_count": {
+            "services": getattr(p, "_services_count", 0) or 0,
+            "reviews": getattr(p, "_reviews_count", 0) or 0,
+        },
+    }
 
 
 # ----- list / create / detail (rows 144, 145, 146) ------------------------
@@ -96,8 +119,13 @@ class AdminUserDetailView(APIView):
         result = admin_users_selectors.get_user_with_relations(user_id)
         if result is None:
             raise NotFound("Ο χρήστης δεν βρέθηκε")
+        # OLD getUser (actions/admin/users.ts:50-90) returned the Prisma user
+        # row FLAT with `profile{…,_count}`, `accounts` and `sessions` included;
+        # the copied page does `user = data` then `user.id.slice(...)`.
+        profile = result["profile"]
         return Response({
-            "user": AdminUserSerializer(result["user"]).data,
+            **AdminUserSerializer(result["user"]).data,
+            "profile": _profile_summary(profile) if profile is not None else None,
             "accounts": AdminAccountSerializer(result["accounts"], many=True).data,
             "sessions": AdminSessionSerializer(result["sessions"], many=True).data,
         })
@@ -176,8 +204,16 @@ class AdminRevokeAllSessionsView(APIView):
 
     def post(self, request, user_id):
         target = _get_target(user_id)
-        n = admin_users_service.revoke_all_user_sessions(target_user=target)
-        return Response({"revoked": n})
+        # OLD auth.api.revokeUserSessions killed every session immediately
+        # (actions/admin/users.ts:524-551). Auth is SimpleJWT now, so the
+        # legacy `Session` rows are inert: blacklist every outstanding refresh
+        # token (same as the user-facing "log out everywhere",
+        # views/public/account.py) so no new access token can be minted.
+        from apps.accounts.services import sessions as session_service
+
+        legacy = admin_users_service.revoke_all_user_sessions(target_user=target)
+        jwt_revoked = session_service.revoke_all_for_user(target)
+        return Response({"revoked": jwt_revoked + legacy, "refreshTokensRevoked": jwt_revoked})
 
 
 class AdminRevokeSessionView(APIView):
@@ -360,28 +396,48 @@ class AdminAccountUpdateView(APIView):
     permission_classes = [IsAuthenticated, _PERM_VIEW]
 
     def patch(self, request, user_id):
-        from apps.accounts.serializers.auth import UpdateAccountSerializer
+        from apps.accounts.serializers.admin_users import AdminUpdateAccountSerializer
 
         target = _get_target(user_id)
-        serializer = UpdateAccountSerializer(data=request.data, partial=True)
+        serializer = AdminUpdateAccountSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        target.display_name = serializer.validated_data.get("displayName", target.display_name)
-        image_provided = "image" in serializer.validated_data
+        data = serializer.validated_data
+        update_fields = ["updated_at"]
+        # OLD: `displayName: displayName || undefined` — blank leaves it as is.
+        display_name = data.get("displayName") or None
+        if display_name is not None:
+            target.display_name = display_name
+            update_fields.append("display_name")
+        # OLD: `...(processedImage !== undefined && { image })` — only touch the
+        # image when the key was sent; an explicit null clears it on BOTH the
+        # User and the Profile (the previous NEW code cleared only the User).
+        image_provided = "image" in data
+        image_url = None
         if image_provided:
-            image = serializer.validated_data["image"]
-            target.image = (
+            image = data["image"]
+            image_url = (
                 image.get("secure_url") if isinstance(image, dict) else image
             ) if image else None
-        target.save(update_fields=["display_name", "image", "updated_at"])
-        # Same best-effort sync as the public path
-        # (apps/accounts/views/public/account.py).
+            target.image = image_url
+            update_fields.append("image")
+        target.save(update_fields=update_fields)
         try:
-            from apps.profiles.services.profile_updates import sync_account_to_profile
-            sync_account_to_profile(
-                target,
-                display_name=target.display_name,
-                image=target.image if image_provided else None,
-            )
+            from apps.profiles.models import Profile
+            from common.utils.normalize import normalize_term
+
+            profile = Profile.objects.filter(user_id=target.id).first()
+            if profile is not None:
+                p_fields = []
+                if display_name is not None:
+                    profile.display_name = display_name
+                    profile.display_name_normalized = normalize_term(display_name)
+                    p_fields += ["display_name", "display_name_normalized"]
+                if image_provided:
+                    profile.image = image_url
+                    p_fields.append("image")
+                if p_fields:
+                    p_fields.append("updated_at")
+                    profile.save(update_fields=p_fields)
         except Exception:  # pragma: no cover - defensive
             import logging
             logging.getLogger(__name__).exception(

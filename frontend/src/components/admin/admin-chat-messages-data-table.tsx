@@ -24,16 +24,22 @@ export function AdminChatMessagesDataTable({
       render: (message) => (
         <div className='flex items-center gap-3'>
           <UserAvatar
-            displayName={message.authorId}
+            displayName={message.author?.displayName ?? undefined}
+            image={message.author?.image ?? undefined}
             size='sm'
             className='h-8 w-8'
             showBorder={false}
             showShadow={false}
           />
           <div className='space-y-0.5'>
-            <div className='font-medium text-xs text-muted-foreground'>
-              {message.authorId}
+            <div className='font-medium'>
+              {message.author?.displayName || 'Χρήστης'}
             </div>
+            {message.author?.username && (
+              <div className='text-xs text-muted-foreground'>
+                @{message.author.username}
+              </div>
+            )}
           </div>
         </div>
       ),

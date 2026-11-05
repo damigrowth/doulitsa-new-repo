@@ -5,6 +5,8 @@ import { ApiError } from '@/lib/api/client';
 import type { ActionResult } from '@/lib/types/api';
 import { getFormString } from '@/lib/utils/form';
 import { revalidatePublicProfile } from '@/lib/cache/revalidation';
+import { getProTaxonomies } from '@/lib/taxonomies';
+import { resolveTaxonomyHierarchy } from '@/lib/utils/datasets';
 
 export interface AdminUpdateProfileInput {
   profileId: string;
@@ -27,7 +29,24 @@ const wrap = async <T>(fn: () => Promise<T>): Promise<ActionResult<T>> => {
 };
 
 export async function listProfiles(query: Record<string, unknown> = {}) {
-  return wrap(() => adminProfiles.list(query));
+  // OLD listProfiles (admin/profiles.ts:150-160) attached `taxonomyLabels`
+  // resolved from the pro taxonomies for the table's category column.
+  return wrap(async () => {
+    const res = await adminProfiles.list(query);
+    const proTaxonomies = getProTaxonomies();
+    return {
+      ...res,
+      profiles: res.profiles.map((profile) => ({
+        ...profile,
+        taxonomyLabels: resolveTaxonomyHierarchy(
+          proTaxonomies,
+          profile.category,
+          profile.subcategory,
+          null,
+        ),
+      })),
+    };
+  });
 }
 
 export async function getProfile(profileId: string) {

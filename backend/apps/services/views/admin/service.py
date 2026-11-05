@@ -13,6 +13,7 @@ from apps.services.serializers.service import (
     UpdateServiceMediaSerializer,
     UpdateServiceSerializer,
 )
+from apps.services.models import Service
 from apps.services.services import admin_services as svc
 from common.exceptions import NotFound
 
@@ -96,8 +97,16 @@ class AdminServiceSettingsView(APIView):                                        
     def patch(self, request, service_id):
         sid = int(service_id)
         status_val = request.data.get("status")
+        # The settings form ALWAYS posts `status` (edit-service-settings-form.tsx
+        # :83-90). OLD updateService emailed only when the status actually
+        # moved to published (admin/services.ts:478-490) — so only run the
+        # status transition (and its email/Brevo hooks) on a real change.
         if status_val:
-            svc.update_status(service_id=sid, status=status_val)
+            current = Service.objects.filter(id=sid).values_list("status", flat=True).first()
+            if current is None:
+                raise NotFound("Service not found")
+            if status_val != current:
+                svc.update_status(service_id=sid, status=status_val)
         s = UpdateServiceSerializer(data=request.data, partial=True)
         s.is_valid(raise_exception=True)
         if "featured" in s.validated_data:

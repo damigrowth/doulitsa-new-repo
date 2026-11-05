@@ -66,6 +66,7 @@ export function AdminChatDetailStats({ stats }: AdminChatDetailStatsProps) {
             <div className='flex items-center gap-3'>
               <UserAvatar
                 displayName={stats.creator.displayName ?? undefined}
+                image={stats.creator.image ?? undefined}
                 size='sm'
                 className='h-10 w-10'
                 showBorder={false}
@@ -75,9 +76,9 @@ export function AdminChatDetailStats({ stats }: AdminChatDetailStatsProps) {
                 <div className='text-sm font-medium'>
                   {stats.creator.displayName || 'Χρήστης'}
                 </div>
-                {stats.creator.email && (
+                {stats.creator.username && (
                   <div className='text-xs text-muted-foreground'>
-                    {stats.creator.email}
+                    @{stats.creator.username}
                   </div>
                 )}
               </div>
@@ -99,6 +100,7 @@ export function AdminChatDetailStats({ stats }: AdminChatDetailStatsProps) {
             <div className='flex items-center gap-3'>
               <UserAvatar
                 displayName={stats.member.displayName ?? undefined}
+                image={stats.member.image ?? undefined}
                 size='sm'
                 className='h-10 w-10'
                 showBorder={false}
@@ -108,9 +110,9 @@ export function AdminChatDetailStats({ stats }: AdminChatDetailStatsProps) {
                 <div className='text-sm font-medium'>
                   {stats.member.displayName || 'Χρήστης'}
                 </div>
-                {stats.member.email && (
+                {stats.member.username && (
                   <div className='text-xs text-muted-foreground'>
-                    {stats.member.email}
+                    @{stats.member.username}
                   </div>
                 )}
               </div>

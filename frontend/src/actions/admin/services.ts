@@ -5,6 +5,7 @@ import { ApiError } from '@/lib/api/client';
 import { revalidatePublicService } from '@/lib/cache/revalidation';
 import type { ActionResult } from '@/lib/types/api';
 import { getFormString } from '@/lib/utils/form';
+import { resolveServiceHierarchy } from '@/lib/taxonomies';
 
 export interface AdminUpdateServiceInput {
   serviceId: number;
@@ -26,7 +27,29 @@ const fdJSON = <T>(formData: FormData, key: string, fallback: T): T => {
 };
 
 export async function listServices(query: Record<string, unknown> = {}) {
-  return wrap(() => adminServices.list(query));
+  // OLD listServices (admin/services.ts:277-298) attached `taxonomyLabels`
+  // (context-aware hierarchy lookup) for the table's TaxonomiesDisplay column.
+  return wrap(async () => {
+    const res = await adminServices.list(query);
+    return {
+      ...res,
+      services: res.services.map((service) => {
+        const { category, subcategory, subdivision } = resolveServiceHierarchy(
+          service.category,
+          service.subcategory,
+          service.subdivision,
+        );
+        return {
+          ...service,
+          taxonomyLabels: {
+            category: category?.label || service.category || '',
+            subcategory: subcategory?.label || service.subcategory || '',
+            subdivision: subdivision?.label || service.subdivision || '',
+          },
+        };
+      }),
+    };
+  });
 }
 
 export async function getService(serviceId: number) {

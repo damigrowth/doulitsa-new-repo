@@ -1,6 +1,7 @@
 """Admin blog endpoints (rows 244-248)."""
 from __future__ import annotations
 
+from django.db import IntegrityError
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -10,7 +11,14 @@ from rest_framework.views import APIView
 from apps.accounts.permissions.admin import AdminResource, HasResourcePermission
 from apps.blog.serializers.article import CreateArticleSerializer, UpdateArticleSerializer
 from apps.blog.services import articles
-from common.exceptions import NotFound
+from common.exceptions import ApiError, NotFound
+
+
+def _slug_taken() -> ApiError:
+    # OLD caught the Prisma unique violation and returned it as an error
+    # message (manage-articles.ts:79-85,174-180); NEW let the IntegrityError
+    # escape as a 500 (p3blog N5).
+    return ApiError("Το slug χρησιμοποιείται ήδη", code="slug_taken", status_code=409)
 
 _PERM_VIEW = HasResourcePermission(AdminResource.BLOG, "view")
 _PERM_EDIT = HasResourcePermission(AdminResource.BLOG, "edit")
@@ -35,7 +43,12 @@ class AdminArticleListCreateView(APIView):
         self.check_permissions(request)
         s = CreateArticleSerializer(data=request.data)
         s.is_valid(raise_exception=True)
-        article = articles.create_article(payload=s.validated_data)
+        try:
+            article = articles.create_article(payload=s.validated_data)
+        except IntegrityError as exc:
+            if "slug" not in str(exc):
+                raise
+            raise _slug_taken() from exc
         return Response({"id": article.id, "slug": article.slug}, status=status.HTTP_201_CREATED)
 
 
@@ -54,7 +67,12 @@ class AdminArticleDetailView(APIView):
         self.check_permissions(request)
         s = UpdateArticleSerializer(data=request.data, partial=True)
         s.is_valid(raise_exception=True)
-        article = articles.update_article(article_id=article_id, payload=s.validated_data)
+        try:
+            article = articles.update_article(article_id=article_id, payload=s.validated_data)
+        except IntegrityError as exc:
+            if "slug" not in str(exc):
+                raise
+            raise _slug_taken() from exc
         return Response({"id": article.id, "slug": article.slug})
 
     def delete(self, request, article_id):

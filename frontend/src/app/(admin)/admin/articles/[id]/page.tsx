@@ -30,7 +30,7 @@ export default async function EditArticlePage({ params }: EditArticlePageProps) 
 
   const [articleResult, profilesRaw] = await Promise.all([
     getArticleAdmin(id),
-    adminProfiles.search('').catch(() => [] as AdminProfile[]),
+    adminProfiles.search('', { published: true }).catch(() => [] as AdminProfile[]),
   ]);
   const profiles = profilesRaw as AdminProfile[];
 

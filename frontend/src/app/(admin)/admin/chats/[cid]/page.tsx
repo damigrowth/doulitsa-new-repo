@@ -39,7 +39,9 @@ export default async function ChatDetailPage({
   // Verify chat exists
   const chat = await getAdminChatById(cid);
 
-  if (!chat) {
+  // wrap() always returns an object — 404 on a failed lookup (OLD returned
+  // null for a missing chat → notFound()).
+  if (!chat.success || !chat.data) {
     notFound();
   }
 

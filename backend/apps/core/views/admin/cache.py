@@ -49,6 +49,10 @@ class RevalidateWebhookView(APIView):
     layer), but we keep it functional so Vercel post-deploy hooks don't 404.
     """
 
+    # XC-CRONAUTH: no DRF authenticators. The default SimpleJWT authenticator
+    # would try to parse `Bearer <CRON_SECRET>` as a JWT and 401 the request
+    # before the shared-secret check below ever runs.
+    authentication_classes: list = []
     permission_classes = [AllowAny]
 
     def post(self, request):

@@ -13,9 +13,9 @@ export default async function CreateArticlePage() {
 
   const categories = getAllBlogCategories();
 
-  // Pull a list of professional profiles to populate the author selector.
-  // Use the existing admin profile-search endpoint with an empty query =>
-  // returns up to 50 published profiles.
+  // Author selector = every published profile ordered by displayName (OLD
+  // `prisma.profile.findMany({ where: { published: true } })`). The search
+  // endpoint returns that list for an empty query + `published=true`.
   type AdminProfile = {
     id: string;
     displayName: string | null;
@@ -25,7 +25,7 @@ export default async function CreateArticlePage() {
   };
   let profiles: AdminProfile[] = [];
   try {
-    profiles = (await adminProfiles.search('')) as AdminProfile[];
+    profiles = (await adminProfiles.search('', { published: true })) as AdminProfile[];
   } catch {
     profiles = [];
   }

@@ -13,15 +13,25 @@ from common.exceptions import NotFound
 _PERM = HasResourcePermission(AdminResource.CHATS, "view")
 
 
+def _athens_today_start():
+    """Start of "today" in Europe/Athens (OLD forced process.env.TZ =
+    'Europe/Athens', src/instrumentation.ts:25,32, so its `setHours(0,0,0,0)`
+    was Athens midnight — not UTC midnight)."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    return datetime.now(ZoneInfo("Europe/Athens")).replace(
+        hour=0, minute=0, second=0, microsecond=0,
+    )
+
+
 class AdminChatStatsView(APIView):
     """GET /api/admin/chats/stats (row 139)."""
 
     permission_classes = [IsAuthenticated, _PERM]
 
     def get(self, request):
-        from datetime import datetime, timezone
-        from datetime import timedelta
-        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start = _athens_today_start()
         # OLD getAdminChatStats (actions/admin/chats.ts:49-66) counts only
         # non-deleted messages; chats + chatMembers are counted unfiltered.
         return Response({
@@ -53,16 +63,27 @@ class AdminChatListView(APIView):
             ).distinct()
         page = max(1, int(request.query_params.get("page", 1)))
         limit = max(1, min(100, int(request.query_params.get("limit", 50))))
-        # OLD admin/chats.ts:149-167 `sort` values the table still sends.
+        # OLD admin/chats.ts:132-165: a table column sort (sortBy + sortOrder)
+        # takes precedence over the filter-dropdown `sort`; both can be in the
+        # URL at once. Unknown sortBy (incl. messageCount) → lastActivity.
         sort = request.query_params.get("sort")
-        if sort in ("newest", "oldest", "active"):
-            col = {"newest": "-created_at", "oldest": "created_at", "active": "-last_activity"}[sort]
-        else:
-            order = request.query_params.get("sortOrder", "desc")
-            sort_by = request.query_params.get("sortBy", "lastActivity")
-            col = {"lastActivity": "last_activity", "createdAt": "created_at"}.get(sort_by, "last_activity")
-            if order == "desc":
+        sort_by = request.query_params.get("sortBy")
+        sort_order = request.query_params.get("sortOrder")
+        if sort_by and sort_order in ("asc", "desc"):
+            if sort_by in ("lastActivity", "messageCount"):
+                col = "last_activity"
+            elif sort_by == "createdAt":
+                col = "created_at"
+            else:
+                col, sort_order = "last_activity", "desc"
+            if sort_order == "desc":
                 col = f"-{col}"
+        elif sort == "newest":
+            col = "-created_at"
+        elif sort == "oldest":
+            col = "created_at"
+        else:
+            col = "-last_activity"
         qs = qs.order_by(col)
         total = qs.count()
         offset = (page - 1) * limit
@@ -141,8 +162,7 @@ class AdminChatStatsForChatView(APIView):
         chat = Chat.objects.filter(Q(id=chat_id) | Q(cid=chat_id)).first()
         if chat is None:
             raise NotFound("Chat not found")
-        from datetime import datetime, timezone
-        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start = _athens_today_start()
         members = list(
             ChatMember.objects.filter(chat_id=chat.id).values(
                 "user_id", "user__email", "user__display_name",
@@ -177,7 +197,14 @@ class AdminChatMessagesView(APIView):
         # NOTE: OLD intentionally INCLUDES deleted messages in the admin message
         # list + total (chats.ts:469 "including deleted for admin view"), unlike
         # the stats endpoints — keep that quirk.
-        qs = Message.objects.filter(chat_id=chat.id).select_related("author").order_by("-created_at")
+        # OLD chats.ts:449-454: `orderBy {[sortBy]: sortOrder}` when both are
+        # sent, else newest first.
+        sort_by = request.query_params.get("sortBy")
+        sort_order = request.query_params.get("sortOrder")
+        order_col = "-created_at"
+        if sort_by == "createdAt" and sort_order in ("asc", "desc"):
+            order_col = "created_at" if sort_order == "asc" else "-created_at"
+        qs = Message.objects.filter(chat_id=chat.id).select_related("author").order_by(order_col)
         q = request.query_params.get("search")
         if q:
             qs = qs.filter(content__icontains=q)
@@ -212,6 +239,7 @@ def _msg(m, creator_id: str | None = None) -> dict:
         "content": m.content if not m.deleted else None,
         "authorId": m.author_id,
         "author": {
+            "id": m.author_id,
             "displayName": getattr(author, "display_name", None),
             "username": getattr(author, "username", None),
             "image": getattr(author, "image", None),
