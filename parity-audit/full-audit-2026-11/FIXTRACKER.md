@@ -54,7 +54,7 @@ Batch reports with evidence: fixes-B1..B5.md in this folder.
 | XC-CRONAUTH (3 non-billing views) | B5 | ✅ (wrong secret 401, right secret 200, renewals untouched) |
 | P5-BR-2 missing cleanup task | B1 | ✅ (tasks.py created, worker lists it) |
 | useSession vein (P5-CS-1..5 + NoServiceDialog) | B3 | ✅ (2 ρίζες: store + 5s cache) |
-| Taxonomy approve purge no-op (CG-8) | — | ⏭️ εκτός briefs — follow-up |
+| Taxonomy approve purge no-op + static reads (CG-8) | int | ✅ (store: DB-only, version στο Redis) |
 
 ## P3 LOW (handled inside batches; see batch reports for item lists)
 | Area | Batch | Status |
@@ -79,7 +79,6 @@ Batch reports with evidence: fixes-B1..B5.md in this folder.
 - B1 extras fixed: SM-D1 ✅, SM-D2 ✅, VM-D1 ✅ (8 fields), P5-BR-8 ✅, D5 username atomicity ✅
 
 ## Still open after the batches
-- CG-8 taxonomy submission purge/static reads (not in any brief)
 - Full XC-EN Greek sweep of remaining ~80 backend strings (main plumbing done)
 - P1-14 carousel semantics + D-02 shuffle (product decisions)
 - LC-10 live AADE call (needs creds), reviews/views/admin enum validation (B4 skipped, B2 noted)

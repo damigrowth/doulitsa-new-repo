@@ -13,27 +13,19 @@ like the OLD `require(...)` memoization (`_taxonomyMaps`).
 """
 from __future__ import annotations
 
-import json
 import unicodedata
-from functools import lru_cache
-from pathlib import Path
 from typing import Any
 
-# Resolve the shared maps file. `apps/taxonomy/services/` -> backend root is
-# three parents up, then into apps/core/management/commands/.
-_MAPS_PATH = (
-    Path(__file__).resolve().parents[2]
-    / "core"
-    / "management"
-    / "commands"
-    / "_taxonomy_maps.json"
-)
 
-
-@lru_cache(maxsize=1)
 def _maps() -> dict[str, Any]:
-    with _MAPS_PATH.open("r", encoding="utf-8") as fh:
-        return json.load(fh)
+    # CG-8: the LIVE DB maps (version-cached in the store) — never the static
+    # seed file. Skills/tags approved in the admin are seen here immediately,
+    # so the submissions duplicate-check can no longer re-accept an
+    # already-approved term (user decision 2026-11-05: the static file only
+    # ever feeds the DB once, nothing reads it at runtime).
+    from apps.taxonomy.services import store
+
+    return store.get_maps_dict()
 
 
 def normalize_term(term: str) -> str:

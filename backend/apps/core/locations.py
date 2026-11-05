@@ -19,33 +19,35 @@ from OLD. The search order is what makes the result exact:
 
 Source data: the DB-owned display tree (`LocationTree` id=1, byte-identical to
 `locationOptions`) + `Location` slugs. Falls back to the shipped
-`_taxonomy_maps.json` (flat `byId` / `bySlug`) only when the tables are empty.
+the DB-built maps (flat `byId` / `bySlug`) via the taxonomy store — never the static seed file.
 Cached in-process; `apps.taxonomy.services.cache` clears `_id_to_name` and
 `_maps` on taxonomy writes.
 """
 from __future__ import annotations
 
 import functools
-import json
-from pathlib import Path
 from typing import Any
 
-_MAPS_PATH = Path(__file__).resolve().parent / "management" / "commands" / "_taxonomy_maps.json"
+from apps.core.taxonomy import _versioned
 
 # "Πανελλαδικά / nationwide" sentinels seen in coverage.counties across the data:
 # the Next.js taxonomy used "_all"; the legacy prefecture list used "54".
 NATIONWIDE_IDS = ("_all", "54")
 
 
-def _json_location() -> dict[str, Any]:
-    try:
-        return json.loads(_MAPS_PATH.read_text(encoding="utf-8")).get("location", {}) or {}
-    except (OSError, ValueError):
-        return {}
+def _location_maps() -> dict[str, Any]:
+    """`location` section of the DB-built maps (byId/bySlug) via the store."""
+    from apps.taxonomy.services import store
+
+    return store.get_maps_dict().get("location", {}) or {}
 
 
 def _load_tree() -> list[dict[str, Any]]:
-    """The hierarchical `locationOptions` tree (counties → areas → zipcodes)."""
+    """The hierarchical `locationOptions` tree (counties → areas → zipcodes).
+
+    DB only — the static seed snapshot is never read at runtime (user
+    decision 2026-11-05). Empty tables → empty tree; fix with seed_taxonomy.
+    """
     try:
         from apps.taxonomy.models import LocationTree
 
@@ -54,11 +56,10 @@ def _load_tree() -> list[dict[str, Any]]:
             return row
     except Exception:
         pass
-    tree = _json_location().get("tree")
-    return tree if isinstance(tree, list) else []
+    return []
 
 
-@functools.lru_cache(maxsize=1)
+@_versioned
 def _id_to_name() -> dict[str, str]:
     """id → name in OLD `getLocationName` priority (see module docstring).
 
@@ -95,7 +96,7 @@ def _id_to_name() -> dict[str, str]:
             return out
     except Exception:
         pass
-    by_id: dict = _json_location().get("byId", {}) or {}
+    by_id: dict = _location_maps().get("byId", {}) or {}
     return {
         str(nid): str(node["name"])
         for nid, node in by_id.items()
@@ -111,7 +112,7 @@ def location_name_for_id(location_id) -> str | None:
     return _id_to_name().get(str(location_id))
 
 
-@functools.lru_cache(maxsize=1)
+@_versioned
 def _maps() -> dict[str, Any]:
     """Resolution indexes, built once per process:
 
@@ -148,13 +149,13 @@ def _maps() -> dict[str, Any]:
     except Exception:
         pass
     if not slug_to_id:
-        for slug, node in (_json_location().get("bySlug") or {}).items():
+        for slug, node in (_location_maps().get("bySlug") or {}).items():
             if isinstance(node, dict) and node.get("id") is not None:
                 slug_to_id[slug] = str(node["id"])
     if not tree:
         # No hierarchical tree available: derive counties/areas from the flat
         # JSON bySlug children so slug filters still work (degraded fallback).
-        for node in (_json_location().get("bySlug") or {}).values():
+        for node in (_location_maps().get("bySlug") or {}).values():
             if not isinstance(node, dict):
                 continue
             kids = node.get("children") or []

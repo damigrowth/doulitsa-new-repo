@@ -12,36 +12,19 @@ so the 3 MB is transferred ONLY when the taxonomy actually changes.
 """
 from __future__ import annotations
 
-from django.core.cache import cache
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.taxonomy.services.maps_builder import build_maps
+from apps.taxonomy.services import store
 
-CACHE_KEY = "taxonomy:maps:v1"          # the built maps (dict)
-VERSION_KEY = "taxonomy:maps:version"   # bumped on every taxonomy write -> ETag
-CACHE_TTL = 60 * 60  # 1h; also invalidated on taxonomy writes
-
-
-def current_version() -> str:
-    v = cache.get(VERSION_KEY)
-    if v is None:
-        v = "1"
-        cache.set(VERSION_KEY, v, None)  # no expiry
-    return str(v)
-
-
-def bump_version() -> None:
-    """Invalidate the ETag so the next poll re-downloads. Called on taxonomy writes."""
-    import uuid
-
-    cache.set(VERSION_KEY, uuid.uuid4().hex, None)
+# Kept as aliases for existing callers; the store owns the mechanism now.
+current_version = store.current_version
+bump_version = store.bump_version
 
 
 def invalidate_maps_cache() -> None:
-    cache.delete(CACHE_KEY)
-    bump_version()
+    store.bump_version()
 
 
 class TaxonomyMapsView(APIView):
@@ -49,7 +32,11 @@ class TaxonomyMapsView(APIView):
     throttle_classes: list = []  # public taxonomy data; never throttle
 
     def get(self, request):
-        etag = f'W/"{current_version()}"'
+        # version and body come from ONE store call, so the ETag always
+        # matches the payload it is sent with (no stale-body-under-new-ETag
+        # race — pass2-caching D3).
+        version, data = store.get_maps()
+        etag = f'W/"{version}"'
         # Conditional request: unchanged since the client's copy -> 304, no body.
         if request.headers.get("If-None-Match") == etag:
             resp = Response(status=304)
@@ -57,10 +44,6 @@ class TaxonomyMapsView(APIView):
             resp["Cache-Control"] = "no-cache"
             return resp
 
-        data = cache.get(CACHE_KEY)
-        if data is None:
-            data = build_maps()
-            cache.set(CACHE_KEY, data, CACHE_TTL)
         resp = Response(data)
         resp["ETag"] = etag
         # `no-cache` = the client MAY cache but must revalidate (send If-None-Match)

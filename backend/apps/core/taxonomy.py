@@ -7,38 +7,48 @@ in `services.category/subcategory/subdivision`, so the label-fuzzy helpers here
 return the matching **slugs** (the DB column values) instead of ids. Same intent,
 adapted column space.
 
-Source data: the prebuilt taxonomy maps shipped for seeding
-(`apps/core/management/commands/_taxonomy_maps.json`). Loaded once, cached.
+Source data: the DATABASE, via apps.taxonomy.services.store (version-keyed,
+cross-process invalidation). The static seed snapshot is NEVER read at
+runtime (user decision 2026-11-05): if the tables are empty, the maps are
+empty — fix with `seed_taxonomy`, not with a stale file.
 """
 from __future__ import annotations
 
 import functools
-import json
-from pathlib import Path
 from typing import Any
 
 from common.utils.normalize import normalize_term
 
-_MAPS_PATH = Path(__file__).resolve().parent / "management" / "commands" / "_taxonomy_maps.json"
+
+def _versioned(fn):
+    """Memoize per taxonomy VERSION (Redis), not per process-lifetime.
+
+    Replaces lru_cache(maxsize=1): a taxonomy write anywhere (web, celery, a
+    management command) bumps the shared version, and every process rebuilds
+    on its next call — no cache_clear fan-out needed. Empty results are not
+    kept, so an unseeded/briefly-down DB heals without a restart.
+    """
+    memo: dict[str, Any] = {}
+
+    @functools.wraps(fn)
+    def wrapper():
+        from apps.taxonomy.services import store
+
+        v = store.current_version()
+        if memo.get("v") != v or not memo.get("val"):
+            memo["v"] = v
+            memo["val"] = fn()
+        return memo["val"]
+
+    wrapper.cache_clear = memo.clear  # compat with cache.py's guarded clears
+    return wrapper
 
 
-@functools.lru_cache(maxsize=1)
 def _maps() -> dict[str, Any]:
-    # Single source of truth = the DB (service/pro rebuilt byte-exact via
-    # `slug_primary`; see maps_builder + docs/TAXONOMY-DB-MIGRATION.md). Fall back
-    # to the shipped JSON only when the tables aren't seeded yet (fresh DB).
-    try:
-        from apps.taxonomy.services.maps_builder import build_maps
+    # DB only — the store memoizes per version; no static fallback (see header).
+    from apps.taxonomy.services import store
 
-        m = build_maps()
-        if (m.get("service") or {}).get("byId"):
-            return m
-    except Exception:
-        pass
-    try:
-        return json.loads(_MAPS_PATH.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return {}
+    return store.get_maps_dict()
 
 
 def _level_tree(space: str) -> list[dict[str, Any]]:
@@ -91,7 +101,7 @@ def _level_tree(space: str) -> list[dict[str, Any]]:
     return [n for nid, n in by_id.items() if str(nid) not in child_ids]
 
 
-@functools.lru_cache(maxsize=1)
+@_versioned
 def _service_indexes() -> dict[str, Any]:
     """Flat indexes over the LEVEL-AWARE service tree (see `_level_tree`).
 
@@ -132,7 +142,7 @@ def _service_indexes() -> dict[str, Any]:
 # `__in`. Ports the spirit of OLD `findById`/`findBySlug` slug↔id resolution.
 
 
-@functools.lru_cache(maxsize=1)
+@_versioned
 def _slug_to_ids() -> dict[str, list[str]]:
     """slug -> ALL ids that carry that slug.
 
@@ -157,7 +167,7 @@ def _slug_to_ids() -> dict[str, list[str]]:
     return out
 
 
-@functools.lru_cache(maxsize=1)
+@_versioned
 def _id_to_slug() -> dict[str, str]:
     out: dict[str, str] = {}
     for space in ("service", "pro"):
@@ -328,7 +338,7 @@ def matching_tag_ids(search_term: str) -> list[str]:
 # ----- pro subcategory label matching (search-conditions parity) ----------
 
 
-@functools.lru_cache(maxsize=1)
+@_versioned
 def _pro_subcategories() -> list[dict[str, Any]]:
     # Level-aware (CG-1): walk the pro category tree, never the slug-collapsed
     # bySlug map (13 pro slugs are shared by gender-variant siblings).
@@ -363,7 +373,7 @@ def matching_pro_subcategory_slugs(search_term: str) -> list[str]:
 # ----- coverage → matched location name (search location label) -----------
 
 
-@functools.lru_cache(maxsize=1)
+@_versioned
 def _location_id_to_name() -> dict[str, str]:
     """id → Greek name, matching the OLD app's `getLocationName` priority:
     **top-level COUNTY first, then AREA** — so collision ids resolve like the
