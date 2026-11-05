@@ -239,7 +239,9 @@ def sync_user_to_correct_list(user) -> None:
 
     try:
         # Blocked/banned → remove from all lists (list-management.ts:293-298).
-        if user.blocked or user.banned:
+        # AUTH-G4: `banned` alone ignores expiry — an expired ban must not
+        # keep the contact off the lists (B1 handoff; use the model helper).
+        if user.blocked or user.is_ban_active():
             for list_id in all_ids:
                 remove_contact_from_list(email, list_id)
             return

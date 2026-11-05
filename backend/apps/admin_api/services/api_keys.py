@@ -24,7 +24,11 @@ def validate_static_or_db_key(provided: str) -> dict[str, Any]:
     """
     if not provided:
         return {"success": True, "valid": False, "source": None, "data": None}
-    if settings.ADMIN_API_KEY and provided == settings.ADMIN_API_KEY:
+    # AZ-D1: constant-time compare — the env key must not be probable
+    # byte-by-byte through timing on this (unauthenticated-reachable) check.
+    import hmac
+
+    if settings.ADMIN_API_KEY and hmac.compare_digest(provided, settings.ADMIN_API_KEY):
         return {
             "success": True,
             "valid": True,

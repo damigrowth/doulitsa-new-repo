@@ -223,8 +223,12 @@ REST_FRAMEWORK = {
         # cookie via JS — they need the server to read it for them. Try the
         # cookie-bound JWT first; falls through cleanly if no cookie present.
         "common.authentication.CookieJWTAuthentication",
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-        "common.authentication.ApiKeyAuthentication",
+        # P0-6: revocation-aware wrapper of SimpleJWT's class — rejects access
+        # tokens minted before an admin "revoke all sessions" epoch.
+        "common.authentication.RevocationAwareJWTAuthentication",
+        # AZ-D1: ApiKeyAuthentication is deliberately NOT a default — an API
+        # key must never log a request in globally (OLD only ever VALIDATED
+        # keys). Views that need it opt in via `authentication_classes`.
         "rest_framework.authentication.SessionAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [

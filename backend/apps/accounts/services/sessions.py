@@ -25,6 +25,8 @@ refresh token as an `OutstandingToken` row tied to the user.
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -76,4 +78,21 @@ def revoke_all_for_user(user: User) -> int:
         _, created = BlacklistedToken.objects.get_or_create(token=token)
         if created:
             revoked += 1
+
+    # P0-6: refresh tokens die above, but already-minted ACCESS tokens would
+    # stay valid for up to their 15-minute TTL. Record a per-user revocation
+    # epoch; RevocationAwareJWTAuthentication rejects any token issued before
+    # it. TTL = access lifetime + slack, after which no such token survives.
+    from django.conf import settings as dj_settings
+    from django.core.cache import cache
+
+    lifetime = dj_settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].total_seconds()
+    # Floor to whole seconds: token `iat` is an int, so a sub-second epoch
+    # would also reject tokens minted in the same second AFTER the revoke
+    # (fresh logins). The ≤1s window of pre-revoke tokens surviving is fine.
+    cache.set(
+        f"auth:revoked-before:{user.id}",
+        int(datetime.now(timezone.utc).timestamp()),
+        timeout=int(lifetime) + 60,
+    )
     return revoked

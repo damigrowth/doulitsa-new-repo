@@ -51,6 +51,21 @@ export async function revalidateAllCaches(): Promise<{
     revalidateTag(CACHE_TAGS.search.all);
     revalidated.push(`tag:${CACHE_TAGS.search.all}`);
 
+    // XC-DEADREVAL: tags the current fetches ACTUALLY carry but this
+    // "revalidate everything" button missed (lib/api/{core,services,
+    // profiles,blog}.ts + unstable_cache wrappers).
+    for (const tag of [
+      'archive:services',
+      'archive:profiles',
+      'nav:menu',
+      'search:suggestions',
+      'blog:articles',
+      'taxonomy-paths',
+    ]) {
+      revalidateTag(tag);
+      revalidated.push(`tag:${tag}`);
+    }
+
     // ============================================
     // 4. ADMIN TAGS
     // ============================================

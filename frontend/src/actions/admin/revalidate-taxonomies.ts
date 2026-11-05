@@ -31,34 +31,25 @@ export async function revalidateTaxonomyCaches(): Promise<{
 
     const revalidated: string[] = [];
 
-    // 1. Revalidate tags used by getCategoriesPageData
-    // These exact tags are in src/actions/services/get-categories.ts
-    // Note: 'services' tag removed - taxonomy changes don't affect existing service assignments
-    revalidateTag('categories');
-    revalidated.push('tag:categories');
-
-    revalidateTag('categories-page');
-    revalidated.push('tag:categories-page');
-
-    // 2. Revalidate navigation menu cache
-    revalidateTag('navigation-menu');
-    revalidated.push('tag:navigation-menu');
-
-    // 3. Revalidate CACHE_TAGS from the cache system
-    revalidateTag(CACHE_TAGS.search.taxonomies);
-    revalidated.push(`tag:${CACHE_TAGS.search.taxonomies}`);
-
-    revalidateTag(CACHE_TAGS.archive.all);
-    revalidated.push(`tag:${CACHE_TAGS.archive.all}`);
-
-    revalidateTag(CACHE_TAGS.archive.servicesFiltered);
-    revalidated.push(`tag:${CACHE_TAGS.archive.servicesFiltered}`);
-
-    revalidateTag(CACHE_TAGS.categories.all);
-    revalidated.push(`tag:${CACHE_TAGS.categories.all}`);
-
-    revalidateTag(CACHE_TAGS.home);
-    revalidated.push(`tag:${CACHE_TAGS.home}`);
+    // XC-DEADREVAL: this action used to clear the OLD app's tag names
+    // ('categories', 'navigation-menu', archive:all, …) which no fetch in the
+    // new data layer uses — the button was a no-op. These are the tags the
+    // current fetches actually carry (lib/api/{core,services,profiles}.ts).
+    const liveTags = [
+      'categories-page',
+      'nav:menu',
+      'archive:services',
+      'archive:profiles',
+      'services:all',
+      'profiles:all',
+      'search:suggestions',
+      'taxonomy-paths',
+      CACHE_TAGS.home, // page:home
+    ];
+    for (const tag of liveTags) {
+      revalidateTag(tag);
+      revalidated.push(`tag:${tag}`);
+    }
 
     // 4. Revalidate key public paths (use dynamic segment pattern to cover all instances)
     const staticPaths = ['/'];

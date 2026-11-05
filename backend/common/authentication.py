@@ -24,7 +24,36 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 COOKIE_NAME_ACCESS = "dj_access"
 
 
-class CookieJWTAuthentication(JWTAuthentication):
+class RevocationAwareJWTAuthentication(JWTAuthentication):
+    """JWTAuthentication that honors the per-user revocation epoch.
+
+    P0-6: admin "revoke all sessions" blacklists refresh tokens, but access
+    tokens already in the wild stayed valid for up to 15 minutes. The revoke
+    helper stores `auth:revoked-before:{user_id}` (a unix timestamp, TTL just
+    over the access lifetime); any access token ISSUED before that moment is
+    rejected here — for both the Bearer header path (this class as the
+    settings default) and the cookie path (CookieJWTAuthentication subclasses
+    it). Cache misses and cache outages fail OPEN (the token's own 15-minute
+    TTL remains the backstop, as before this check existed).
+    """
+
+    def get_validated_token(self, raw_token):  # type: ignore[override]
+        validated = super().get_validated_token(raw_token)
+        try:
+            from django.core.cache import cache
+
+            user_id = validated.get("user_id")
+            revoked_before = cache.get(f"auth:revoked-before:{user_id}") if user_id else None
+            if revoked_before is not None and validated.get("iat", 0) < float(revoked_before):
+                raise InvalidToken("Session revoked")
+        except InvalidToken:
+            raise
+        except Exception:  # pragma: no cover — cache down: fail open
+            pass
+        return validated
+
+
+class CookieJWTAuthentication(RevocationAwareJWTAuthentication):
     """JWT auth that pulls the access token from the `dj_access` cookie.
 
     Returns `None` (not an error) when the cookie is missing, so the request
