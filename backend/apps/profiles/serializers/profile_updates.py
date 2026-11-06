@@ -269,11 +269,22 @@ class ReportProfileSerializer(serializers.Serializer):
 class SubmitVerificationSerializer(serializers.Serializer):
     """Mirrors OLD `verificationFormSchema` (profile.ts:427-444).
 
-    OLD afm is min(1)/max(20) chars (NOT strict 9-digit); name min(2)/max(100);
+    OLD afm was only min(1)/max(20) on THIS form, but every other OLD AFM
+    surface enforced exactly 9 digits (billing refine profile.ts:410-421,
+    lookup-afm.ts:28) and the E2E (problem 8) showed garbage («12345») being
+    persisted. Enforce the 9-digit rule server-side with the OLD billing
+    wording — rejecting garbage is parity-safe. name min(2)/max(100);
     address min(5)/max(200); phone min(1)/max(50).
     """
 
-    afm = serializers.CharField(min_length=1, max_length=20)
+    afm = serializers.RegexField(
+        regex=r"^\d{9}$",
+        error_messages={
+            "invalid": "Ο ΑΦΜ πρέπει να είναι ακριβώς 9 ψηφία",
+            "blank": "Ο ΑΦΜ είναι υποχρεωτικός",
+            "required": "Ο ΑΦΜ είναι υποχρεωτικός",
+        },
+    )
     name = serializers.CharField(min_length=2, max_length=100)
     address = serializers.CharField(min_length=5, max_length=200)
     phone = serializers.CharField(min_length=1, max_length=50)

@@ -52,7 +52,9 @@ def submit_verification(
     send_verification_request_email.delay(profile.id, afm)
     logger.info(
         "verification_submitted",
-        extra={"verification_id": verification.id, "user_id": user.id, "created": created},
+        # "created" is a reserved LogRecord attribute — passing it in `extra`
+        # raises KeyError and 500'd every submit (E2E problem 8).
+        extra={"verification_id": verification.id, "user_id": user.id, "created_new": created},
     )
     return verification
 

@@ -104,7 +104,18 @@ class AdminSetUserRoleSerializer(serializers.Serializer):
 
 
 class AdminBanUserSerializer(serializers.Serializer):
-    banReason = serializers.CharField(required=False, allow_blank=True, max_length=500)
+    # OLD's ban form required a non-empty reason (`banUserFormSchema`,
+    # lib/validations/admin.ts:146 — min(1, 'Please provide a ban reason')),
+    # so no OLD ban ever lacked one. Keeping it optional here let a mis-keyed
+    # payload ban with NO stored reason (E2E A#12) — require it instead.
+    banReason = serializers.CharField(
+        min_length=1,
+        max_length=500,
+        error_messages={
+            "required": "Please provide a ban reason",
+            "blank": "Please provide a ban reason",
+        },
+    )
     banExpiresIn = serializers.IntegerField(required=False, allow_null=True, min_value=1)
 
 

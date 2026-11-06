@@ -100,6 +100,25 @@ def _stringify(value: Any) -> Any:
     return str(value)
 
 
+def _plain_message(detail: Any) -> str:
+    """Flatten a DRF error detail (str | list | dict) into a readable string.
+
+    SimpleJWT's token errors carry a dict detail ({'detail': …, 'code':
+    'token_not_valid', 'messages': […]}); str() on that leaked a raw
+    ErrorDetail repr into `message` (E2E C#2).
+    """
+    if isinstance(detail, dict):
+        for key in ("detail", "message"):
+            if key in detail:
+                return _plain_message(detail[key])
+        for value in detail.values():
+            return _plain_message(value)
+        return ""
+    if isinstance(detail, (list, tuple)):
+        return _plain_message(detail[0]) if detail else ""
+    return str(detail)
+
+
 def json_exception_handler(exc: Exception, context: dict[str, Any]) -> Response | None:
     """Translate any exception into the project-wide error envelope.
 
@@ -137,6 +156,16 @@ def json_exception_handler(exc: Exception, context: dict[str, Any]) -> Response 
     else:
         # Permission denied, throttled, not authenticated, etc.
         code = getattr(exc, "default_code", "error")
+        detail = getattr(exc, "detail", None)
+        details = None
+        if isinstance(detail, dict):
+            # SimpleJWT token errors ({'detail': …, 'code': 'token_not_valid',
+            # 'messages': […]}): surface the specific code and keep the
+            # per-token messages, with a plain-string `message` (E2E C#2).
+            if "code" in detail:
+                code = str(detail["code"])
+            if "messages" in detail:
+                details = _stringify(detail["messages"])
         # DRF's Throttled default_code is "throttled", but the frontend branches
         # on `err.code === 'rate_limited'` (e.g. actions/auth/forgot-password.ts)
         # and shows its own Greek-friendly message.
@@ -145,8 +174,8 @@ def json_exception_handler(exc: Exception, context: dict[str, Any]) -> Response 
         body = {
             "error": {
                 "code": code,
-                "message": str(exc.detail) if hasattr(exc, "detail") else str(exc),
-                "details": None,
+                "message": _plain_message(detail) if detail is not None else str(exc),
+                "details": details,
             }
         }
 

@@ -15,14 +15,19 @@ from django.db import transaction
 
 from apps.accounts.models import Account, User, Verification
 from apps.accounts.selectors.users import get_password_account, get_user_by_email
-from apps.accounts.services.auth import _verify_password
+from apps.accounts.services.auth import _verify_password, issue_tokens
+from apps.accounts.services.sessions import revoke_all_for_user
 from common.exceptions import ApiError, FieldErrors
 
 RESET_TOKEN_TTL = timedelta(hours=1)
 
 
-def change_password(user: User, current_password: str, new_password: str) -> None:
-    """Change a logged-in user's password. Mirrors Better Auth's changePassword."""
+def change_password(user: User, current_password: str, new_password: str) -> dict[str, str]:
+    """Change a logged-in user's password. Mirrors Better Auth's changePassword.
+
+    Returns a fresh access/refresh pair for the caller: every existing session
+    is revoked (see below), so the caller must adopt these to stay signed in.
+    """
     if not current_password or not new_password:
         raise FieldErrors(details={"_errors": ["Συμπλήρωσε όλα τα πεδία"]})
     if len(new_password) < 6:
@@ -54,6 +59,18 @@ def change_password(user: User, current_password: str, new_password: str) -> Non
     # Successful change always rewrites with the default hasher (Argon2).
     account.password = make_password(new_password)
     account.save(update_fields=["password", "updated_at"])
+
+    # E2E C#1: without this, a stolen 14-day refresh token survived the
+    # password change. OLD (`actions/auth/change-password.ts:45-51`) called
+    # Better Auth `changePassword` WITHOUT `revokeOtherSessions`, but it kept
+    # the CALLER signed in. The JWT revocation epoch can't spare individual
+    # tokens (and the request doesn't carry the caller's refresh token), so:
+    # revoke everything via the same path as the admin revoke (blacklist all
+    # outstanding refresh tokens + per-user epoch), then mint a fresh pair
+    # AFTER the epoch so the caller's session continues — matching OLD's UX
+    # while actually killing every other session.
+    revoke_all_for_user(user)
+    return issue_tokens(user)
 
 
 def initiate_password_reset(email: str) -> tuple[User, str] | None:

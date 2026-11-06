@@ -123,12 +123,18 @@ class ChangePasswordView(APIView):
     def post(self, request):
         serializer = ChangePasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        password_service.change_password(
+        tokens = password_service.change_password(
             request.user,
             serializer.validated_data["currentPassword"],
             serializer.validated_data["newPassword"],
         )
-        return Response({"message": "Ο κωδικός άλλαξε επιτυχώς"})
+        # The change revokes every existing session (E2E C#1); hand the caller
+        # a fresh pair so their session survives, like OLD's changePassword.
+        return Response({
+            "message": "Ο κωδικός άλλαξε επιτυχώς",
+            "access": tokens["access"],
+            "refresh": tokens["refresh"],
+        })
 
 
 class ForgotPasswordView(APIView):

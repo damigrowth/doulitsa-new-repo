@@ -139,8 +139,18 @@ export async function changePassword(input: {
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
-}): Promise<{ message: string }> {
-  return api.post('/auth/password/change', input);
+}): Promise<{ message: string; access?: string; refresh?: string }> {
+  const res = await api.post<{ message: string; access?: string; refresh?: string }>(
+    '/auth/password/change',
+    input,
+  );
+  // Django revokes EVERY existing session on password change (E2E C#1) and
+  // returns a fresh pair for the caller — adopt it so the current session
+  // keeps working (OLD's changePassword kept the caller signed in).
+  if (res.access && res.refresh) {
+    await setTokens(res.access, res.refresh);
+  }
+  return res;
 }
 
 export async function forgotPassword(email: string): Promise<{ message: string; devResetToken?: string }> {
