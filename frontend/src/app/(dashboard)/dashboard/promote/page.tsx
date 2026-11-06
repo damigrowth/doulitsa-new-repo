@@ -2,6 +2,8 @@ import { requireProUser, getCurrentUser } from '@/actions/auth/server';
 import { getSubscription, getMyPaymentAttempts } from '@/actions/subscription';
 import { getDashboardMetadata } from '@/lib/seo/pages';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { History } from 'lucide-react';
 import { BillingForm } from '@/components';
 import { SubscriptionStatus, type Subscription } from '@/lib/prisma-types';
 import SubscriptionManagement from './subscription-management';
@@ -54,18 +56,29 @@ export default async function SubscriptionPage({ searchParams }: PageProps) {
 
       <SubscriptionManagement subscription={subscription || null} />
 
+      {/* Quick jump to the payment history for anyone with past charges. */}
+      {attemptsTotal > 0 && (
+        <Button asChild variant='outline' size='sm' className='w-fit'>
+          <a href='#payment-history'>
+            <History className='mr-2 h-4 w-4' />
+            Ιστορικό χρεώσεων ({attemptsTotal})
+          </a>
+        </Button>
+      )}
+
       {!isActive && <PlanComparison />}
 
-      {isActive && (
-        <Card className='w-full max-w-3xl shadow-lg'>
+      {/* Payment history: unlike OLD (which hid it with the whole isActive
+          block), a client with past charges can always see them — even after
+          the subscription lapses (user decision 2026-11-06). */}
+      {attemptsTotal > 0 && (
+        <Card id='payment-history' className='w-full max-w-3xl shadow-lg scroll-mt-24'>
           <CardHeader className='pb-3'>
             <CardTitle className='text-lg'>
               Τελευταίες χρεώσεις
-              {attemptsTotal > 0 && (
-                <span className='ml-2 text-sm font-normal text-muted-foreground'>
-                  ({attemptsTotal})
-                </span>
-              )}
+              <span className='ml-2 text-sm font-normal text-muted-foreground'>
+                ({attemptsTotal})
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
