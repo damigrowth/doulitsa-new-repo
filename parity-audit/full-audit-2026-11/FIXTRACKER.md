@@ -90,3 +90,5 @@ Batch reports with evidence: fixes-B1..B5.md in this folder.
 - ✅ FE: admin user-detail forms ζωντανά (handleSubmit, Ban enabled, inverted toast fix) · DEBUG panels αφαιρέθηκαν · share-review-link origin-based · dates pinned Europe/Athens (όλα τα admin tables) · save rollback+toast (global Toaster στο root layout!) · eternal-spinner try/catch σε 3 forms — commit (αυτό)
 - 📄 B#4 pending review: parity με το παλιό, όχι bug (τεκμηρίωση στο fixes-E2E-frontend.md)
 - Αναφορές: fixes-E2E-backend.md, fixes-E2E-frontend.md, e2e-shots/FIX-*.jpg
+- ✅ D1: coverage Save μόνιμα disabled (stale isValid) → submit μέσω form.handleSubmit + ορατά errors, όπως το form-account fix · D3: το ΑΦΜ validation error εμφανίζει πλέον το ελληνικό μήνυμα από details αντί του generic — commit (αυτό)
+- 📊 Rounds D/E/F: D (Επιχείρηση) 42 checks 36✅/5⚠️/1❌ · E (settings/διαγραφή) 20 checks 16✅/4⚠️/0❌ — password-revoke & deletion ΟΚ · F (admin) 33 checks 31✅/2⚠️/0❌ — review approve/rating live, no-wipe edit, AFM badge, Athens dates confirmed
