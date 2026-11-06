@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ArchiveLayout, ArchiveServiceCard } from '@/components/archives';
+import { groupServicesByProfile } from '@/components/archives/group-services';
 import { getServiceArchivePageData } from '@/actions/services/get-services';
 import { getServiceSubdivisionMetadata } from '@/lib/seo/pages';
 import { ServicesSchema } from '@/lib/seo/schema';
@@ -133,8 +134,12 @@ export default async function ServicesSubdivisionPage({
             </p>
           </div>
         ) : (
-          services.map((service) => (
-            <ArchiveServiceCard key={service.id} service={service} />
+          groupServicesByProfile(services).map(({ service, more }) => (
+            <ArchiveServiceCard
+              key={service.id}
+              service={service}
+              moreFromSameProfile={more}
+            />
           ))
         )}
       </div>

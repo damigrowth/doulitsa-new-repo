@@ -13,11 +13,14 @@ import SaveButton from '@/components/shared/save-button';
 
 interface ArchiveServiceCardProps {
   service: ArchiveServiceCardData | ServiceCardData;
+  /** Same-profile services from the current results page, shown as pills. */
+  moreFromSameProfile?: (ArchiveServiceCardData | ServiceCardData)[];
   className?: string;
 }
 
 export function ArchiveServiceCard({
   service,
+  moreFromSameProfile,
   className,
 }: ArchiveServiceCardProps) {
   // Check if service has taxonomyLabels (ArchiveServiceCardData) or just category (ServiceCardData)
@@ -108,6 +111,35 @@ export function ArchiveServiceCard({
           </div>
         )}
       </div>
+
+      {/* Same-profile services (grouped archive view): one card per pro, the
+          rest of their services as pills — each pill links to its own page. */}
+      {moreFromSameProfile && moreFromSameProfile.length > 0 && (
+        <div className='px-6 pb-4 relative z-20'>
+          <p className='text-xs font-medium text-muted-foreground mb-2'>
+            Ακόμα υπηρεσίες από το ίδιο προφίλ:
+          </p>
+          <div className='flex flex-wrap gap-1.5'>
+            {moreFromSameProfile.map((s) => {
+              const pillPrice = Number(s.price) || 0;
+              return (
+                <NextLink
+                  key={s.id}
+                  href={`/s/${s.slug}`}
+                  className='inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 text-sm text-body hover:border-fourth/60 hover:text-third transition-colors max-w-full'
+                >
+                  <span className='truncate max-w-[16rem]'>{s.title}</span>
+                  {pillPrice > 0 && (
+                    <span className='text-xs text-muted-foreground whitespace-nowrap'>
+                      από {pillPrice}€
+                    </span>
+                  )}
+                </NextLink>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Footer strip: tinted band that visually closes the card and separates it from the page background */}
       <div className='flex items-center gap-3 border-t border-gray-100 bg-gray-50 px-6 py-3'>
