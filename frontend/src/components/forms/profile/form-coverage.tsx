@@ -118,7 +118,7 @@ export default function CoverageForm({
   });
 
   const {
-    formState: { isValid, isDirty },
+    formState: { isDirty },
     getValues,
     setValue,
     watch,
@@ -326,11 +326,12 @@ export default function CoverageForm({
   return (
     <Form {...form}>
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          const formData = new FormData(e.currentTarget);
+        onSubmit={form.handleSubmit((_, e) => {
+          // Validation passed — visible errors render via FormMessage instead
+          // of silently disabling the button (D1: stale isValid kept Save dead).
+          const formData = new FormData(e?.target as HTMLFormElement);
           handleFormAction(formData);
-        }}
+        })}
       >
         <FormWrapper {...wrapperProps}>
           {/* Delivery Methods Section */}
@@ -712,7 +713,7 @@ export default function CoverageForm({
               text='Αποθήκευση'
               loadingText='Αποθήκευση...'
               loading={isPending}
-              disabled={isPending || !isValid || !isDirty}
+              disabled={isPending || !isDirty}
             />
           </div>
         </FormWrapper>

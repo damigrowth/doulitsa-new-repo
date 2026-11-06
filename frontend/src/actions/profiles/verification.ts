@@ -18,7 +18,22 @@ export async function submitVerificationRequest(
     });
     return { success: true, message: 'Η αίτηση επαλήθευσης υποβλήθηκε' };
   } catch (err) {
-    return { success: false, message: err instanceof ApiError ? err.message : 'Σφάλμα δικτύου' };
+    if (err instanceof ApiError) {
+      // Validation envelope: the per-field Greek messages live in `details` —
+      // surface the first one instead of the generic "One or more fields are
+      // invalid." (E2E D3).
+      const d = err.details as Record<string, unknown> | null | undefined;
+      if (d && typeof d === 'object') {
+        for (const v of Object.values(d)) {
+          const first = Array.isArray(v) ? v[0] : typeof v === 'string' ? v : null;
+          if (typeof first === 'string' && first) {
+            return { success: false, message: first };
+          }
+        }
+      }
+      return { success: false, message: err.message };
+    }
+    return { success: false, message: 'Σφάλμα δικτύου' };
   }
 }
 
