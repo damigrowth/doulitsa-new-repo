@@ -122,6 +122,21 @@ def get_for_user(user: User) -> dict[str, Any] | None:
     sub = Subscription.objects.filter(profile=profile).first()
     if sub is None:
         return None
+    # Lazy expiry: a cancel_at_period_end sub whose paid period has passed is
+    # normally downgraded by the renewals task — but with that task disabled
+    # (double-billing freeze) the row stays "active/Ακυρώνεται" forever and the
+    # promote page blocks buying a new package. Apply the task's own
+    # idempotent, charge-free transition at read time instead.
+    now = datetime.now(timezone.utc)
+    if (
+        sub.status == SubscriptionStatus.ACTIVE
+        and sub.cancel_at_period_end
+        and sub.current_period_end
+        and sub.current_period_end < now
+    ):
+        from apps.billing.services.renewals import _expire_canceled_subscription
+
+        _expire_canceled_subscription(sub, now)
     return _row(sub)
 
 
