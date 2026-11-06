@@ -134,11 +134,12 @@ export default async function ServicesSubdivisionPage({
             </p>
           </div>
         ) : (
-          groupServicesByProfile(services).map(({ service, more }) => (
+          groupServicesByProfile(services).map(({ service, more, remainingCount }) => (
             <ArchiveServiceCard
               key={service.id}
               service={service}
               moreFromSameProfile={more}
+              moreFromProfileCount={remainingCount}
             />
           ))
         )}

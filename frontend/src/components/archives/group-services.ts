@@ -7,6 +7,12 @@ export interface GroupedArchiveService<T extends AnyServiceCard = AnyServiceCard
   service: T;
   /** Other services of the same profile within this results page. */
   more: T[];
+  /**
+   * Matching services of the profile that fall on OTHER pages of the filtered
+   * result set (from the backend's profileMatchCount window annotation);
+   * rendered as a «+N ακόμα» pill linking to the profile.
+   */
+  remainingCount: number;
 }
 
 /**
@@ -28,9 +34,17 @@ export function groupServicesByProfile<T extends AnyServiceCard>(
     if (existing) {
       existing.more.push(s);
     } else {
-      const group: GroupedArchiveService<T> = { service: s, more: [] };
+      const group: GroupedArchiveService<T> = { service: s, more: [], remainingCount: 0 };
       byProfile.set(key, group);
       groups.push(group);
+    }
+  }
+  for (const g of groups) {
+    const matchCount = Number(
+      (g.service as { profileMatchCount?: number | null }).profileMatchCount,
+    );
+    if (Number.isFinite(matchCount) && matchCount > 0) {
+      g.remainingCount = Math.max(0, matchCount - 1 - g.more.length);
     }
   }
   return groups;
