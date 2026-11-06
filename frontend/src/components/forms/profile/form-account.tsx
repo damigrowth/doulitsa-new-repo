@@ -60,7 +60,22 @@ export default function AccountForm({
   // Select the appropriate action based on admin mode
   const actionToUse = adminMode ? updateAccountAdmin : updateAccount;
 
-  const [state, action, isPending] = useActionState(actionToUse, initialState);
+  const [state, action, isPending] = useActionState(
+    async (prevState: any, formData: FormData) => {
+      try {
+        return await actionToUse(prevState, formData);
+      } catch {
+        // The action call itself failed (network error, stale server action
+        // after a redeploy) — resolve to an error state instead of leaving
+        // the submit button in an eternal pending state.
+        return {
+          success: false,
+          message: 'Η αποθήκευση απέτυχε. Παρακαλώ δοκιμάστε ξανά.',
+        };
+      }
+    },
+    initialState,
+  );
   const router = useRouter();
   const [isUploading, setIsUploading] = useState(false);
   const [isPendingTransition, startTransition] = useTransition();
@@ -81,7 +96,7 @@ export default function AccountForm({
   });
 
   const {
-    formState: { isValid, isDirty, errors },
+    formState: { isDirty, errors },
     getValues,
     setValue,
   } = form;
@@ -183,11 +198,11 @@ export default function AccountForm({
   return (
     <Form {...form}>
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          const formData = new FormData(e.currentTarget);
-          handleFormAction(formData);
-        }}
+        onSubmit={form.handleSubmit(() => {
+          // Validation passed — build the payload from form values
+          // (populateFormData in handleFormAction reads getValues()).
+          handleFormAction(new FormData());
+        })}
         className={
           hideCard
             ? 'space-y-6'
@@ -296,13 +311,7 @@ export default function AccountForm({
             text='Αποθήκευση'
             loadingText='Αποθήκευση...'
             loading={isPending || isPendingTransition || isUploading}
-            disabled={
-              isPending ||
-              isPendingTransition ||
-              isUploading ||
-              !isValid ||
-              !isDirty
-            }
+            disabled={isPending || isPendingTransition || isUploading || !isDirty}
           />
         </div>
       </form>

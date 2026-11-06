@@ -84,3 +84,9 @@ Batch reports with evidence: fixes-B1..B5.md in this folder.
 - LC-10 live AADE call (needs creds), reviews/views/admin enum validation (B4 skipped, B2 noted)
 - P3-29 saved-toggle false success
 - Prod commands after deploy: renormalize_coverage --apply, unstick OAUTH users (fixes-B1), SQL Q0c stays frozen with payments
+
+## 2026-11-06 — E2E-local fix batch (μετά το logged-in E2E A/B/C)
+- ✅ BE: AFM 500 (logger key) + 9ψήφιο validation · password-change → revoke all sessions + fresh pair · banReason required/persisted · 401 plain messages — commit b151ab3b
+- ✅ FE: admin user-detail forms ζωντανά (handleSubmit, Ban enabled, inverted toast fix) · DEBUG panels αφαιρέθηκαν · share-review-link origin-based · dates pinned Europe/Athens (όλα τα admin tables) · save rollback+toast (global Toaster στο root layout!) · eternal-spinner try/catch σε 3 forms — commit (αυτό)
+- 📄 B#4 pending review: parity με το παλιό, όχι bug (τεκμηρίωση στο fixes-E2E-frontend.md)
+- Αναφορές: fixes-E2E-backend.md, fixes-E2E-frontend.md, e2e-shots/FIX-*.jpg

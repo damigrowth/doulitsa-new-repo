@@ -11,6 +11,7 @@ import {
 } from '@/components/dynamic';
 import { FooterWrapper } from '@/components/shared/layout';
 import { Body, Notifications } from '@/components/shared/layout/wrapper';
+import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { SavedStateProvider } from '@/lib/providers/saved-state-provider';
 import NavigationSkeletonOverlay from '@/components/shared/navigation-skeleton-overlay';
@@ -73,6 +74,9 @@ export default async function RootLayout({ children }: RootLayoutProps) {
               docs/COOKIE-CONSENT.md.
             */}
             <CookieConsentRoot />
+            {/* Global toast container (sonner) — single mount for the whole
+                app; nested layouts must not mount their own Toaster. */}
+            <Toaster />
             {/* Cloudinary Upload Widget */}
             {/* <Script
             src='https://upload-widget.cloudinary.com/global/all.js'

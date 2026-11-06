@@ -77,7 +77,22 @@ export default function CoverageForm({
   // Select the appropriate action based on admin mode
   const actionToUse = adminMode ? updateCoverageAdmin : updateCoverage;
 
-  const [state, action, isPending] = useActionState(actionToUse, initialState);
+  const [state, action, isPending] = useActionState(
+    async (prevState: any, formData: FormData) => {
+      try {
+        return await actionToUse(prevState, formData);
+      } catch {
+        // The action call itself failed (network error, stale server action
+        // after a redeploy) — resolve to an error state instead of leaving
+        // the submit button in an eternal pending state.
+        return {
+          success: false,
+          message: 'Η αποθήκευση απέτυχε. Παρακαλώ δοκιμάστε ξανά.',
+        };
+      }
+    },
+    initialState,
+  );
   const [, startTransition] = useTransition();
 
   // Track if user has made any actual changes

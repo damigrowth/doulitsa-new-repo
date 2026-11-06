@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Heart, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { toggleSave } from '@/actions/saved';
 import { useSession } from '@/lib/auth/client';
@@ -65,20 +66,29 @@ export default function SaveButton({
     onToggle?.(newState);
 
     startTransition(async () => {
-      const result = await toggleSave(itemType, itemId);
-
-      if (!result.success) {
+      const rollback = () => {
         setLocalSaved(previousState);
         updateSavedState(itemType, itemId, previousState);
         onToggle?.(previousState);
-      } else if (result.data) {
-        setLocalSaved(result.data.isSaved);
-        updateSavedState(itemType, itemId, result.data.isSaved);
-        onToggle?.(result.data.isSaved);
+        toast.error('Η αποθήκευση απέτυχε. Παρακαλώ δοκιμάστε ξανά.');
+      };
 
-        if (isInDashboard && pathname?.includes('/saved')) {
-          router.refresh();
+      try {
+        const result = await toggleSave(itemType, itemId);
+
+        if (!result.success) {
+          rollback();
+        } else if (result.data) {
+          setLocalSaved(result.data.isSaved);
+          updateSavedState(itemType, itemId, result.data.isSaved);
+          onToggle?.(result.data.isSaved);
+
+          if (isInDashboard && pathname?.includes('/saved')) {
+            router.refresh();
+          }
         }
+      } catch {
+        rollback();
       }
     });
   };

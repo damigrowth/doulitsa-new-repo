@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,7 +14,14 @@ interface ShareReviewLinkProps {
 export function ShareReviewLink({ username, className }: ShareReviewLinkProps) {
   const [copied, setCopied] = useState(false);
 
-  const reviewUrl = `https://doulitsa.gr/profile/${username}#review`;
+  // Resolved after mount so SSR and client render identically (same approach
+  // as the share buttons, which build URLs from window.location).
+  const [origin, setOrigin] = useState('');
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
+  const reviewUrl = `${origin}/profile/${username}#review`;
 
   const handleCopy = async () => {
     try {

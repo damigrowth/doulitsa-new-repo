@@ -1166,52 +1166,6 @@ export default function OnboardingForm({
           </div>
         )}
 
-        {/* Debug Info */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className='p-4 bg-gray-100 rounded text-xs space-y-2'>
-            <div>isValid: {isValid.toString()}</div>
-            <div>isDirty: {isDirty.toString()}</div>
-            <div>Errors: {JSON.stringify(errors, null, 2)}</div>
-            <div>Form Values: {JSON.stringify(getValues(), null, 2)}</div>
-            <div>
-              Manual Validation:{' '}
-              {(() => {
-                try {
-                  const result =
-                    onboardingFormSchemaWithMedia.safeParse(getValues());
-                  if (result.success) {
-                    return 'SUCCESS: Form is valid';
-                  } else {
-                    return JSON.stringify(
-                      {
-                        success: false,
-                        errors: result.error.issues.map((err) => ({
-                          path: err.path.join('.'),
-                          message: err.message,
-                          code: err.code,
-                        })),
-                      },
-                      null,
-                      2,
-                    );
-                  }
-                } catch (e) {
-                  return `Error: ${e.message}`;
-                }
-              })()}
-            </div>
-            <button
-              type='button'
-              onClick={() => {
-                form.trigger();
-              }}
-              className='px-4 py-2 bg-gray-200 rounded text-sm'
-            >
-              Trigger Validation
-            </button>
-          </div>
-        )}
-
         {/* Submit Button */}
         <div className='pt-6 border-t border-border flex justify-center'>
           <FormButton

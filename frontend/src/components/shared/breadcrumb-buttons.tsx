@@ -16,6 +16,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
+import { toast } from 'sonner';
 import AuthRequiredDialog from '@/components/shared/auth-required-dialog';
 import { BreadcrumbButtonsProps } from '@/lib/types';
 import { useSession } from '@/lib/auth/client';
@@ -53,12 +54,18 @@ export default function BreadcrumbButtons({
     updateSavedState(itemType, id, newState);
 
     startTransition(async () => {
-      const result = await toggleSave(itemType, id);
+      try {
+        const result = await toggleSave(itemType, id);
 
-      if (!result.success) {
+        if (!result.success) {
+          updateSavedState(itemType, id, previousState);
+          toast.error('Η αποθήκευση απέτυχε. Παρακαλώ δοκιμάστε ξανά.');
+        } else if (result.data) {
+          updateSavedState(itemType, id, result.data.isSaved);
+        }
+      } catch {
         updateSavedState(itemType, id, previousState);
-      } else if (result.data) {
-        updateSavedState(itemType, id, result.data.isSaved);
+        toast.error('Η αποθήκευση απέτυχε. Παρακαλώ δοκιμάστε ξανά.');
       }
     });
   };

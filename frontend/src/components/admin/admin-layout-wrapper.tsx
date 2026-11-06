@@ -2,7 +2,6 @@
 
 import { AppSidebar } from '@/components/admin/app-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import type { NavItem } from '@/actions/admin/helpers';
 
@@ -23,7 +22,6 @@ export function AdminLayoutWrapper({ children, navItems }: AdminLayoutWrapperPro
             </div>
           </div>
         </SidebarInset>
-        <Toaster />
       </SidebarProvider>
     </TooltipProvider>
   );

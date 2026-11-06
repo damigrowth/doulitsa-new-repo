@@ -7,19 +7,56 @@ import { format, formatDistance, formatRelative, isValid, parseISO } from 'date-
 import { el } from 'date-fns/locale';
 
 /**
- * Format date for display in Greek locale
+ * All absolute dates are displayed in Europe/Athens, regardless of the
+ * environment timezone (server containers run in UTC, browsers vary).
+ */
+const DISPLAY_TIME_ZONE = 'Europe/Athens';
+
+/**
+ * Return a Date whose local fields match the Europe/Athens wall clock for
+ * the given instant. Formatting that Date produces identical output on
+ * server and client, keeping SSR/hydration deterministic.
+ */
+export function toAthensDate(date: Date): Date {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: DISPLAY_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date);
+
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((part) => part.type === type)?.value ?? 0);
+
+  return new Date(
+    get('year'),
+    get('month') - 1,
+    get('day'),
+    get('hour'),
+    get('minute'),
+    get('second'),
+    date.getMilliseconds(),
+  );
+}
+
+/**
+ * Format date for display in Greek locale (Europe/Athens)
  */
 export function formatDate(
   date: Date | string | number,
   formatStr: string = 'dd/MM/yyyy'
 ): string {
   const dateObj = typeof date === 'string' ? parseISO(date) : new Date(date);
-  
+
   if (!isValid(dateObj)) {
     return 'Invalid Date';
   }
-  
-  return format(dateObj, formatStr, { locale: el });
+
+  return format(toAthensDate(dateObj), formatStr, { locale: el });
 }
 
 /**

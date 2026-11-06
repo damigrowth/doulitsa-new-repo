@@ -114,7 +114,7 @@ export default function BasicInfoForm({
 
   const {
     handleSubmit,
-    formState: { errors, isValid, isDirty },
+    formState: { isValid, isDirty },
     setValue,
     getValues,
     watch,
@@ -527,28 +527,6 @@ export default function BasicInfoForm({
             );
           }}
         />
-
-        {/* Debug Info */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className='max-w-xl overflow-scroll p-4 bg-gray-100 rounded text-xs space-y-2'>
-            <div>isValid: {isValid.toString()}</div>
-            <div>isDirty: {isDirty.toString()}</div>
-            <div>isSubmitted: {form.formState.isSubmitted.toString()}</div>
-            <div>Category Value: {watch('category') || 'empty'}</div>
-            <div>Subcategory Value: {watch('subcategory') || 'empty'}</div>
-            <div>
-              Category Touched:{' '}
-              {form.formState.touchedFields.category?.toString() || 'false'}
-            </div>
-            <div>
-              Subcategory Touched:{' '}
-              {form.formState.touchedFields.subcategory?.toString() || 'false'}
-            </div>
-            <div>Username: {initialUser?.username || 'undefined'}</div>
-            <div>User ID: {initialUser?.id || 'undefined'}</div>
-            <div>Errors: {JSON.stringify(errors, null, 2)}</div>
-          </div>
-        )}
 
         <div className='flex justify-end space-x-4'>
           <FormButton

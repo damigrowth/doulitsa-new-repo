@@ -100,7 +100,17 @@ export default function FormServiceEdit({
 }: FormServiceEditProps) {
   const [state, action, isPending] = useActionState(
     async (prevState: any, formData: FormData) => {
-      return updateServiceAction(Number(service.id), formData);
+      try {
+        return await updateServiceAction(Number(service.id), formData);
+      } catch {
+        // The action call itself failed (network error, stale server action
+        // after a redeploy) — resolve to an error state instead of leaving
+        // the submit button in an eternal pending state.
+        return {
+          success: false,
+          error: 'Η αποθήκευση απέτυχε. Παρακαλώ δοκιμάστε ξανά.',
+        };
+      }
     },
     initialState,
   );
