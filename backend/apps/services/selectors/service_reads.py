@@ -5,7 +5,7 @@ import random
 from typing import Any
 
 from django.core.cache import cache
-from django.db.models import Count, F, Q, QuerySet, Window
+from django.db.models import Count, Q, QuerySet
 
 from apps.accounts.models import User
 from apps.core import taxonomy
@@ -246,9 +246,6 @@ def _card(s: Service) -> dict[str, Any]:
         "status": s.status,
         "refreshedAt": s.refreshed_at.isoformat() if s.refreshed_at else None,
         "createdAt": s.created_at.isoformat() if s.created_at else None,
-        # Present only on archive-search rows (window annotation): the
-        # profile's total matching services in the full filtered set.
-        "profileMatchCount": getattr(s, "profile_match_count", None),
         "profile": profile_payload,
     }
 
@@ -612,13 +609,6 @@ def search_services(filters: dict[str, Any]) -> dict[str, Any]:
     limit = min(100, _safe_int(filters.get("limit"), 20))
     offset = (page - 1) * limit
     total = qs.count()
-    # How many services of the SAME profile exist in the WHOLE filtered set
-    # (window over the full query, before LIMIT). The archive groups a pro's
-    # services into one card; this lets it say «+N ακόμα» for the ones that
-    # fall on other pages (user decision 2026-11-06).
-    qs = qs.annotate(
-        profile_match_count=Window(expression=Count("id"), partition_by=[F("profile_id")]),
-    )
     rows = list(qs[offset:offset + limit])
     # OLD always ran shuffleFeatured(services) on the page slice, regardless of
     # sortBy (get-services.ts:583): featured rows are pulled to the front in
