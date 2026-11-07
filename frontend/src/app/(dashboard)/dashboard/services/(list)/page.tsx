@@ -10,6 +10,7 @@ import {
   getUserServices,
   getUserServiceStats,
 } from '@/actions/services/get-user-services';
+import { requireProUser } from '@/actions/auth/server';
 import { Status } from '@/lib/prisma-types';
 import { StatusColors, StatusLabels } from '@/lib/types/common';
 import type {
@@ -37,6 +38,10 @@ interface ServicesPageProps {
 export default async function ServicesPage({
   searchParams,
 }: ServicesPageProps) {
+  // Pro-only page: regular users have no services (OLD errored with
+  // "Profile not found" here — we redirect like the other pro-only pages).
+  await requireProUser();
+
   // Await searchParams first
   const params = await searchParams;
 

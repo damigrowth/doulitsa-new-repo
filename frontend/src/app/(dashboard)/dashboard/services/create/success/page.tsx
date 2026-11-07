@@ -27,6 +27,11 @@ export default async function ServiceSuccessPage({ searchParams }: PageProps) {
     redirect('/login');
   }
 
+  // Pro-only: regular users cannot create services.
+  if (userResult.data.user.type !== 'pro') {
+    redirect('/dashboard/profile/account');
+  }
+
   // Await searchParams as required in Next.js 15
   const params = await searchParams;
 

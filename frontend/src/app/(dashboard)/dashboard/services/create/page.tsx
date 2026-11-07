@@ -19,6 +19,11 @@ export default async function CreateServicePage() {
     redirect('/login');
   }
 
+  // Pro-only: regular users cannot create services.
+  if (userResult.data.user.type !== 'pro') {
+    redirect('/dashboard/profile/account');
+  }
+
   const { user, profile } = userResult.data;
 
   // Check if user can create services (only professionals)
