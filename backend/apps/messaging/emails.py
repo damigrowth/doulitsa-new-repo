@@ -3,7 +3,7 @@
 Ported from the OLD app's `src/lib/email/**` + `src/constants/email/**`. Each
 builder renders the OLD subject + HTML + plain-text twin
 (`apps.messaging.email_templates`, verbatim ports of the OLD templates) and
-sends through the configured EMAIL_BACKEND (`anymail.backends.sendinblue`)
+sends through the configured EMAIL_BACKEND (`anymail.backends.brevo`)
 with OLD's per-email sender display name and Reply-To (`email-config.ts`).
 Sends are best-effort: if Brevo isn't configured (no API key — e.g. local
 dev) or the provider errors, we log and return False so a failed email NEVER
@@ -89,7 +89,7 @@ def _admin_email() -> str:
 
 
 def _configured() -> bool:
-    return bool((getattr(settings, "ANYMAIL", {}) or {}).get("SENDINBLUE_API_KEY"))
+    return bool((getattr(settings, "ANYMAIL", {}) or {}).get("BREVO_API_KEY"))
 
 
 def _sender(display_name: str | None) -> str | None:

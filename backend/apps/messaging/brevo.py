@@ -34,7 +34,7 @@ _TIMEOUT = 10  # seconds
 
 
 def _api_key() -> str:
-    return (getattr(settings, "ANYMAIL", {}) or {}).get("SENDINBLUE_API_KEY") or ""
+    return (getattr(settings, "ANYMAIL", {}) or {}).get("BREVO_API_KEY") or ""
 
 
 def _configured() -> bool:

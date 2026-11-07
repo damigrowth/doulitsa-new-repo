@@ -375,9 +375,11 @@ CONTENT_SECURITY_POLICY = {
 # ---------------------------------------------------------------------------
 # Email (Brevo via Anymail)
 # ---------------------------------------------------------------------------
-EMAIL_BACKEND = "anymail.backends.sendinblue.EmailBackend"
+# anymail >=13 removed the legacy "sendinblue" names (Sendinblue → Brevo
+# rebrand); the "brevo" backend/key exist since anymail 10.
+EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
 ANYMAIL = {
-    "SENDINBLUE_API_KEY": env.str("BREVO_API_KEY", default=""),
+    "BREVO_API_KEY": env.str("BREVO_API_KEY", default=""),
 }
 # OLD brevo/client.ts getDefaultSender(): `BREVO_SENDER_NAME || 'Doulitsa'` <
 # `BREVO_SENDER_EMAIL || 'noreply@doulitsa.gr'`. The per-email display names
