@@ -22,7 +22,7 @@ const SILENT_MESSAGE =
 export async function resendVerificationEmail(
   prevState: ActionResponse | null,
   formData: FormData,
-): Promise<ActionResponse> {
+): Promise<ActionResponse & { rateLimited?: boolean }> {
   const email = getFormString(formData, 'email');
   const validated = resendSchema.safeParse({ email });
   if (!validated.success) {
@@ -46,6 +46,7 @@ export async function resendVerificationEmail(
     if (err instanceof ApiError && err.status === 429) {
       return {
         success: false,
+        rateLimited: true,
         message: 'Πάρα πολλές προσπάθειες. Παρακαλώ δοκίμασε ξανά σε λίγα λεπτά.',
       };
     }

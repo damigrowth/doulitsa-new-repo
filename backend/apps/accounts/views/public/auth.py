@@ -34,6 +34,7 @@ from apps.accounts.services import password as password_service
 from apps.accounts.services import registration as registration_service
 from common.exceptions import RateLimited
 from common.throttling import (
+    DefaultRatesThrottle,
     LoginThrottle,
     PasswordResetThrottle,
     RegisterThrottle,
@@ -198,7 +199,7 @@ class ResendVerificationView(APIView):
     """
 
     permission_classes = [AllowAny]
-    throttle_classes = [VerificationResendThrottle]
+    throttle_classes = [DefaultRatesThrottle, VerificationResendThrottle]
 
     @extend_schema(request=ResendVerificationSerializer)
     def post(self, request):

@@ -13,6 +13,33 @@ const initialState = {
   message: '',
 };
 
+const COOLDOWN_SECONDS = 60;
+
+// The deadline persists per email so a page refresh resumes the countdown
+// instead of resetting it (the server throttles at 3/10min regardless).
+const storageKey = (email: string) => `resend-verification-until:${email}`;
+
+const readRemaining = (email: string): number => {
+  try {
+    const raw = window.localStorage.getItem(storageKey(email));
+    const until = raw ? parseInt(raw, 10) : 0;
+    return Math.max(0, Math.ceil((until - Date.now()) / 1000));
+  } catch {
+    return 0;
+  }
+};
+
+const storeDeadline = (email: string, seconds: number) => {
+  try {
+    window.localStorage.setItem(
+      storageKey(email),
+      String(Date.now() + seconds * 1000),
+    );
+  } catch {
+    // Private mode / blocked storage: the server throttle still applies.
+  }
+};
+
 const FormResendVerification: React.FC = () => {
   const searchParams = useSearchParams();
   const email = searchParams?.get('email') || '';
@@ -23,12 +50,18 @@ const FormResendVerification: React.FC = () => {
   const [, startTransition] = useTransition();
   const [cooldown, setCooldown] = useState(0);
 
-  // Start cooldown after successful send
+  // Resume a cooldown that survived a refresh
   useEffect(() => {
-    if (state.success && state.message) {
-      setCooldown(60);
+    if (email) setCooldown(readRemaining(email));
+  }, [email]);
+
+  // Start cooldown after a send — also when the server rate-limited us
+  useEffect(() => {
+    if (state.message && (state.success || (state as { rateLimited?: boolean }).rateLimited)) {
+      setCooldown(COOLDOWN_SECONDS);
+      if (email) storeDeadline(email, COOLDOWN_SECONDS);
     }
-  }, [state.success, state.message]);
+  }, [state, email]);
 
   // Countdown timer
   useEffect(() => {

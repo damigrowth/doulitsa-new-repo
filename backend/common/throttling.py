@@ -144,7 +144,10 @@ class PasswordResetThrottle(_EndpointThrottle):
     scope = "password_reset"
 
 
-class VerificationResendThrottle(_EndpointThrottle):
+class VerificationResendThrottle(ClassScopedRateThrottle):
+    """Enforced (D-10 resolved 2026-11-07): `verification_resend` = 3/10min per
+    visitor. The view must list DefaultRatesThrottle alongside this class to
+    keep the global anon/user buckets."""
     scope = "verification_resend"
 
 
