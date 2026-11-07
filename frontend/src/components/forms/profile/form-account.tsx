@@ -110,7 +110,9 @@ export default function AccountForm({
   useEffect(() => {
     if (!initialUser) return;
     const resetData = {
-      displayName: initialUser.displayName || '',
+      // OLD showed the `name` column, which register fills with the username
+      // when no display name was given (simple users) — keep that fallback.
+      displayName: initialUser.displayName || initialUser.name || '',
       image: initialUser.image ? initialUser.image : null,
     };
     const snapshot = JSON.stringify(resetData);
